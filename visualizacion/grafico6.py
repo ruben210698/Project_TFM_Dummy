@@ -5,23 +5,6 @@ import requests
 from PIL import Image
 import io
 
-"""
-¿Qué necesito aqui?
-Pues necesito que me saque las relaciones entre palabras. Es decir, la flecha, el verbo que necesitaré.
-También tengo que saber qué tipo de palabra es.
-Saber a qué hace referencia para poner bien el color.
-Enlazar palabras con imágenes.
-
-Gráficamente:
-- Tengo que hacer que dinámicamente se vayan añadiendo palabras y que me las distribuya bien en el lienzo.
-
-
-Web:
-- Varios botones, o mejor uno de + y otro de - para ir agregando nivel de detalle en diferentes colores.
-Esto simplemente lo que haría sería ir cambiando la imagen a una más compleja o menos (dejar precargada de antes
-mientras ves la primera imagen).
-
-"""
 # Función para dibujar aristas con flechas
 def draw_edge(ax, u, v, width=1.0, color='k', label='', label_offset=(0, 0)):
     arrow = FancyArrowPatch(u, v, arrowstyle='->', mutation_scale=20, linewidth=width, color=color,  width=2.0)

@@ -31,12 +31,12 @@ for sent in doc.sents:
         if token.dep_ != 'ROOT':
             G.add_edge(token.head, token)
 
-# Configurar la visualización
+# Configurar la visualizacion
 pos = nx.spring_layout(G, seed=42) # posición de los nodos
 labels = {node: str(node) for node in G.nodes()} # etiquetas de los nodos
 
 # Dibujar el grafo
 nx.draw(G, pos, labels=labels, with_labels=True)
 
-# Mostrar la visualización
+# Mostrar la visualizacion
 plt.show()
