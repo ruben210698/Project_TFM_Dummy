@@ -35,61 +35,6 @@ list_types_connector_relation = [TYPE_MORF_ADP, TYPE_MORF_ADP, TYPE_MORF_CONJ, T
                                  TYPE_MORF_DET, TYPE_MORF_PRON, TYPE_MORF_PART, TYPE_MORF_VERB]
 
 
-
-
-
-
-
-
-texto = "Ruben dibuja koalas en bañador saltando entre acantilados mientras su amigo graba la escena y se rie."
-#texto = "Ruben dibuja koalas en bañador y chanclas"
-list_palabras = []
-list_relaciones = []
-list_tokens_rel = []
-
-# Primero los objetos y luego las relaciones.
-doc = nlp(texto)
-fifo_heads = {}
-fifo_children = {}
-for token in doc:
-    token = token_manual_modifier.set_token_manual(token)
-    print(token.text, ": ", token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop)
-
-    texto_palabra = token.text
-    tipo_morfol = token.pos_
-    lugar_sintact = token.dep_
-    lema_palabra = token.lemma_
-    position_doc = token.idx
-
-    if tipo_morfol == TYPE_MORF_PUNCT:
-        continue
-    # Crear objeto Palabra y añadir a lista de palabras
-    nueva_palabra = token
-    if tipo_morfol not in list_types_connector_relation:
-        nueva_palabra = Palabra(texto_palabra, tipo_morfol, lugar_sintact, txt_lema=lema_palabra,
-                                position_doc=position_doc)
-        list_palabras.append(nueva_palabra)
-    else:
-        list_tokens_rel.append(token)
-
-    if token.head is not None and token.head != token:
-        if token.head not in fifo_heads.keys():
-            fifo_heads.update({token.head: [nueva_palabra]})
-        else:
-            fifo_heads[token.head].append(nueva_palabra)
-
-    for child in token.children:
-        print(child)
-        if child not in fifo_children.keys():
-            fifo_children.update({child: [nueva_palabra]})
-        else:
-            fifo_children[child].append(nueva_palabra)
-
-
-
-doc = nlp(texto)
-dict_relations_1_2 = {}
-
 def get_relation(rel, fifo_heads, fifo_children):
     possible_relations = []
     for key in fifo_heads:
@@ -120,61 +65,166 @@ def get_relation(rel, fifo_heads, fifo_children):
             if child not in possible_relations and child != rel:
                 possible_relations.append(child)
 
-
-    rel
-
     return possible_relations
 
+def get_list_palabras_relaciones(texto,spacy_load):
+    nlp = spacy.load(spacy_load)
+    list_palabras =  []
+    list_relaciones = []
+    list_tokens_rel = []
 
-for relation in list_tokens_rel:
-    print(relation)
-    fifo_heads_copy = fifo_heads.get(relation, [])
+    # Primero los objetos y luego las relaciones.
+    doc = nlp(texto)
+    fifo_heads = {}
+    fifo_children = {}
+    for token in doc:
+        token = token_manual_modifier.set_token_manual(token)
+        print(token.text, ": ", token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop)
 
-    relation_possible_list = None
-    if fifo_heads_copy == []:
-        relation_possible_list = get_relation(relation, fifo_heads, fifo_children)
-        for rel_possibl in relation_possible_list:
-            palabra = Palabra.palabras_dict.get(rel_possibl.lemma_, None)
-            if palabra is not None:
-                fifo_heads_copy.append(palabra)
+        texto_palabra = token.text
+        tipo_morfol = token.pos_
+        lugar_sintact = token.dep_
+        lema_palabra = token.lemma_
+        position_doc = token.idx
 
-    # ver si alguna palabra head es token y en caso de serlo, buscar si existe palabra relacionada.
-    if fifo_heads_copy is not None and fifo_heads_copy != []:
-        fifo_heads_copy = fifo_heads_copy.copy()
-        relacion1 = None
-        relacion2 = None
-        position_rel = relation.pos
+        if tipo_morfol == TYPE_MORF_PUNCT:
+            continue
+        # Crear objeto Palabra y añadir a lista de palabras
+        nueva_palabra = token
+        if tipo_morfol not in list_types_connector_relation:
+            nueva_palabra = Palabra.get_palabra_by_lema(lema_palabra, position_doc)
+            if nueva_palabra is None:
+                nueva_palabra = Palabra(texto_palabra, tipo_morfol, lugar_sintact, txt_lema=lema_palabra,
+                                        position_doc=position_doc)
+            list_palabras.append(nueva_palabra)
+        else:
+            list_tokens_rel.append(token)
 
-        for pal in fifo_heads.get(relation, []):
-            if isinstance(pal, Token):
-                #TODO para el futuro, de momento se quita y ya
-                for i in range(len(fifo_heads_copy)-1, -1, -1): #recorrerlo al reves para hacer bien el POP
-                    if isinstance(fifo_heads_copy[i], Token) and fifo_heads_copy[i] == pal:
-                        fifo_heads_copy.pop(i)
+        if token.head is not None and token.head != token:
+            if token.head not in fifo_heads.keys():
+                fifo_heads.update({token.head: [nueva_palabra]})
+            else:
+                fifo_heads[token.head].append(nueva_palabra)
 
-        if len(fifo_heads_copy) <= 1:
-            relation_possible_list_new = get_relation(relation, fifo_heads, fifo_children)
-            for rel_possibl in relation_possible_list_new:
+        for child in token.children:
+            print(child)
+            if child not in fifo_children.keys():
+                fifo_children.update({child: [nueva_palabra]})
+            else:
+                fifo_children[child].append(nueva_palabra)
+
+
+
+    doc = nlp(texto)
+    dict_relations_1_2 = {}
+
+
+
+    for relation in list_tokens_rel:
+        print(relation)
+        fifo_heads_copy = fifo_heads.get(relation, [])
+
+        relation_possible_list = None
+        if fifo_heads_copy == []:
+            relation_possible_list = get_relation(relation, fifo_heads, fifo_children)
+            for rel_possibl in relation_possible_list:
                 palabra = Palabra.palabras_dict.get(rel_possibl.lemma_, None)
-                if palabra is not None and palabra not in fifo_heads_copy:
+                if palabra is not None:
                     fifo_heads_copy.append(palabra)
 
-        if len(fifo_heads_copy) <= 1:
-            # No hay relaciones posibles
-            continue
+        # ver si alguna palabra head es token y en caso de serlo, buscar si existe palabra relacionada.
+        if fifo_heads_copy is not None and fifo_heads_copy != []:
+            fifo_heads_copy = fifo_heads_copy.copy()
+            relacion1 = None
+            relacion2 = None
+            position_rel = relation.pos
 
-        # Ordena y determinar relacionPal1.
-        relacion1 = fifo_heads_copy[0]
-        for pal in fifo_heads_copy:
-            if isinstance(pal, Palabra) and pal.position_doc < relacion1.position_doc:
-                relacion1 = pal
-        fifo_heads_copy.remove(relacion1)
+            for pal in fifo_heads.get(relation, []):
+                if isinstance(pal, Token):
+                    #TODO para el futuro, de momento se quita y ya
+                    for i in range(len(fifo_heads_copy)-1, -1, -1): #recorrerlo al reves para hacer bien el POP
+                        if isinstance(fifo_heads_copy[i], Token) and fifo_heads_copy[i] == pal:
+                            fifo_heads_copy.pop(i)
 
-        for pal_rel_2 in fifo_heads_copy:
-            nueva_relacion = Relacion(relation.text, relacion1, pal_rel_2, pal_rel_2.lugar_sintactico)
-            list_relaciones.append(nueva_relacion)
-            dict_relations_1_2.update({relacion1: pal_rel_2})
+            if len(fifo_heads_copy) <= 1:
+                relation_possible_list_new = get_relation(relation, fifo_heads, fifo_children)
+                for rel_possibl in relation_possible_list_new:
+                    palabra = Palabra.palabras_dict.get(rel_possibl.lemma_, None)
+                    if palabra is not None and palabra not in fifo_heads_copy:
+                        fifo_heads_copy.append(palabra)
 
+            if len(fifo_heads_copy) <= 1:
+                # No hay relaciones posibles
+                continue
+
+            # Ordena y determinar relacionPal1.
+            relacion1 = fifo_heads_copy[0]
+            for pal in fifo_heads_copy:
+                if isinstance(pal, Palabra) and pal.position_doc < relacion1.position_doc:
+                    relacion1 = pal
+            fifo_heads_copy.remove(relacion1)
+
+            for pal_rel_2 in fifo_heads_copy:
+                nueva_relacion = Relacion(relation.text, relacion1, pal_rel_2, pal_rel_2.lugar_sintactico)
+                list_relaciones.append(nueva_relacion)
+                dict_relations_1_2.update({relacion1: pal_rel_2})
+
+    return list_palabras, list_relaciones
+
+
+#texto = "Ruben dibuja koalas en bañador y chanclas"
+
+
+texto = "Ruben dibuja koalas en bañador saltando entre acantilados mientras su amigo graba la escena y se rie."
+#spacy_load ="es_core_news_sm"
+#spacy_load = "es_core_news_md
+spacy_load = "es_core_news_lg"
+list_palabras, list_relaciones = get_list_palabras_relaciones(texto, spacy_load)
+#mirar la lista de relaciones_dict_dest y origen y ver si alguna palabra de la list_palabras no tiene ninguna
+# relacion con ninguna otra palabra. Si es asi, añadir a lista_palabras_sin_relacion
+lista_palabras_sin_relacion = []
+for palabra in list_palabras:
+    if palabra not in Palabra.relaciones_dict_origen.keys() and palabra not in Palabra.relaciones_dict_dest.keys():
+        lista_palabras_sin_relacion.append(palabra)
+lista_palabras_sin_aparicion = texto.split(" ")
+for palabra in list_palabras:
+    if palabra.texto in lista_palabras_sin_aparicion:
+        lista_palabras_sin_aparicion.remove(palabra.texto)
+for relacion in list_relaciones:
+    if relacion.texto in lista_palabras_sin_aparicion:
+        lista_palabras_sin_aparicion.remove(relacion.texto)
+print(lista_palabras_sin_aparicion)
+
+list_palabras2, list_relaciones2 = get_list_palabras_relaciones(texto, "es_core_news_sm")
+
+# hay alguna de las palabras de list_palabras2 que no esten en list_palabras_sin_aparicion?
+list_palabras2_copy = list_palabras2.copy()
+for palabra in list_palabras2:
+    if palabra.texto not in lista_palabras_sin_aparicion:
+        list_palabras2_copy.remove(palabra)
+print(list_palabras2_copy)
+
+list_relaciones2_copy = list_relaciones2.copy()
+for relacion in list_relaciones2:
+    if relacion.texto not in lista_palabras_sin_aparicion:
+        list_relaciones2_copy.remove(relacion)
+print(list_relaciones2_copy)
+
+#TODO, no se qué hacer, si aceptar todas las relaciones o solo la primera de cada tipo (es decir, texto)
+def remove_repeated_relations(list_relaciones):
+    # Elimina desde la ultima
+    # pero dejando una de ellas y comparandola con el texto
+    list_relaciones_copy = list_relaciones.copy()
+    # lista con solo los textos de las relaciones
+    list_textos = [rel.texto for rel in list_relaciones]
+    for i in range(len(list_relaciones)-1, -1, -1):
+        relacion = list_relaciones[i]
+        if relacion.texto in list_textos[:i]:
+            list_relaciones_copy.remove(relacion)
+    return list_relaciones_copy
+
+list_palabras = list_palabras + list_palabras2_copy
+list_relaciones = list_relaciones + remove_repeated_relations(list_relaciones2_copy)
 
 print("Palabras: ", list_palabras)
 print("Relaciones: ", list_relaciones)

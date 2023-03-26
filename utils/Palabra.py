@@ -26,6 +26,7 @@ class Palabra:
 
     def __init__(self, texto, tipo, lugar_sintactico, id=None, importancia=99, num_relaciones=0, autoincremental=True,
                  txt_lema=None, position_doc = 9999):
+
         self.texto = texto
         self.txt_lema = txt_lema if txt_lema is not None else self.limpiar_texto(texto)
         self.tipo = tipo
@@ -40,6 +41,14 @@ class Palabra:
         Palabra.palabras_dict[self.txt_lema] = self
         Palabra.relaciones_dict_origen[self] = []
         Palabra.relaciones_dict_dest[self] = []
+
+    #get palabra by lema si existe
+    @classmethod
+    def get_palabra_by_lema(cls, txt_lema, position_doc):
+        if Palabra.palabras_dict.get(txt_lema, None) is not None and Palabra.palabras_dict[txt_lema].position_doc == position_doc:
+            return Palabra.palabras_dict[txt_lema]
+        else:
+            return None
 
     @classmethod
     def generar_id(cls, texto, autoincremental=True):
