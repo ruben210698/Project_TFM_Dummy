@@ -1,7 +1,7 @@
 
 import re
 
-from visualizacion.Palabra import Palabra
+from utils.Palabra import Palabra
 
 DIR_ABAJO = "abajo"
 DIR_ARRIBA = "arriba"
@@ -17,6 +17,7 @@ class Relacion:
         self.pal_origen = pal_origen
         self.pal_dest = pal_dest
         self.lugar_sintactico = lugar_sintactico
+        self.tam_texto = self.get_tam_texto(texto)
         self.id = id if id is not None else self.generar_id()
         self.importancia = importancia if importancia is not None else self.generar_importancia(pal_origen, pal_dest)
         self.direccion = None
@@ -41,3 +42,8 @@ class Relacion:
         texto_limpio = texto.lower()
         texto_limpio = re.sub(r'\W+', '', texto_limpio)
         return texto_limpio
+
+    @staticmethod
+    def get_tam_texto(texto):
+        # Método que calcula la dimensión dependiendo del tamaño de la palabra
+        return len(texto)//3

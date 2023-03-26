@@ -77,8 +77,8 @@ palabras_dict = Palabra.palabras_dict
 
 list_relaciones = []
 list_relaciones.append(Relacion("dibuja", pal_origen=palabras_dict["ruben"], pal_dest=palabras_dict["koalas"], lugar_sintactico=PREDICADO, importancia=2))
-list_relaciones.append(Relacion("en", pal_origen=palabras_dict["ruben"], pal_dest=palabras_dict["bañador"], lugar_sintactico=CCL, importancia=2))
-list_relaciones.append(Relacion("saltando", pal_origen=palabras_dict["ruben"], pal_dest=palabras_dict["acantilados"], lugar_sintactico=CCL, importancia=2))
+list_relaciones.append(Relacion("en", pal_origen=palabras_dict["koalas"], pal_dest=palabras_dict["bañador"], lugar_sintactico=CCL, importancia=2))
+list_relaciones.append(Relacion("saltando", pal_origen=palabras_dict["koalas"], pal_dest=palabras_dict["acantilados"], lugar_sintactico=CCL, importancia=2))
 list_relaciones.append(Relacion("mientras", pal_origen=palabras_dict["ruben"], pal_dest=palabras_dict["amigo"], lugar_sintactico=CCCOMP, importancia=3))
 list_relaciones.append(Relacion("graba", pal_origen=palabras_dict["amigo"], pal_dest=palabras_dict["escena"], lugar_sintactico=CD, importancia=3))
 list_relaciones.append(Relacion("", pal_origen=palabras_dict["amigo"], pal_dest=palabras_dict["rie"], lugar_sintactico=PREDICADO, importancia=3))
@@ -110,7 +110,7 @@ def get_importance_dict(list_palabras):
 def get_next_direction(matrix_dim, x_ini, x_fin, y):
     pos_x_media = (x_ini + x_fin) // 2
     # comprueba si el espacio inmediatamente a la derecha está libre
-    if x_fin + 1 < len(matrix_dim[y]) and matrix_dim[y][x_fin + 1] == 0:
+    if x_fin + 1 < len(matrix_dim[y]) and matrix_dim[y][x_fin + 1] == 0 and matrix_dim[y][x_fin + 2] == 0:
         return x_fin + 1, y, DIR_DCHA
 
     # comprueba si el espacio inmediatamente abajo está libre
@@ -192,15 +192,19 @@ def get_suggested_position(matrix_dim, palabra):
     y, x = get_most_centered_pos(matrix_dim)
     id_to_find = 0
     relacion = None
-    for relacion in list_relaciones:
+    for rel in list_relaciones:
         for i in range(len(matrix_dim)):
             for j in range(len(matrix_dim[i])):
-                if matrix_dim[i][j] == relacion.id:
+                if matrix_dim[i][j] == rel.id:
                     y = i
                     x = j
-                    id_to_find = relacion.id
+                    id_to_find = rel.id
+                    relacion = rel
                     break
-
+    if relacion is not None and relacion.direction == DIR_DCHA:
+        x = x + 1
+    if relacion is not None and relacion.direction == DIR_IZQ:
+        x = x - 1
     # cabe????
     for x_test in range(palabra.dimension + 2):
         if matrix_dim[y][x_test + x] != id_to_find and matrix_dim[y][x_test + x] != 0:
@@ -335,8 +339,12 @@ def get_position_dict(list_palabras):
         for relation in list_relaciones_pal:
             rel_x, rel_y, direction = get_next_direction(matrix_dim, pos0, pos0 + palabra.dimension + 1, axis_y)
             relation.direction = direction
-            if rel_y == axis_y:
+            if direction == DIR_DCHA:
                 matrix_dim[rel_y][rel_x] = relation.id
+                matrix_dim[rel_y][rel_x+1] = relation.id
+            elif direction == DIR_IZQ:
+                matrix_dim[rel_y][rel_x] = relation.id
+                matrix_dim[rel_y][rel_x-1] = relation.id
             else:
                 matrix_dim[rel_y][rel_x] = relation.id
             imprimir_matriz(matrix_dim)

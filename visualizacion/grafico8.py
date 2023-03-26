@@ -1,12 +1,9 @@
 import networkx as nx
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyArrowPatch, Circle, RegularPolygon, Ellipse, Rectangle
-import requests
-from PIL import Image
-import io
+from matplotlib.patches import FancyArrowPatch, RegularPolygon, Ellipse, Rectangle
 
-from visualizacion.Palabra import Palabra
-from visualizacion.Relacion import Relacion
+from utils.Palabra import Palabra
+from utils.Relacion import Relacion
 
 
 
