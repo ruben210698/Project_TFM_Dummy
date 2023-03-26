@@ -11,6 +11,7 @@ DIR_IZQ = "izquierda"
 class Relacion:
     id_actual = -1
     relaciones_dict = {}
+    # TODO que no coja el lugar sintactico de la relacion, sino que coja el lugar sintactico de la palabra 2
 
     def __init__(self, texto, pal_origen, pal_dest, lugar_sintactico="", id=None, importancia = None):
         self.texto = self.limpiar_texto(texto)
@@ -26,7 +27,8 @@ class Relacion:
         Palabra.relaciones_dict_origen[self.pal_origen].append(self)
         Palabra.relaciones_dict_origen[self.pal_origen] = \
             Palabra.reordenar_importancia_list(Palabra.relaciones_dict_origen[self.pal_origen])
-        Palabra.relaciones_dict_dest[self.pal_dest].append(self)
+        if pal_dest is not None:
+            Palabra.relaciones_dict_dest[self.pal_dest].append(self)
 
     @classmethod
     def generar_id(cls):
@@ -35,6 +37,8 @@ class Relacion:
 
     @classmethod
     def generar_importancia(cls, relacion1, relacion2):
+        if relacion2 is None:
+            return 99
         return relacion1.importancia + relacion2.importancia - 1
 
     @staticmethod
@@ -47,3 +51,12 @@ class Relacion:
     def get_tam_texto(texto):
         # Método que calcula la dimensión dependiendo del tamaño de la palabra
         return len(texto)//3
+
+    def add_rel_dest(self, palabra_dest):
+        Palabra.relaciones_dict_dest[self.pal_dest].append(palabra_dest)
+        self.pal_dest = palabra_dest
+        self.importancia = \
+            self.importancia if self.importancia != 99 else self.generar_importancia(self.pal_origen, self.pal_dest)
+
+    def __str__(self):
+        return self.texto

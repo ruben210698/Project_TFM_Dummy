@@ -24,8 +24,10 @@ class Palabra:
     relaciones_dict_origen = {}
     relaciones_dict_dest = {}
 
-    def __init__(self, texto, tipo, lugar_sintactico, id=None, importancia=99, num_relaciones=0, autoincremental=True):
-        self.texto = self.limpiar_texto(texto)
+    def __init__(self, texto, tipo, lugar_sintactico, id=None, importancia=99, num_relaciones=0, autoincremental=True,
+                 txt_lema=None, position_doc = 9999):
+        self.texto = texto
+        self.txt_lema = txt_lema if txt_lema is not None else self.limpiar_texto(texto)
         self.tipo = tipo
         self.lugar_sintactico = lugar_sintactico
         self.id = id if id is not None else self.generar_id(texto, autoincremental)
@@ -33,8 +35,9 @@ class Palabra:
         self.num_relaciones = num_relaciones
         self.dimension = self.get_dimension(texto)
         self.has_been_plotted = False
+        self.position_doc = position_doc
 
-        Palabra.palabras_dict[self.texto] = self
+        Palabra.palabras_dict[self.txt_lema] = self
         Palabra.relaciones_dict_origen[self] = []
         Palabra.relaciones_dict_dest[self] = []
 
@@ -55,10 +58,13 @@ class Palabra:
     @staticmethod
     def limpiar_texto(texto):
         texto_limpio = texto.lower()
-        #texto_limpio = re.sub(r'\W+', '', texto_limpio)
+        texto_limpio = re.sub(r'\W+', '', texto_limpio)
         return texto_limpio
 
     @staticmethod
     def get_dimension(texto):
         # Método que calcula la dimensión dependiendo del tamaño de la palabra
         return len(texto)//3
+
+    def __str__(self):
+        return self.texto
