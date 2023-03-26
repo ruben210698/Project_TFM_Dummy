@@ -1,3 +1,5 @@
+import math
+
 import networkx as nx
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, Circle, RegularPolygon, Ellipse, Rectangle
@@ -58,7 +60,7 @@ texto3 = "ruben dibuja koalas en bañador saltando entre acantilados mientras su
 
 list_palabras = []
 list_palabras.append(Palabra("ruben", NOMBRE, SUJETO, importancia=1))
-list_palabras.append(Palabra("koalas", NOMBRE, CD, importancia=1))
+list_palabras.append(Palabra("koalas", NOMBRE, CD, importancia=2))
 list_palabras.append(Palabra("bañador", NOMBRE, CCL, importancia=2))
 list_palabras.append(Palabra("acantilados", NOMBRE, CCL, importancia=2))
 list_palabras.append(Palabra("amigo", NOMBRE, CCCOMP, importancia=3))
@@ -72,7 +74,7 @@ for palabra in list_palabras:
 palabras_dict = Palabra.palabras_dict
 
 list_relaciones = []
-list_relaciones.append(Relacion("dibuja", pal_origen=palabras_dict["ruben"], pal_dest=palabras_dict["koalas"], lugar_sintactico=PREDICADO, importancia=1))
+list_relaciones.append(Relacion("dibuja", pal_origen=palabras_dict["ruben"], pal_dest=palabras_dict["koalas"], lugar_sintactico=PREDICADO, importancia=2))
 list_relaciones.append(Relacion("en", pal_origen=palabras_dict["ruben"], pal_dest=palabras_dict["bañador"], lugar_sintactico=CCL, importancia=2))
 list_relaciones.append(Relacion("saltando", pal_origen=palabras_dict["ruben"], pal_dest=palabras_dict["acantilados"], lugar_sintactico=CCL, importancia=2))
 list_relaciones.append(Relacion("mientras", pal_origen=palabras_dict["ruben"], pal_dest=palabras_dict["amigo"], lugar_sintactico=CCCOMP, importancia=3))
@@ -124,17 +126,123 @@ def get_next_direction(matrix_dim, x_ini, x_fin, y):
     return None, None
 
 
+def reducir_tam_matriz(matrix_dim):
+    imprimir_matriz(matrix_dim)
+    # Reducir Matriz
+    matrix_dim_copy = matrix_dim.copy()
+    for x in matrix_dim_copy:
+        if sum(x) == 0:
+            matrix_dim.pop(0)
+        else:
+            break
+    imprimir_matriz(matrix_dim)
+    matrix_dim_reverse = matrix_dim.copy()
+    matrix_dim_reverse.reverse()
+    for x in matrix_dim_reverse:
+        if sum(x) == 0:
+            matrix_dim.pop()
+        else:
+            break
+    imprimir_matriz(matrix_dim)
+    matrix_dim_transpose = [list(fila) for fila in zip(*matrix_dim)]
+    matrix_dim_transpose_copy = matrix_dim_transpose.copy()
+    for x in matrix_dim_transpose_copy:
+        if sum(x) == 0:
+            matrix_dim_transpose.pop(0)
+        else:
+            break
+    matrix_dim_transpose_reverse = matrix_dim_transpose.copy()
+    matrix_dim_transpose_reverse.reverse()
+    for x in matrix_dim_transpose_reverse:
+        if sum(x) == 0:
+            matrix_dim_transpose.pop()
+        else:
+            break
+    matrix_dim = [list(fila) for fila in zip(*matrix_dim_transpose)]
+    return matrix_dim
+
+
 def imprimir_matriz(matriz):
     print("-----------------------------------------------------------------------")
+    i, j = 0, 0
+    print(f"    ", end="")
+    for elemento in matriz[0]:
+        print(f"{i:<4}", end="")
+        i += 1
+    print()
+
     for fila in matriz:
+        print(f"{j:<4}", end="")
         for elemento in fila:
             if elemento == 0:
                 print(f"{elemento:<4}", end="")
             else:
                 print(f"{elemento:<4}", end="")
+        j += 1
         print()
     print("-----------------------------------------------------------------------")
 
+
+
+def get_suggested_position(matrix_dim, palabra):
+    list_relaciones = Palabra.relaciones_dict_dest[palabra]
+
+    y, x = get_most_centered_pos(matrix_dim)
+    id_to_find = 0
+    relacion = None
+    for relacion in list_relaciones:
+        for i in range(len(matrix_dim)):
+            for j in range(len(matrix_dim[i])):
+                if matrix_dim[i][j] == relacion.id:
+                    y = i
+                    x = j
+                    id_to_find = relacion.id
+                    break
+
+    # cabe????
+    for x_test in range(palabra.dimension + 2):
+        if matrix_dim[y][x_test + x] != id_to_find and matrix_dim[y][x_test + x] != 0:
+            imprimir_matriz(matrix_dim)
+            matrix_dim[y][x] = 0
+            x = x - palabra.dimension // 2 - 2
+            matrix_dim[y][x] = id_to_find
+            imprimir_matriz(matrix_dim)
+            break
+    # TODO: ya se completará esto para que suba otra fila o para que haga cosas más complicadas
+
+
+    return y, x, id_to_find
+
+
+def get_most_centered_pos(matrix):
+    rows = len(matrix)
+    cols = len(matrix[0])
+    center_row = rows // 2
+    center_col = cols // 2
+    min_distance = math.inf
+    closest_zero = None
+
+    for i in range(rows):
+        for j in range(cols):
+            if matrix[i][j] == 0:
+                distance = math.sqrt((i - center_row) ** 2 + (j - center_col) ** 2)
+                if distance < min_distance:
+                    min_distance = distance
+                    closest_zero = (i, j)
+
+    return closest_zero
+
+def insert_start_list(original_list, added_list):
+    added_list.reverse()
+    for pal in added_list:
+        try:
+            if pal in added_list:
+                original_list.remove(pal)
+                original_list.insert(0, pal)
+        except Exception as e:
+            pass
+
+    return original_list
 
 
 def get_position_dict(list_palabras):
@@ -155,6 +263,7 @@ def get_position_dict(list_palabras):
     # X2 ya que hay que dejar una diferencia de 2 entre palabras
     matrix_dim = [ [] for i in range(max_importance*2) ]
     pos_y_media = len(matrix_dim)//2
+    pos_x_media = len(matrix_dim[0])//2
 
     for (palabra, value_import) in importance_dict.items():
         if value_import['importancia'] % 2 != 0:
@@ -167,9 +276,9 @@ def get_position_dict(list_palabras):
     matrix_dim = [[] for i in range(15)]
     for y in range(15):
         matrix_dim[y] += [0 for x in range(50)]
+    print(matrix_dim)
     pos_y_media = len(matrix_dim) // 2
     pos_x_media = len(matrix_dim[0]) // 2
-    print(matrix_dim)
 
     """
     Ahora tenemos una matriz bonita:
@@ -183,30 +292,46 @@ def get_position_dict(list_palabras):
     """
     pos = {}
 
-    for (palabra, value_import) in importance_dict.items():
+    list_palabras_ordenadas = list(importance_dict.keys())
+    while len(list_palabras_ordenadas) != 0:
+        palabra = list_palabras_ordenadas.pop(0)
 
+        pos_y_sugerida, pos_x_sugerida, id_to_find = get_suggested_position(matrix_dim, palabra)
+        imprimir_matriz(matrix_dim)
         print(f"Matrix: {palabra.texto}")
-        if value_import['importancia'] % 2 != 0:
-            axis_y = pos_y_media + (value_import['importancia'] - 1)
-            # obtener la posicion del primer 0 de la lista
-            pos0 = pos_x_media + matrix_dim[axis_y][pos_x_media:].index(0)
-            pos.update({palabra: (value_import['dimension']//2 + pos0, axis_y - pos_y_media)})
 
-            # reemplazar los 0s por 1s para range(value['dimension']+2)
-            matrix_dim[axis_y][pos0:pos0+value_import['dimension']+2] = [palabra.id for x in range(value_import['dimension']+2)]
-        else:
-            axis_y = pos_y_media - value_import['importancia']
-            # obtener la posicion del primer 0 de la lista
-            pos0 = pos_x_media + matrix_dim[axis_y][pos_x_media:].index(0)
-            pos.update({palabra: (value_import['dimension']//2 + pos0, axis_y - pos_y_media)})
+        # obtener la posicion del primer 0 de la lista
+        axis_y = pos_y_sugerida
+        pos0 = pos_x_sugerida + matrix_dim[axis_y][pos_x_sugerida:].index(id_to_find)
+        pos.update({palabra: (pos0 - palabra.dimension // 2 -pos_x_media , axis_y - pos_y_media)})
 
-            # reemplazar los 0s por 1s para range(value['dimension']+2)
-            matrix_dim[axis_y][pos0:pos0 + value_import['dimension'] + 2] = [1 for x in range(value_import['dimension'] + 2)]
+        # reemplazar los 0s por 1s para range(value['dimension']+2)
+        matrix_dim[axis_y][pos0:pos0 + palabra.dimension + 2] = [palabra.id for x in range(palabra.dimension + 2)]
+
+
+        #if value_import['importancia'] % 2 != 0:
+        #    axis_y = pos_y_sugerida + (value_import['importancia'] - 1)
+        #    # obtener la posicion del primer 0 de la lista
+        #    pos0 = pos_x_sugerida + matrix_dim[axis_y][pos_x_sugerida:].index(0)
+        #    pos.update({palabra: (palabra.dimension//2 + pos0, axis_y - pos_y_sugerida)})
+#
+        #    # reemplazar los 0s por 1s para range(value['dimension']+2)
+        #    matrix_dim[axis_y][pos0:pos0+palabra.dimension+2] = [palabra.id for x in range(palabra.dimension+2)]
+        #else:
+        #    axis_y = pos_y_sugerida - value_import['importancia']
+        #    # obtener la posicion del primer 0 de la lista
+        #    pos0 = pos_x_sugerida + matrix_dim[axis_y][pos_x_sugerida:].index(0)
+        #    pos.update({palabra: (palabra.dimension//2 + pos0, axis_y - pos_y_sugerida)})
+#
+        #    # reemplazar los 0s por 1s para range(value['dimension']+2)
+        #    matrix_dim[axis_y][pos0:pos0 + palabra.dimension + 2] = [1 for x in range(palabra.dimension + 2)]
 
         palabra.has_been_plotted = True
         list_relaciones_pal = Palabra.relaciones_dict_origen.get(palabra)
+        added_list_pal_dest = [rel.pal_dest for rel in list_relaciones_pal]
+        list_palabras_ordenadas = insert_start_list(list_palabras_ordenadas, added_list_pal_dest)
         for relation in list_relaciones_pal:
-            rel_x, rel_y, direction = get_next_direction(matrix_dim, pos0, pos0 + value_import['dimension'] + 1, axis_y)
+            rel_x, rel_y, direction = get_next_direction(matrix_dim, pos0, pos0 + palabra.dimension + 1, axis_y)
             relation.direction = direction
             if rel_y == axis_y:
                 matrix_dim[rel_y][rel_x] = relation.id
@@ -234,14 +359,18 @@ position_elems, matrix_dim = get_position_dict(list_palabras)
 position_elems_deprec = {}
 for pal in list_palabras:
     position_elems_deprec[pal.texto] = position_elems[pal]
-# FIXME: eliminar
 
 
-pos_media = len(matrix_dim)//2
-max_axis_y = len(matrix_dim) - pos_media + 1
-min_axis_y = 0 - pos_media - 1
-max_axis_x = max([len(x) for x in matrix_dim]) + 1
-min_axis_x = -1
+
+matrix_dim = reducir_tam_matriz(matrix_dim)
+
+imprimir_matriz(matrix_dim)
+pos_y_media = len(matrix_dim)//2
+pos_x_media = len(matrix_dim[0])//2
+max_axis_y = len(matrix_dim) - pos_y_media + 2
+min_axis_y = 0 - pos_y_media - 2
+max_axis_x = max([len(x) for x in matrix_dim]) - pos_x_media + 3
+min_axis_x = -pos_x_media - 3
 
 fig, ax = plt.subplots(figsize=(12, 8))
 
@@ -302,7 +431,7 @@ for pal, (x, y) in position_elems.items():
 # Dibujar aristas
 for relation in list_relaciones:
     color = dict_color.get(relation.lugar_sintactico,dict_color[None])
-    draw_edge(ax, position_elems_deprec[relation.pal_origen], position_elems_deprec[relation.pal_dest], color=color, label=relation.texto, label_offset=(0, 0.1))
+    draw_edge(ax, position_elems_deprec[relation.pal_origen.texto], position_elems_deprec[relation.pal_dest.texto], color=color, label=relation.texto, label_offset=(0, 0.1))
 
 #draw_edge(ax, position_elems_deprec["ruben"], position_elems_deprec["pescado"], color=light_blue, label='come', label_offset=(0, 0.1))
 #draw_edge(ax, position_elems_deprec["pescado"], position_elems_deprec["restaurante"], color=light_blue, label='en', label_offset=(0, 0.1))
