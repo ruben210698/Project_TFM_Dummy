@@ -60,3 +60,6 @@ class Relacion:
 
     def __str__(self):
         return self.texto
+
+    def to_create_Relacion_str(self):
+        return "Relacion(" + self.texto + ", " + str(self.pal_origen.id) + ", " + str(self.pal_dest.id) + ", " + self.lugar_sintactico + ", " + str(self.id) + ", " + str(self.importancia) + ")"

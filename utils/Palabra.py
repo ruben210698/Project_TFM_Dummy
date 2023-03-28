@@ -77,3 +77,6 @@ class Palabra:
 
     def __str__(self):
         return self.texto
+
+    def to_create_Palabra_str(self):
+        return "Palabra('" + self.texto + "', '" + self.tipo + "', '" + self.lugar_sintactico + "', " + str(self.id) + ", " + str(self.importancia) + ", " + str(self.num_relaciones) + ", False, '" + self.txt_lema + "', " + str(self.position_doc) + ")"

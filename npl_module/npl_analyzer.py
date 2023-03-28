@@ -23,7 +23,7 @@ from utils.Palabra import Palabra
 from utils.Relacion import Relacion
 from constants.type_morfologico import *
 from constants.type_sintax import *
-
+from visualizacion.graficoFinal2 import print_graph
 
 # python -m spacy download es_core_news_sm
 nlp = spacy.load("es_core_news_sm")
@@ -176,9 +176,13 @@ def get_list_palabras_relaciones(texto,spacy_load):
 
 
 texto = "Ruben dibuja koalas en bañador saltando entre acantilados mientras su amigo graba la escena y se rie."
+texto = "Okami jugó en el parque con palos"
+texto = "Ruben cocina hamburguesas en la Freidora de aire"
 #spacy_load ="es_core_news_sm"
 #spacy_load = "es_core_news_md
 spacy_load = "es_core_news_lg"
+spacy_load = "es_core_news_sm"
+
 list_palabras, list_relaciones = get_list_palabras_relaciones(texto, spacy_load)
 #mirar la lista de relaciones_dict_dest y origen y ver si alguna palabra de la list_palabras no tiene ninguna
 # relacion con ninguna otra palabra. Si es asi, añadir a lista_palabras_sin_relacion
@@ -195,7 +199,10 @@ for relacion in list_relaciones:
         lista_palabras_sin_aparicion.remove(relacion.texto)
 print(lista_palabras_sin_aparicion)
 
-list_palabras2, list_relaciones2 = get_list_palabras_relaciones(texto, "es_core_news_sm")
+
+spacy_load = "es_core_news_sm"
+spacy_load = "es_core_news_lg"
+list_palabras2, list_relaciones2 = get_list_palabras_relaciones(texto, spacy_load)
 
 # hay alguna de las palabras de list_palabras2 que no esten en list_palabras_sin_aparicion?
 list_palabras2_copy = list_palabras2.copy()
@@ -228,6 +235,13 @@ list_relaciones = list_relaciones + remove_repeated_relations(list_relaciones2_c
 
 print("Palabras: ", list_palabras)
 print("Relaciones: ", list_relaciones)
+for pal in list_palabras:
+    print(pal.to_create_Palabra_str())
+
+for rel in list_relaciones:
+    print(rel.to_create_Relacion_str())
+
+print_graph(texto, list_palabras, list_relaciones)
 
 
 # if token in fifo_heads.keys():
