@@ -11,9 +11,10 @@ DIR_IZQ = "izquierda"
 class Relacion:
     id_actual = -1
     relaciones_dict = {}
+    relaciones_dict_id = {}
     # TODO que no coja el lugar sintactico de la relacion, sino que coja el lugar sintactico de la palabra 2
 
-    def __init__(self, texto, pal_origen, pal_dest, lugar_sintactico="", id=None, importancia = None):
+    def __init__(self, texto, pal_origen, pal_dest, position_doc=9999, lugar_sintactico="", id=None, importancia = None):
         self.texto = self.limpiar_texto(texto)
         self.pal_origen = pal_origen
         self.pal_dest = pal_dest
@@ -22,8 +23,10 @@ class Relacion:
         self.id = id if id is not None else self.generar_id()
         self.importancia = importancia if importancia is not None else self.generar_importancia(pal_origen, pal_dest)
         self.direccion = None
+        self.position_doc = position_doc
 
         Relacion.relaciones_dict[self.texto] = self
+        Relacion.relaciones_dict_id[self.id] = self
         Palabra.relaciones_dict_origen[self.pal_origen].append(self)
         Palabra.relaciones_dict_origen[self.pal_origen] = \
             Palabra.reordenar_importancia_list(Palabra.relaciones_dict_origen[self.pal_origen])
@@ -62,4 +65,10 @@ class Relacion:
         return self.texto
 
     def to_create_Relacion_str(self):
-        return "Relacion(" + self.texto + ", " + str(self.pal_origen.id) + ", " + str(self.pal_dest.id) + ", " + self.lugar_sintactico + ", " + str(self.id) + ", " + str(self.importancia) + ")"
+        return "list_relaciones.append(Relacion('" + self.texto + "', " + f"Palabra.palabras_dict.get('{self.pal_origen.txt_lema}') " + ", " +  f"Palabra.palabras_dict.get('{self.pal_dest.txt_lema}')" + ", '" + self.lugar_sintactico + "', " + str(self.id) + ", " + str(self.importancia) + "))"
+
+    def delete_relation(self):
+        Palabra.relaciones_dict_origen[self.pal_origen].remove(self)
+        if self.pal_dest is not None:
+            Palabra.relaciones_dict_dest[self.pal_dest].remove(self)
+        del Relacion.relaciones_dict_id[self.id]

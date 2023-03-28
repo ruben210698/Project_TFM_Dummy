@@ -254,13 +254,13 @@ def get_position_dict(list_palabras):
     pos_y_media = len(matrix_dim)//2
     pos_x_media = len(matrix_dim[0])//2
 
-    for (palabra, value_import) in importance_dict.items():
-        if value_import['importancia'] % 2 != 0:
-            axis_y = pos_y_media + (value_import['importancia'] - 1)
-            matrix_dim[axis_y] += [0 for x in range(value_import['dimension']+2)]
-        else:
-            axis_y = pos_y_media - value_import['importancia']
-            matrix_dim[axis_y] += [0 for x in range(value_import['dimension']+2)]
+    # for (palabra, value_import) in importance_dict.items():
+    #     if value_import['importancia'] % 2 != 0:
+    #         axis_y = pos_y_media + (value_import['importancia'] - 1)
+    #         matrix_dim[axis_y] += [0 for x in range(value_import['dimension']+2)]
+    #     else:
+    #         axis_y = pos_y_media - value_import['importancia']
+    #         matrix_dim[axis_y] += [0 for x in range(value_import['dimension']+2)]
 
     matrix_dim = [[] for i in range(15)]
     for y in range(15):
@@ -335,7 +335,32 @@ def get_position_dict(list_palabras):
     return pos, matrix_dim
 
 
+def unir_relaciones(list_relaciones):
+    # En caso de que 2 relaciones tengan el mismo origen y destino, unirlas
+    list_relaciones = list(set(list_relaciones))
+    list_relaciones_new = list_relaciones.copy()
+    list_modified = []
+    for rel in list_relaciones:
+        for rel2 in list_relaciones:
+            if rel2 not in list_modified and rel not in list_modified and \
+                rel != rel2 and rel.pal_origen == rel2.pal_origen and rel.pal_dest == rel2.pal_dest:
+                if rel.position_doc <= rel2.position_doc:
+                    rel.texto = rel.texto + " " + rel2.texto
+                else:
+                    rel.texto = rel2.texto + " " + rel.texto
+                    rel.position_doc = rel2.position_doc
+                rel.importancia = min(rel.importancia, rel2.importancia)
+                list_relaciones_new.remove(rel2)
+                list_modified.append(rel)
+                rel2.delete_relation()
+
+    return list_relaciones_new
+
+
+
 def print_graph(texto, list_palabras, list_relaciones):
+    list_relaciones = unir_relaciones(list_relaciones)
+
     dict_palabras = {}
     for palabra in list_palabras:
         dict_palabras[palabra.id] = palabra
@@ -451,3 +476,24 @@ def print_graph(texto, list_palabras, list_relaciones):
     ax.axis('on')
 
     plt.show()
+
+
+
+texto = "Ruben cocina hamburguesas en la Freidora de aire"
+list_palabras = []
+list_relaciones = []
+
+list_palabras.append(Palabra('Ruben', 'PROPN', 'ROOT', 1, 99, 0, False, 'Ruben', 0))
+list_palabras.append(Palabra('hamburguesas', 'ADJ', 'amod', 2, 99, 0, False, 'hamburguesa', 13))
+list_palabras.append(Palabra('Freidora', 'PROPN', 'nmod', 3, 99, 0, False, 'Freidora', 32))
+list_palabras.append(Palabra('aire', 'PROPN', 'flat', 4, 99, 0, False, 'aire', 44))
+list_relaciones.append(Relacion('cocina', Palabra.palabras_dict.get('Ruben'), Palabra.palabras_dict.get('hamburguesa'), 5, 'amod', -2, 197))
+list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('hamburguesa'), Palabra.palabras_dict.get('Freidora'), 17, 'nmod', -3, 197))
+list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('hamburguesa'), Palabra.palabras_dict.get('aire'), 17, 'flat', -4, 197))
+list_relaciones.append(Relacion('la', Palabra.palabras_dict.get('hamburguesa'), Palabra.palabras_dict.get('Freidora'), 20, 'nmod', -5, 197))
+list_relaciones.append(Relacion('la', Palabra.palabras_dict.get('hamburguesa'), Palabra.palabras_dict.get('aire'), 20, 'flat', -6, 197))
+list_relaciones.append(Relacion('de', Palabra.palabras_dict.get('Freidora'), Palabra.palabras_dict.get('aire'), 38, 'flat', -7, 197))
+
+print_graph(texto, list_palabras, list_relaciones)
+
+
