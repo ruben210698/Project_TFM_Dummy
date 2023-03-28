@@ -80,33 +80,37 @@ def get_importance_dict(list_palabras):
     return new_dict
 
 
-def get_next_direction(matrix_dim, x_ini, x_fin, y):
+def get_next_direction(matrix_dim, x_ini, x_fin, y, rel):
     pos_x_media = (x_ini + x_fin) // 2
+    # Saco el tamaño texto impar para las relaciones que vayan a abajo o arriba.
+    # Ya que deben ocupar de ancho el tamaño del texto de forma simetrica
+    tam_text_origen = rel.tam_texto if rel.tam_texto > 0 else 1
+    tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
     # comprueba si el espacio inmediatamente a la derecha está libre
     if x_fin + 1 < len(matrix_dim[y]) and matrix_dim[y][x_fin + 1] == 0 and matrix_dim[y][x_fin + 2] == 0:
-        return x_fin + 1, y, DIR_DCHA
+        return x_fin + 1 , y, DIR_DCHA, tam_text_origen
 
     # comprueba si el espacio inmediatamente abajo está libre
     if y + 2 < len(matrix_dim) and matrix_dim[y + 2][pos_x_media] == 0 * (len(matrix_dim[y]) - x_ini):
-        return pos_x_media, y + 2, DIR_ABAJO
+        return pos_x_media, y + 2, DIR_ABAJO, tam_text_impar
 
     # comprueba si el espacio inmediatamente arriba está libre
     if y - 2 >= 0 and matrix_dim[y - 2][pos_x_media] == 0 * (len(matrix_dim[y]) - x_ini):
-        return pos_x_media, y - 2, DIR_ARRIBA
+        return pos_x_media, y - 2, DIR_ARRIBA, tam_text_impar
 
     # comprueba si el espacio inmediatamente a la izquierda está libre
     if x_ini - 1 >= 0 and x_ini - 1 >= 0 and matrix_dim[y][x_ini - 1] == 0:
-        return x_ini - 1, y, DIR_IZQ
+        return x_ini - 1 , y, DIR_IZQ, tam_text_origen
 
     #######
     # TODO quitar esto
     #######
     if y - 4 >= 0 and matrix_dim[y - 4][pos_x_media] == 0 * (len(matrix_dim[y]) - x_ini):
-        return pos_x_media, y - 4, DIR_ARRIBA
+        return pos_x_media, y - 4, DIR_ARRIBA, tam_text_impar
     if y - 6 >= 0 and matrix_dim[y - 6][pos_x_media] == 0 * (len(matrix_dim[y]) - x_ini):
-        return pos_x_media, y - 6, DIR_ARRIBA
+        return pos_x_media, y - 6, DIR_ARRIBA, tam_text_impar
     if y - 8 >= 0 and matrix_dim[y - 8][pos_x_media] == 0 * (len(matrix_dim[y]) - x_ini):
-        return pos_x_media, y - 8, DIR_ARRIBA
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
 
     return None, None, None
 
@@ -175,32 +179,43 @@ def get_suggested_position(matrix_dim, palabra):
     y, x = get_most_centered_pos(matrix_dim)
     id_to_find = 0
     relacion = None
+    # x_ini = -1
+    # x_fin = -1
+    # y_ini = -1
+    # y_fin = -1
     for rel in list_relaciones:
         for i in range(len(matrix_dim)):
             for j in range(len(matrix_dim[i])):
                 if matrix_dim[i][j] == rel.id:
                     y = i
                     x = j
+                    #y_ini = i if y_ini == -1 else y_ini
+                    #y_fin = i
+                    #x_ini = j if x_ini == -1 else x_ini
+                    #x_fin = j
                     id_to_find = rel.id
                     relacion = rel
                     break
+
     if relacion is not None and relacion.direction == DIR_DCHA:
-        x = x + 1
+        x = x + (relacion.tam_texto if relacion.tam_texto > 0 else 1)
     if relacion is not None and relacion.direction == DIR_IZQ:
-        x = x - 1
+        x = x - (relacion.tam_texto if relacion.tam_texto > 0 else 1)
     # cabe????
-    for x_test in range(palabra.dimension + 2):
+    rango = palabra.dimension + 1
+    if relacion is not None and relacion.direction == DIR_IZQ:
+        rango = -rango
+    for x_test in range(rango):
         if matrix_dim[y][x_test + x] != id_to_find and matrix_dim[y][x_test + x] != 0:
             imprimir_matriz(matrix_dim)
             matrix_dim[y][x] = 0
-            x = x - palabra.dimension // 2 - 2
+            x = x - palabra.dimension // 2 - 1
             matrix_dim[y][x] = id_to_find
             imprimir_matriz(matrix_dim)
             break
     # TODO: ya se completará esto para que suba otra fila o para que haga cosas más complicadas
 
-
-    return y, x, id_to_find
+    return y, x + rango//2, id_to_find
 
 
 def get_most_centered_pos(matrix):
@@ -236,50 +251,16 @@ def insert_start_list(original_list, added_list):
 
 def get_position_dict(list_palabras):
     importance_dict = get_importance_dict(list_palabras)
-    # cojo el importance_dict y genero un diccionario con las posiciones
-    # para cada palabra. De forma que quede una distancia de 2 entre palabras
-    # y que las palabras más importantes estén en el centro
-    # y las menos importantes en los extremos
-    # y que tenga en cuenta tanto el eje x como el y
-
-    # De momento se va a hacer simple: en el eje y, las palabras y en el eje x, la importancia.
-    # La importancia 1, en el x=0, la 2, en el x=-2, la 3, en el x=2, etc.
-
-    # obtener el valor maximo de importancia en importance_dict
     max_importance = max([value['importancia'] for key, value in importance_dict.items()])
-
-    # Crear una lista con max_importance elementos
-    # X2 ya que hay que dejar una diferencia de 2 entre palabras
-    matrix_dim = [ [] for i in range(max_importance*2) ]
-    pos_y_media = len(matrix_dim)//2
-    pos_x_media = len(matrix_dim[0])//2
-
-    # for (palabra, value_import) in importance_dict.items():
-    #     if value_import['importancia'] % 2 != 0:
-    #         axis_y = pos_y_media + (value_import['importancia'] - 1)
-    #         matrix_dim[axis_y] += [0 for x in range(value_import['dimension']+2)]
-    #     else:
-    #         axis_y = pos_y_media - value_import['importancia']
-    #         matrix_dim[axis_y] += [0 for x in range(value_import['dimension']+2)]
-
     matrix_dim = [[] for i in range(15)]
     for y in range(15):
-        matrix_dim[y] += [0 for x in range(50)]
+        matrix_dim[y] += [0 for x in range(70)]
     print(matrix_dim)
     pos_y_media = len(matrix_dim) // 2
     pos_x_media = len(matrix_dim[0]) // 2
 
-    """
-    Ahora tenemos una matriz bonita:
-    [[], 
-    [0, 0, 0, 0, 0], 
-    [], 
-    [0, 0, 0, 0, 0, 0, 0], 
-    [], 
-    [0, 0, 0]]
-    Y vamos a ir rellenandola con 1s, por cada palabra que vayamos metiendo
-    """
     pos = {}
+    dict_rel_direction = {}
 
     list_palabras_ordenadas = list(importance_dict.keys())
     while len(list_palabras_ordenadas) != 0:
@@ -291,45 +272,32 @@ def get_position_dict(list_palabras):
 
         # obtener la posicion del primer 0 de la lista
         axis_y = pos_y_sugerida
-        pos0 = pos_x_sugerida + matrix_dim[axis_y][pos_x_sugerida:].index(id_to_find)
-        pos.update({palabra: (pos0 - palabra.dimension // 2 -pos_x_media , axis_y - pos_y_media)})
+        pos0 = pos_x_sugerida #+ matrix_dim[axis_y][pos_x_sugerida:].index(id_to_find)
+
+        pos.update({palabra: (pos0 - palabra.dimension // 2 - pos_x_media , axis_y - pos_y_media)})
 
         # reemplazar los 0s por 1s para range(value['dimension']+2)
         matrix_dim[axis_y][pos0:pos0 + palabra.dimension + 2] = [palabra.id for x in range(palabra.dimension + 2)]
-
-
-        #if value_import['importancia'] % 2 != 0:
-        #    axis_y = pos_y_sugerida + (value_import['importancia'] - 1)
-        #    # obtener la posicion del primer 0 de la lista
-        #    pos0 = pos_x_sugerida + matrix_dim[axis_y][pos_x_sugerida:].index(0)
-        #    pos.update({palabra: (palabra.dimension//2 + pos0, axis_y - pos_y_sugerida)})
-#
-        #    # reemplazar los 0s por 1s para range(value['dimension']+2)
-        #    matrix_dim[axis_y][pos0:pos0+palabra.dimension+2] = [palabra.id for x in range(palabra.dimension+2)]
-        #else:
-        #    axis_y = pos_y_sugerida - value_import['importancia']
-        #    # obtener la posicion del primer 0 de la lista
-        #    pos0 = pos_x_sugerida + matrix_dim[axis_y][pos_x_sugerida:].index(0)
-        #    pos.update({palabra: (palabra.dimension//2 + pos0, axis_y - pos_y_sugerida)})
-#
-        #    # reemplazar los 0s por 1s para range(value['dimension']+2)
-        #    matrix_dim[axis_y][pos0:pos0 + palabra.dimension + 2] = [1 for x in range(palabra.dimension + 2)]
 
         palabra.has_been_plotted = True
         list_relaciones_pal = Palabra.relaciones_dict_origen.get(palabra)
         added_list_pal_dest = [rel.pal_dest for rel in list_relaciones_pal]
         list_palabras_ordenadas = insert_start_list(list_palabras_ordenadas, added_list_pal_dest)
         for relation in list_relaciones_pal:
-            rel_x, rel_y, direction = get_next_direction(matrix_dim, pos0, pos0 + palabra.dimension + 1, axis_y)
+            rel_x, rel_y, direction, ancho_flecha = get_next_direction(
+                matrix_dim, pos0, pos0 + palabra.dimension + 1, axis_y, relation)
             relation.direction = direction
+            dict_rel_direction.update({relation.id: direction})
             if direction == DIR_DCHA:
-                matrix_dim[rel_y][rel_x] = relation.id
-                matrix_dim[rel_y][rel_x+1] = relation.id
+                for i in range(ancho_flecha+1):
+                    matrix_dim[rel_y][rel_x + i] = relation.id
             elif direction == DIR_IZQ:
-                matrix_dim[rel_y][rel_x] = relation.id
-                matrix_dim[rel_y][rel_x-1] = relation.id
+                for i in range(ancho_flecha+1):
+                    matrix_dim[rel_y][rel_x - i] = relation.id
             else:
                 matrix_dim[rel_y][rel_x] = relation.id
+                for i in range(ancho_flecha):
+                    matrix_dim[rel_y][rel_x - ancho_flecha//2 + i] = relation.id
             imprimir_matriz(matrix_dim)
 
     return pos, matrix_dim
@@ -350,6 +318,7 @@ def unir_relaciones(list_relaciones):
                     rel.texto = rel2.texto + " " + rel.texto
                     rel.position_doc = rel2.position_doc
                 rel.importancia = min(rel.importancia, rel2.importancia)
+                rel.tam_texto = rel.tam_texto + rel2.tam_texto
                 list_relaciones_new.remove(rel2)
                 list_modified.append(rel)
                 rel2.delete_relation()
@@ -377,10 +346,6 @@ def print_graph(texto, list_palabras, list_relaciones):
     # Añadir nodos y aristas
     for relation in list_relaciones:
         G.add_edge(relation.pal_origen, relation.pal_dest)
-    # G.add_edge("Ruben", "pescado")
-    # G.add_edge("pescado", "en restaurante")
-    # G.add_edge("en restaurante", "Pepe")
-    # G.add_edge("Ruben", "Universidad Politécnica de Madrid")
 
     # Crear posiciones de nodos
     position_elems, matrix_dim = get_position_dict(list_palabras)
@@ -399,8 +364,8 @@ def print_graph(texto, list_palabras, list_relaciones):
     pos_x_media = len(matrix_dim[0])//2
     max_axis_y = len(matrix_dim) - pos_y_media + 2
     min_axis_y = 0 - pos_y_media - 2
-    max_axis_x = max([len(x) for x in matrix_dim]) - pos_x_media + 3
-    min_axis_x = -pos_x_media - 3
+    max_axis_x = max([len(x) for x in matrix_dim]) + 3
+    min_axis_x = -3
 
     fig, ax = plt.subplots(figsize=(12, 8))
 
@@ -461,7 +426,25 @@ def print_graph(texto, list_palabras, list_relaciones):
     # Dibujar aristas
     for relation in list_relaciones:
         color = dict_color.get(relation.lugar_sintactico,dict_color[None])
-        draw_edge(ax, position_elems_deprec[relation.pal_origen.texto], position_elems_deprec[relation.pal_dest.texto], color=color, label=relation.texto, label_offset=(0, 0.1))
+        x_origen = 0
+        x_dest = 0
+        if relation.direction == DIR_DCHA:
+            x_origen = position_elems_deprec[relation.pal_origen.texto][0] + relation.pal_origen.dimension//2
+            x_dest = position_elems_deprec[relation.pal_dest.texto][0] - relation.pal_dest.dimension//2
+        if relation.direction == DIR_IZQ:
+            x_origen = position_elems_deprec[relation.pal_origen.texto][0] - relation.pal_origen.dimension//2
+            x_dest = position_elems_deprec[relation.pal_dest.texto][0] + relation.pal_dest.dimension//2
+
+
+
+        draw_edge(
+            ax,
+            (x_origen, position_elems_deprec[relation.pal_origen.texto][1]),
+            (x_dest, position_elems_deprec[relation.pal_dest.texto][1]),
+            color=color,
+            label=relation.texto,
+            label_offset=(0, 0.1)
+        )
 
     #draw_edge(ax, position_elems_deprec["ruben"], position_elems_deprec["pescado"], color=light_blue, label='come', label_offset=(0, 0.1))
     #draw_edge(ax, position_elems_deprec["pescado"], position_elems_deprec["restaurante"], color=light_blue, label='en', label_offset=(0, 0.1))

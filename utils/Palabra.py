@@ -73,7 +73,7 @@ class Palabra:
     @staticmethod
     def get_dimension(texto):
         # Método que calcula la dimensión dependiendo del tamaño de la palabra
-        return len(texto)//3
+        return len(texto)//2
 
     def __str__(self):
         return self.texto
