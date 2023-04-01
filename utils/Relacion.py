@@ -14,7 +14,8 @@ class Relacion:
     relaciones_dict_id = {}
     # TODO que no coja el lugar sintactico de la relacion, sino que coja el lugar sintactico de la palabra 2
 
-    def __init__(self, texto, pal_origen, pal_dest, position_doc=9999, lugar_sintactico="", importancia = None, id=None):
+    def __init__(self, texto, pal_origen, pal_dest, position_doc=9999, lugar_sintactico="", importancia = None, id=None,
+                 tipo_morf = None):
         self.texto = self.limpiar_texto(texto)
         self.pal_origen = pal_origen
         self.pal_dest = pal_dest
@@ -24,6 +25,7 @@ class Relacion:
         self.importancia = importancia if importancia is not None else self.generar_importancia(pal_origen, pal_dest)
         self.direccion = None
         self.position_doc = position_doc
+        self.tipo_morf = tipo_morf
 
         Relacion.relaciones_dict[self.texto] = self
         Relacion.relaciones_dict_id[self.id] = self
