@@ -40,6 +40,8 @@ TYPE_SINTAX_PUNCT = 'punct'
 TYPE_SINTAX_QUANTMOD = 'quantmod'
 TYPE_SINTAX_ROOT = 'root'
 TYPE_SINTAX_XCOMP = 'xcomp'
+TYPE_SINTAX_NMOD = 'nmod'
+TYPE_SINTAX_FLAT = 'flat'
 
 
 

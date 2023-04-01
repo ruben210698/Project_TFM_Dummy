@@ -14,7 +14,7 @@ class Relacion:
     relaciones_dict_id = {}
     # TODO que no coja el lugar sintactico de la relacion, sino que coja el lugar sintactico de la palabra 2
 
-    def __init__(self, texto, pal_origen, pal_dest, position_doc=9999, lugar_sintactico="", id=None, importancia = None):
+    def __init__(self, texto, pal_origen, pal_dest, position_doc=9999, lugar_sintactico="", importancia = None, id=None):
         self.texto = self.limpiar_texto(texto)
         self.pal_origen = pal_origen
         self.pal_dest = pal_dest
@@ -53,7 +53,7 @@ class Relacion:
     @staticmethod
     def get_tam_texto(texto):
         # Método que calcula la dimensión dependiendo del tamaño de la palabra
-        return len(texto)//3 if len(texto) > 3 else 1
+        return len(texto)//2 if len(texto) > 2 else 1
 
     def add_rel_dest(self, palabra_dest):
         Palabra.relaciones_dict_dest[self.pal_dest].append(palabra_dest)

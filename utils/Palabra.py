@@ -37,6 +37,10 @@ class Palabra:
         self.dimension = self.get_dimension(texto)
         self.has_been_plotted = False
         self.position_doc = position_doc
+        self.figura = None
+        self.multiplicador_borde_figura = None
+        self.pos_x = None
+        self.pos_y = None
 
         Palabra.palabras_dict[self.txt_lema] = self
         Palabra.relaciones_dict_origen[self] = []
