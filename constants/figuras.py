@@ -1,3 +1,3 @@
-ELIPSE = "Elipse"
-RECTANGULO = "Rectangulo"
-HEXAGONO = "Hexagono"
+FIGURA_ELIPSE = "Elipse"
+FIGURA_RECTANGULO = "Rectangulo"
+FIGURA_HEXAGONO = "Hexagono"

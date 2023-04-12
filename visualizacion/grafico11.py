@@ -454,7 +454,7 @@ def print_graph(texto, list_palabras, list_relaciones):
     for pal, (x, y) in position_elems.items():
         node = pal.texto
         if pal.lugar_sintactico.lower() in (TYPE_SINTAX_ROOT):
-            pal.figura = ELIPSE
+            pal.figura = FIGURA_ELIPSE
             pal.multiplicador_borde_figura = 0.3 * len(node)
             ellipse_width = 0.6 * len(node)
             ellipse = Ellipse((x, y), width=ellipse_width, height=1, color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
@@ -462,7 +462,7 @@ def print_graph(texto, list_palabras, list_relaciones):
             ax.text(x, y, node, fontsize=12, ha='center', va='center', zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
 
         elif pal.lugar_sintactico.lower() in (TYPE_SINTAX_AMOD, TYPE_SINTAX_NMOD):
-            pal.figura = RECTANGULO
+            pal.figura = FIGURA_RECTANGULO
             pal.multiplicador_borde_figura = 0.3 * len(node)
             rectangle_width = 0.6 * len(node)
             rectangle = Rectangle((x - rectangle_width / 2, y - 0.4), width=rectangle_width, height=1, color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
@@ -470,7 +470,7 @@ def print_graph(texto, list_palabras, list_relaciones):
             ax.text(x, y, node, fontsize=12, ha='center', va='center', zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
 #
         elif pal.lugar_sintactico.lower() in (TYPE_SINTAX_FLAT):
-            pal.figura = HEXAGONO
+            pal.figura = FIGURA_HEXAGONO
             pal.multiplicador_borde_figura = 0.35 * len(node)
             polygon_radius = 0.4 * len(node)
             polygon = RegularPolygon((x, y), numVertices=6, radius=polygon_radius, orientation=0, color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)

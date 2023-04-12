@@ -180,6 +180,18 @@ texto = "Ruben dibuja koalas en bañador saltando entre acantilados mientras su 
 texto = "Okami jugó en el parque con palos"
 texto = "Ruben cocina hamburguesas en la Freidora de aire"
 texto = "Ruben cocina hamburguesas con carne picada y cebolla en la sartén que tiene el aceite hirviendo"
+texto = "La dinastía de los Austrias gobernó España desde el siglo XVI hasta el siglo XVII. Durante su reinado, el país " \
+        "experimentó una época de esplendor y decadencia. Los monarcas austriacos, entre ellos Carlos I y Felipe II, " \
+        "ampliaron el territorio español mediante la conquista de América y la anexión de Portugal. Sin embargo, también " \
+        "fueron responsables de la Inquisición española y de la expulsión de los judíos. La falta de recursos y las guerras " \
+        "en Europa contribuyeron al declive de la monarquía, que terminó con la llegada de la dinastía de los Borbones " \
+        "en el siglo XVIII. El legado de los Austrias en España se puede ver en su arquitectura y arte, especialmente en " \
+        "Madrid y en las ciudades andaluzas de Granada y Córdoba."
+
+texto = "Los Austrias gobernaron España en el siglo XVI y XVII, ampliando su territorio pero también responsables de la Inquisición y la expulsión de judíos. Su legado se ve en la arquitectura y el arte, especialmente en Madrid, Granada y Córdoba."
+texto = "Los Austrias gobernaron España en el siglo XVI y XVII, responsables también de la Inquisición, expulsión de judíos. Su legado: arquitectura y arte en Madrid, Córdoba."
+
+
 #spacy_load ="es_core_news_sm"
 #spacy_load = "es_core_news_md
 spacy_load = "es_core_news_lg"

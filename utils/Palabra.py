@@ -39,6 +39,7 @@ class Palabra:
         self.position_doc = position_doc
         self.figura = None
         self.multiplicador_borde_figura = None
+        self.tam_eje_y_figura = None
         self.pos_x = None
         self.pos_y = None
 

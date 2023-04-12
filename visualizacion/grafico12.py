@@ -13,12 +13,14 @@ from constants.type_morfologico import *
 from constants.type_sintax import *
 from constants import type_sintax
 from constants import colores_figura, colores_figura_letra, colores
+from constants.figuras import *
+from constants import tam_figuras
 
 LINEAS_SEP_FILA = 5
 DIM_Y_MATRIX = 15
 DIM_X_MATRIX = 100
-DIM_Y_MATRIX = 50
-DIM_X_MATRIX = 2000
+DIM_Y_MATRIX = 500
+DIM_X_MATRIX = 20000
 PRINT_MATRIX = False
 
 
@@ -147,11 +149,23 @@ def get_next_direction(matrix_dim, x_ini, x_fin, y, rel):
     #######
     # TODO quitar esto
     #######
-    if y - 4 >= 0 and matrix_dim[y - 4][pos_x_media] == 0 * (len(matrix_dim[y]) - x_ini):
+    if y - 4 >= 0 and matrix_dim[y - 4][pos_x_media] == 0:
         return pos_x_media, y - 4, DIR_ARRIBA, tam_text_impar
-    if y - 6 >= 0 and matrix_dim[y - 6][pos_x_media] == 0 * (len(matrix_dim[y]) - x_ini):
+    if y - 6 >= 0 and matrix_dim[y - 6][pos_x_media] == 0:
         return pos_x_media, y - 6, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 8][pos_x_media] == 0 * (len(matrix_dim[y]) - x_ini):
+    if y - 8 >= 0 and matrix_dim[y - 8][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 10][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 12][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 14][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 16][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 18][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 20][pos_x_media] == 0:
         return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
 
     return None, None, None
@@ -232,7 +246,6 @@ def get_y_matrix(matrix, id):
 
 
 def get_pal_suggested_position(matrix_dim, palabra):
-    # TODO obtener posicion de la palabra destino x e y si no es None
     list_relaciones = Palabra.relaciones_dict_dest[palabra]
 
     y, x = get_most_centered_pos(matrix_dim)
@@ -288,19 +301,21 @@ def get_most_centered_pos(matrix):
     cols = len(matrix[0])
     center_row = rows // 2
     center_col = cols // 2
-    min_distance = math.inf
-    closest_zero = None
+    max_distance = max(center_row, center_col) + 1
 
-    for i in range(rows):
-        j = 0
-        for j in range(cols):
-            if matrix[i][j] == 0:
-                distance = math.sqrt((i - center_row) ** 2 + (j - center_col) ** 2)
-                if distance < min_distance:
-                    min_distance = distance
-                    closest_zero = (i, j)
+    for distance in range(max_distance):
+        for i in range(center_row - distance, center_row + distance + 1):
+            j_left = center_col - distance
+            j_right = center_col + distance
 
-    return closest_zero
+            # Comprobar si las posiciones están dentro de la matriz
+            if i >= 0 and i < rows:
+                if j_left >= 0 and j_left < cols and matrix[i][j_left] == 0:
+                    return (i, j_left)
+                if j_right >= 0 and j_right < cols and matrix[i][j_right] == 0:
+                    return (i, j_right)
+
+    return None
 
 def insert_start_list(original_list, added_list):
     added_list.reverse()
@@ -321,7 +336,7 @@ def get_position_dict(list_palabras):
     matrix_dim = [[] for i in range(DIM_Y_MATRIX)]
     for y in range(DIM_Y_MATRIX):
         matrix_dim[y] += [0 for x in range(DIM_X_MATRIX)]
-    print(matrix_dim)
+    #print(matrix_dim)
     pos_y_media = len(matrix_dim) // 2
     pos_x_media = len(matrix_dim[0]) // 2
 
@@ -458,24 +473,27 @@ def print_graph(texto, list_palabras, list_relaciones):
     for pal, (x, y) in position_elems.items():
         node = pal.texto
         if pal.lugar_sintactico.lower() in (TYPE_SINTAX_ROOT):
-            pal.figura = ELIPSE
-            pal.multiplicador_borde_figura = 0.3 * len(node)
+            pal.figura = FIGURA_ELIPSE
+            pal.tam_eje_y_figura = tam_figuras.ELIPSE[1]
+            pal.multiplicador_borde_figura = tam_figuras.ELIPSE[0] * len(node)
             ellipse_width = 0.6 * len(node)
             ellipse = Ellipse((x, y), width=ellipse_width, height=1, color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
             ax.add_patch(ellipse)
             ax.text(x, y, node, fontsize=12, ha='center', va='center', zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
 
         elif pal.lugar_sintactico.lower() in (TYPE_SINTAX_AMOD, TYPE_SINTAX_NMOD):
-            pal.figura = RECTANGULO
-            pal.multiplicador_borde_figura = 0.3 * len(node)
+            pal.figura = FIGURA_RECTANGULO
+            pal.tam_eje_y_figura = tam_figuras.RECTANGULO[1]
+            pal.multiplicador_borde_figura = tam_figuras.RECTANGULO[0] * len(node)
             rectangle_width = 0.6 * len(node)
             rectangle = Rectangle((x - rectangle_width / 2, y - 0.4), width=rectangle_width, height=1, color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
             ax.add_patch(rectangle)
             ax.text(x, y, node, fontsize=12, ha='center', va='center', zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
 #
         elif pal.lugar_sintactico.lower() in (TYPE_SINTAX_FLAT):
-            pal.figura = HEXAGONO
-            pal.multiplicador_borde_figura = 0.35 * len(node)
+            pal.figura = FIGURA_HEXAGONO
+            pal.tam_eje_y_figura = tam_figuras.HEXAGONO[1] * len(node)
+            pal.multiplicador_borde_figura = tam_figuras.HEXAGONO[0] * len(node)
             polygon_radius = 0.4 * len(node)
             polygon = RegularPolygon((x, y), numVertices=6, radius=polygon_radius, orientation=0, color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
             ax.add_patch(polygon)
@@ -498,8 +516,10 @@ def print_graph(texto, list_palabras, list_relaciones):
 
 
 
+
     # Dibujar aristas
     for relation in list_relaciones:
+        txt_rel = relation.texto
         color = dict_color_figura.get(relation.lugar_sintactico, dict_color_figura[None])
         x_origen = 0
         x_dest = 0
@@ -508,31 +528,32 @@ def print_graph(texto, list_palabras, list_relaciones):
         if relation.pal_dest.multiplicador_borde_figura is None:
             relation.pal_dest.multiplicador_borde_figura = 0
 
+        x_origen = position_elems_deprec[relation.pal_origen.texto][0]
+        x_dest = position_elems_deprec[relation.pal_dest.texto][0]
+        y_origen = position_elems_deprec[relation.pal_origen.texto][1]
+        y_dest = position_elems_deprec[relation.pal_dest.texto][1]
         if relation.direction == DIR_DCHA:
             x_origen = position_elems_deprec[relation.pal_origen.texto][0] + relation.pal_origen.multiplicador_borde_figura - 0.25
             x_dest = position_elems_deprec[relation.pal_dest.texto][0] - relation.pal_dest.multiplicador_borde_figura
         elif relation.direction == DIR_IZQ:
             x_origen = position_elems_deprec[relation.pal_origen.texto][0] - relation.pal_origen.dimension//2
             x_dest = position_elems_deprec[relation.pal_dest.texto][0] + relation.pal_dest.dimension//2
-        else:
-            x_origen = position_elems_deprec[relation.pal_origen.texto][0]
-            x_dest = position_elems_deprec[relation.pal_dest.texto][0]
-
-        bold = False
-        if relation.tipo_morf is not None and relation.tipo_morf in (TYPE_MORF_VERB):
-            bold = True
-
+        elif relation.direction == DIR_ARRIBA:
+            y_origen = position_elems_deprec[relation.pal_origen.texto][1]
+            y_dest = position_elems_deprec[relation.pal_dest.texto][1] - relation.pal_dest.multiplicador_borde_figura
+            x_dest = position_elems_deprec[relation.pal_dest.texto][0] - relation.pal_dest.multiplicador_borde_figura
+        elif relation.direction == DIR_ABAJO:
+            y_origen = position_elems_deprec[relation.pal_origen.texto][1]
+            y_dest = position_elems_deprec[relation.pal_dest.texto][1]
 
         draw_edge(
             ax,
-            (x_origen, position_elems_deprec[relation.pal_origen.texto][1]),
-            (x_dest, position_elems_deprec[relation.pal_dest.texto][1]),
+            (x_origen, y_origen),
+            (x_dest, y_dest),
             color=color,
             label=relation.texto,
-            label_offset=(0, 0.4),
-            bold=bold
+            label_offset=(0, 0.4)
         )
-
 
     #draw_edge(ax, position_elems_deprec["ruben"], position_elems_deprec["pescado"], color=light_blue, label='come', label_offset=(0, 0.1))
     #draw_edge(ax, position_elems_deprec["pescado"], position_elems_deprec["restaurante"], color=light_blue, label='en', label_offset=(0, 0.1))
