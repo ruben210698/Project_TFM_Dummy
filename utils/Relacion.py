@@ -72,10 +72,22 @@ class Relacion:
         else:
             return "list_relaciones.append(Relacion('" + self.texto + "', " + f"Palabra.palabras_dict.get('{self.pal_origen.txt_lema}') " + ", " +  f"Palabra.palabras_dict.get('{self.pal_dest.txt_lema}')" + f", position_doc={self.position_doc} "+", lugar_sintactico='" + self.lugar_sintactico + f"', importancia = {self.importancia}" + ", id=" + str(self.id) + "))"
     def delete_relation(self):
-        Palabra.relaciones_dict_origen[self.pal_origen].remove(self)
-        if self.pal_dest is not None:
-            Palabra.relaciones_dict_destino[self.pal_dest].remove(self)
-        del Relacion.relaciones_dict_id[self.id]
+        try:
+            if Palabra.relaciones_dict_origen.get(self.pal_origen) is not None:
+                Palabra.relaciones_dict_origen[self.pal_origen].remove(self)
+        except Exception as _:
+            pass
+        try:
+            if self.pal_dest is not None and Palabra.relaciones_dict_destino.get(self.pal_dest) is not None:
+                Palabra.relaciones_dict_destino[self.pal_dest].remove(self)
+        except Exception as _:
+            pass
+        try:
+            if Relacion.relaciones_dict_id.get(self.id) is not None:
+                del Relacion.relaciones_dict_id[self.id]
+        except Exception as _:
+            pass
+
 
     def change_pal_origen(self, pal_origen):
         Palabra.relaciones_dict_origen[self.pal_origen].remove(self)

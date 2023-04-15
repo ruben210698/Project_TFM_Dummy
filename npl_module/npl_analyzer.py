@@ -24,7 +24,7 @@ from utils.Relacion import Relacion
 from constants.type_morfologico import *
 from constants.type_sintax import *
 # from visualizacion.graficoFinal2 import print_graph
-from visualizacion.grafico12 import print_graph
+from visualizacion.grafico13 import print_graph, generate_graph
 
 # python -m spacy download es_core_news_sm
 nlp = spacy.load("es_core_news_sm")
@@ -32,8 +32,9 @@ nlp = spacy.load("es_core_news_sm")
 # El que mejor lo hace, el primero considera "dibuja" adjetivo -.- y el segundo "rie" adjetivo tambien.
 #nlp = spacy.load("es_core_news_lg")
 
-list_types_connector_relation = [TYPE_MORF_ADP, TYPE_MORF_ADP, TYPE_MORF_CONJ, TYPE_MORF_CCONJ, TYPE_MORF_SCONJ,
+LIST_TYPES_CONNECTOR_RELATION = [TYPE_MORF_ADP, TYPE_MORF_ADP, TYPE_MORF_CONJ, TYPE_MORF_CCONJ, TYPE_MORF_SCONJ,
                                  TYPE_MORF_DET, TYPE_MORF_PRON, TYPE_MORF_PART, TYPE_MORF_VERB]
+LIST_TYPES_SINTAX_RELATION = [TYPE_SINTAX_ADVMOD, TYPE_SINTAX_NPADVMOD]
 
 
 def get_relation(rel, fifo_heads, fifo_children):
@@ -45,6 +46,10 @@ def get_relation(rel, fifo_heads, fifo_children):
         for pal in list_value:
             if isinstance(pal, Token) and pal == rel and key not in possible_relations and \
                     Palabra.palabras_dict.get(key.lemma_, None) is not None: # es decir, que existe una palabra y no es una relacion
+                possible_relations.append(key)
+            # El caso de que la palabra anterior sea una relacion y si esté relacionada con esta otra
+            elif isinstance(pal, Token) and (pal == rel.head or pal == rel.left_edge or pal == rel.right_edge) \
+                    and key not in possible_relations and Palabra.palabras_dict.get(key.lemma_, None) is not None:
                 possible_relations.append(key)
 
     for key in fifo_children:
@@ -92,7 +97,8 @@ def get_list_palabras_relaciones(texto,spacy_load):
             continue
         # Crear objeto Palabra y añadir a lista de palabras
         nueva_palabra = token
-        if tipo_morfol not in list_types_connector_relation:
+
+        if tipo_morfol not in LIST_TYPES_CONNECTOR_RELATION and lugar_sintact not in LIST_TYPES_SINTAX_RELATION:
             nueva_palabra = Palabra.get_palabra_by_lema(lema_palabra, position_doc)
             if nueva_palabra is None:
                 nueva_palabra = Palabra(texto_palabra, tipo_morfol, lugar_sintact, txt_lema=lema_palabra,
@@ -196,7 +202,7 @@ texto = "La dinastía de los Austrias gobernó España desde el siglo XVI hasta 
 
 texto = "Los Austrias gobernaron España en el siglo XVI y XVII, ampliando su territorio pero también responsables de la Inquisición y la expulsión de judíos. Su legado se ve en la arquitectura y el arte, especialmente en Madrid, Granada y Córdoba."
 texto = "Los Austrias gobernaron España en el siglo XVI y XVII, responsables también de la Inquisición, expulsión de judíos. Su legado: arquitectura y arte en Madrid, Córdoba."
-texto = "Los Austrias gobernaron España en el siglo XVI, responsables también de la Inquisición"
+#texto = "Los Austrias gobernaron España en el siglo XVI, responsables también de la Inquisición"
 
 #spacy_load ="es_core_news_sm"
 #spacy_load = "es_core_news_md
@@ -261,7 +267,9 @@ for pal in list_palabras:
 for rel in list_relaciones:
     print(rel.to_create_Relacion_str())
 
-print_graph(texto, list_palabras, list_relaciones)
+Palabra.refresh_dict_palabras()
+
+generate_graph(texto, list_palabras, list_relaciones)
 
 
 # if token in fifo_heads.keys():

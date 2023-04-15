@@ -8,6 +8,7 @@ from utils.Relacion import Relacion
 
 
 def unir_2_relaciones(rel1, rel2, remove_rel2=True):
+    print("Uniendo relaciones: " + rel1.texto + " y " + rel2.texto)
     if rel1.position_doc <= rel2.position_doc:
         rel1.texto = rel1.texto + " " + rel2.texto
     else:
@@ -18,26 +19,36 @@ def unir_2_relaciones(rel1, rel2, remove_rel2=True):
     if remove_rel2:
         rel2.delete_relation()
 
-def unir_list_all_relaciones(list_relaciones):
+def unir_list_all_relaciones(list_relaciones, list_modified = []):
     #TODO meter un filtro y si es el mismo texto que no lo una.
 
     # En caso de que 2 relaciones tengan el mismo origen y destino, unirlas
     list_relaciones = list(set(list_relaciones))
     list_relaciones_new = list_relaciones.copy()
-    list_modified = []
     for rel in list_relaciones:
+        if rel.texto == 'también de':
+            print("hola, la")
         for rel2 in list_relaciones:
-            if rel2 not in list_modified and rel not in list_modified and \
+            if rel2.texto == 'la':
+                print("hola, la")
+            # and rel not in list_modified and \
+            if rel2 not in list_modified and \
                 rel != rel2 and rel.pal_origen == rel2.pal_origen and rel.pal_dest == rel2.pal_dest:
-
+                print(rel2.position_doc)
+                print(rel.position_doc)
                 unir_2_relaciones(rel, rel2)
                 list_relaciones_new.remove(rel2)
                 list_modified.append(rel)
+                return unir_list_all_relaciones(list_relaciones_new, list_modified)
 
     return list_relaciones_new
 
 
 def get_relation_entre_pal(pal1, pal2):
+    print("Buscando relación entre " + pal1.texto)
+    if pal2.texto == 'XVI':
+        print("hola")
+    print("Buscando relación entre " + pal2.texto)
     # Devuelve la relación entre 2 palabras
     for rel in Palabra.relaciones_dict_destino[pal2]:
         if rel.pal_origen == pal1:
@@ -47,16 +58,15 @@ def get_relation_entre_pal(pal1, pal2):
 
 
 def unir_palabras(pal1, pal2, list_relaciones, list_palabras):
-    #TODO
+    if pal2 == 'XVI':
+        print("hola")
     basic_relation = get_relation_entre_pal(pal1, pal2)
     # Primero uno todas las relaciones dest en pal1 con las dest pal2, eliminando las comunes y las que hay entre
     # las 2 palabras.
     #######
     # Recorro el bucle de las relaciones entre pal0 y pal1
-    list_rel_palx_pal2 = Palabra.relaciones_dict_destino[basic_relation.pal_dest].copy()
     list_rel_palx_pal1 = Palabra.relaciones_dict_destino[basic_relation.pal_origen].copy()
-    list_rel_pal1_palx = Palabra.relaciones_dict_origen[basic_relation.pal_origen].copy()
-    list_rel_pal2_palx = Palabra.relaciones_dict_origen[basic_relation.pal_dest].copy()
+
     # Todas las relaciones se tienen que unir a la de la 1a palabra
     for rel in list_rel_palx_pal1:
         # Y a todas estas relaciones, le sumo la relacion basica, ya que voy a unir ambas palabras
@@ -65,12 +75,20 @@ def unir_palabras(pal1, pal2, list_relaciones, list_palabras):
     # Una vez ya tengo esto, ya he unido las relacines de pal0 con pal1 y pal2
     # Faltan las relaciones en las que el origen es pal1 y pal2
 
+    list_rel_pal2_palx = Palabra.relaciones_dict_origen[basic_relation.pal_dest].copy()
+    list_rel_palx_pal2 = Palabra.relaciones_dict_destino[basic_relation.pal_dest].copy()
+
     for rel in list_rel_palx_pal2:
         if rel.pal_origen != pal1:
             rel.change_pal_dest(pal1)
+        else:
+            rel.delete_relation()
     for rel in list_rel_pal2_palx:
         if rel.pal_dest != pal1:
             rel.change_pal_origen(pal1)
+        else:
+            rel.delete_relation()
+
     basic_relation.delete_relation()
     list_relaciones.remove(basic_relation)
 
@@ -114,14 +132,6 @@ def detect_numero_romano(txt):
 # Lo mismo para meses, dias...
 def unir_siglos_annos_all_list(list_palabras, list_relaciones):
     # esta funcion se debe aplicar después de unir relaciones.
-    a = Palabra('Austrias', 'PROPN', 'nsubj', 1, 99, 0, False, 'Austrias', 4)
-    b = Palabra('siglo', 'NOUN', 'obl', 3, 99, 0, False, 'siglo', 37)
-    c = Palabra('XVI', 'NOUN', 'compound', 4, 99, 0, False, 'xvi', 43)
-
-    d = Relacion('gobernaron', Palabra.palabras_dict.get('Austrias'), Palabra.palabras_dict.get('siglo'), '', -3, 197)
-    e = Relacion('en', Palabra.palabras_dict.get('siglo'), Palabra.palabras_dict.get('xvi'), '', -5, 197)
-    f = Relacion('el', Palabra.palabras_dict.get('siglo'), Palabra.palabras_dict.get('xvi'), '', -6, 197)
-
     encontrado = False
     # en la lista de palabras, obtener la palabra que sea del tipo 'compound' en el lugr sintactico
      # la palabra tiene que ser del tipo sinctactico Compound
@@ -150,9 +160,6 @@ def unir_siglos_annos_all_list(list_palabras, list_relaciones):
                     # rel.delete_relation()
                     # # eliminar la palabra 'compound'
                     # pal.delete_word()
-
-    # Por si hubiese más, hacer recursiva
-    if encontrado:
-        return unir_siglos_annos_all_list(list_palabras, list_relaciones)
+                    return unir_siglos_annos_all_list(list_palabras, list_relaciones)
 
     return list_palabras, list_relaciones

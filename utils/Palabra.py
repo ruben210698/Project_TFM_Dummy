@@ -88,5 +88,14 @@ class Palabra:
         del Palabra.relaciones_dict_origen[self]
         del Palabra.relaciones_dict_destino[self]
 
+    @staticmethod
+    def refresh_dict_palabras():
+        # eliminar duplicados y relaciones de palabras que no tengan posicion
+        for key in Palabra.relaciones_dict_destino.keys():
+            values = Palabra.relaciones_dict_destino[key].copy()
+            for rel in values:
+                if rel.position_doc == '':
+                    rel.delete_relation()
+
     def to_create_Palabra_str(self):
         return "list_palabras.append(Palabra('" + self.texto + "', '" + self.tipo + "', '" + self.lugar_sintactico + "', " + str(self.id) + ", " + str(self.importancia) + ", " + str(self.num_relaciones) + ", False, '" + self.txt_lema + "', " + str(self.position_doc) + "))"

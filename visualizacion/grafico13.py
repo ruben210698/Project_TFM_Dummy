@@ -401,6 +401,7 @@ def get_position_dict(list_palabras, list_relaciones):
 def generate_graph(texto, list_palabras, list_relaciones):
     list_relaciones = unir_list_all_relaciones(list_relaciones)
     list_palabras, list_relaciones = unir_siglos_annos_all_list(list_palabras, list_relaciones)
+    list_relaciones = unir_list_all_relaciones(list_relaciones)
 
     dict_palabras = {}
     for palabra in list_palabras:
