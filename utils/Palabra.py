@@ -22,7 +22,7 @@ class Palabra:
     id_actual = 0
     palabras_dict = {}
     relaciones_dict_origen = {}
-    relaciones_dict_dest = {}
+    relaciones_dict_destino = {}
 
     def __init__(self, texto, tipo, lugar_sintactico, id=None, importancia=99, num_relaciones=0, autoincremental=True,
                  txt_lema=None, position_doc = 9999):
@@ -45,7 +45,7 @@ class Palabra:
 
         Palabra.palabras_dict[self.txt_lema] = self
         Palabra.relaciones_dict_origen[self] = []
-        Palabra.relaciones_dict_dest[self] = []
+        Palabra.relaciones_dict_destino[self] = []
 
     #get palabra by lema si existe
     @classmethod
@@ -82,6 +82,11 @@ class Palabra:
 
     def __str__(self):
         return self.texto
+
+    def delete_palabra(self):
+        del Palabra.palabras_dict[self.txt_lema]
+        del Palabra.relaciones_dict_origen[self]
+        del Palabra.relaciones_dict_destino[self]
 
     def to_create_Palabra_str(self):
         return "list_palabras.append(Palabra('" + self.texto + "', '" + self.tipo + "', '" + self.lugar_sintactico + "', " + str(self.id) + ", " + str(self.importancia) + ", " + str(self.num_relaciones) + ", False, '" + self.txt_lema + "', " + str(self.position_doc) + "))"

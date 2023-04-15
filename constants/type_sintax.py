@@ -43,6 +43,8 @@ TYPE_SINTAX_XCOMP = 'xcomp'
 TYPE_SINTAX_NMOD = 'nmod'
 TYPE_SINTAX_FLAT = 'flat'
 
+compound = 'compound'
+
 
 
 """

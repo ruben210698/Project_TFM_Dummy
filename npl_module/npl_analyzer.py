@@ -80,7 +80,7 @@ def get_list_palabras_relaciones(texto,spacy_load):
     fifo_children = {}
     for token in doc:
         token = token_manual_modifier.set_token_manual(token)
-        print(token.text, ": ", token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop)
+        print(token.text, ": ", token.idx, token.lemma_, token.pos_, token.tag_, token.dep_, token.shape_, token.is_alpha, token.is_stop)
 
         texto_palabra = token.text
         tipo_morfol = token.pos_
@@ -138,7 +138,8 @@ def get_list_palabras_relaciones(texto,spacy_load):
             fifo_heads_copy = fifo_heads_copy.copy()
             relacion1 = None
             relacion2 = None
-            position_rel = relation.pos
+            position_doc = relation.idx
+            #position_rel = relation.pos
 
             for pal in fifo_heads.get(relation, []):
                 if isinstance(pal, Token):
@@ -166,7 +167,12 @@ def get_list_palabras_relaciones(texto,spacy_load):
             fifo_heads_copy.remove(relacion1)
 
             for pal_rel_2 in fifo_heads_copy:
-                nueva_relacion = Relacion(relation.text, relacion1, pal_rel_2, pal_rel_2.lugar_sintactico)
+                nueva_relacion = Relacion(
+                    texto=relation.text,
+                    pal_origen=relacion1,
+                    pal_dest=pal_rel_2,
+                    position_doc=position_doc,
+                    lugar_sintactico=pal_rel_2.lugar_sintactico)
                 list_relaciones.append(nueva_relacion)
                 dict_relations_1_2.update({relacion1: pal_rel_2})
 
@@ -190,7 +196,7 @@ texto = "La dinastía de los Austrias gobernó España desde el siglo XVI hasta 
 
 texto = "Los Austrias gobernaron España en el siglo XVI y XVII, ampliando su territorio pero también responsables de la Inquisición y la expulsión de judíos. Su legado se ve en la arquitectura y el arte, especialmente en Madrid, Granada y Córdoba."
 texto = "Los Austrias gobernaron España en el siglo XVI y XVII, responsables también de la Inquisición, expulsión de judíos. Su legado: arquitectura y arte en Madrid, Córdoba."
-
+texto = "Los Austrias gobernaron España en el siglo XVI, responsables también de la Inquisición"
 
 #spacy_load ="es_core_news_sm"
 #spacy_load = "es_core_news_md
@@ -202,7 +208,7 @@ list_palabras, list_relaciones = get_list_palabras_relaciones(texto, spacy_load)
 # relacion con ninguna otra palabra. Si es asi, añadir a lista_palabras_sin_relacion
 lista_palabras_sin_relacion = []
 for palabra in list_palabras:
-    if palabra not in Palabra.relaciones_dict_origen.keys() and palabra not in Palabra.relaciones_dict_dest.keys():
+    if palabra not in Palabra.relaciones_dict_origen.keys() and palabra not in Palabra.relaciones_dict_destino.keys():
         lista_palabras_sin_relacion.append(palabra)
 lista_palabras_sin_aparicion = texto.split(" ")
 for palabra in list_palabras:

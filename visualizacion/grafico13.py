@@ -15,6 +15,7 @@ from constants import type_sintax
 from constants import colores_figura, colores_figura_letra, colores
 from constants.figuras import *
 from constants import tam_figuras
+from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_list
 
 LINEAS_SEP_FILA = 5
 DIM_Y_MATRIX = 15
@@ -23,6 +24,9 @@ DIM_Y_MATRIX = 500
 DIM_X_MATRIX = 20000
 PRINT_MATRIX = False
 
+MODE_DEBUG = "DEBUG"
+MODE_NORMAL = "NORMAL"
+EX_MODE = MODE_DEBUG
 
 
 dict_color_figura = {
@@ -73,10 +77,7 @@ Futuro Avanzado:
 #  - Añadir 1s cuando la relación vaya a pasar por ahi en la matriz.
 
 
-max_axis_x = 0
-min_axis_x = 0
-max_axis_y = 0
-min_axis_y = 0
+
 
 
 
@@ -174,6 +175,7 @@ def get_next_direction(matrix_dim, x_ini, x_fin, y, rel):
 def reducir_tam_matriz(matrix_dim):
 
     # Reducir Matriz
+    matrix_dim = matrix_dim.copy()
     matrix_dim_copy = matrix_dim.copy()
     for x in matrix_dim_copy:
         if sum(x) == 0:
@@ -246,7 +248,7 @@ def get_y_matrix(matrix, id):
 
 
 def get_pal_suggested_position(matrix_dim, palabra):
-    list_relaciones = Palabra.relaciones_dict_dest[palabra]
+    list_relaciones = Palabra.relaciones_dict_destino[palabra]
 
     y, x = get_most_centered_pos(matrix_dim)
     id_to_find = 0
@@ -330,7 +332,7 @@ def insert_start_list(original_list, added_list):
     return original_list
 
 
-def get_position_dict(list_palabras):
+def get_position_dict(list_palabras, list_relaciones):
     importance_dict = get_importance_dict(list_palabras)
     max_importance = max([value['importancia'] for key, value in importance_dict.items()])
     matrix_dim = [[] for i in range(DIM_Y_MATRIX)]
@@ -340,7 +342,7 @@ def get_position_dict(list_palabras):
     pos_y_media = len(matrix_dim) // 2
     pos_x_media = len(matrix_dim[0]) // 2
 
-    pos = {}
+    position_elems = {}
     dict_rel_direction = {}
 
     list_palabras_ordenadas = list(importance_dict.keys())
@@ -355,7 +357,7 @@ def get_position_dict(list_palabras):
         axis_y = pos_y_sugerida
         pos0 = pos_x_sugerida #+ matrix_dim[axis_y][pos_x_sugerida:].index(id_to_find)
 
-        pos.update({palabra: (pos0 - palabra.dimension // 2 - pos_x_media, axis_y - pos_y_media)})
+        position_elems.update({palabra: (pos0 - palabra.dimension // 2 - pos_x_media, axis_y - pos_y_media)})
 
         # reemplazar los 0s por 1s para range(value['dimension']+2)
         matrix_dim[axis_y][pos0:pos0 + palabra.dimension + 2] = [palabra.id for x in range(palabra.dimension + 2)]
@@ -389,36 +391,16 @@ def get_position_dict(list_palabras):
                 relation.pal_dest.pos_x = pal_x
                 relation.pal_dest.pos_y = pal_y
             imprimir_matriz(matrix_dim)
+        print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
 
-    return pos, matrix_dim
-
-
-def unir_relaciones(list_relaciones):
-    # En caso de que 2 relaciones tengan el mismo origen y destino, unirlas
-    list_relaciones = list(set(list_relaciones))
-    list_relaciones_new = list_relaciones.copy()
-    list_modified = []
-    for rel in list_relaciones:
-        for rel2 in list_relaciones:
-            if rel2 not in list_modified and rel not in list_modified and \
-                rel != rel2 and rel.pal_origen == rel2.pal_origen and rel.pal_dest == rel2.pal_dest:
-                if rel.position_doc <= rel2.position_doc:
-                    rel.texto = rel.texto + " " + rel2.texto
-                else:
-                    rel.texto = rel2.texto + " " + rel.texto
-                    rel.position_doc = rel2.position_doc
-                rel.importancia = min(rel.importancia, rel2.importancia)
-                rel.tam_texto = Relacion.get_tam_texto(rel.texto)
-                list_relaciones_new.remove(rel2)
-                list_modified.append(rel)
-                rel2.delete_relation()
-
-    return list_relaciones_new
+    return position_elems, matrix_dim
 
 
 
-def print_graph(texto, list_palabras, list_relaciones):
-    list_relaciones = unir_relaciones(list_relaciones)
+
+def generate_graph(texto, list_palabras, list_relaciones):
+    list_relaciones = unir_list_all_relaciones(list_relaciones)
+    list_palabras, list_relaciones = unir_siglos_annos_all_list(list_palabras, list_relaciones)
 
     dict_palabras = {}
     for palabra in list_palabras:
@@ -446,24 +428,26 @@ def print_graph(texto, list_palabras, list_relaciones):
         relation.delete_relation()
 
     # Crear posiciones de nodos
-    position_elems, matrix_dim = get_position_dict(list_palabras)
+    position_elems, matrix_dim = get_position_dict(list_palabras, list_relaciones)
+
+    print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
+
+def print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
 
     #Convertir el position elements sustituyendo el primero objeto por el texto
     position_elems_deprec = {}
     for pal in list_palabras:
-        position_elems_deprec[pal.texto] = position_elems[pal]
+        try:
+            position_elems_deprec[pal.texto] = position_elems[pal]
+        except Exception as _:
+            pass
 
     imprimir_matriz(matrix_dim, apply_num_inicial_col=False)
-    matrix_dim = reducir_tam_matriz(matrix_dim)
+    matrix_dim_reduced = matrix_dim.copy()
+    matrix_dim_reduced = reducir_tam_matriz(matrix_dim_reduced)
 
-    imprimir_matriz(matrix_dim, apply_num_inicial_col=False)
-    pos_y_media = len(matrix_dim)//2
-    pos_x_media = len(matrix_dim[0])//2
-    # max_axis_y = len(matrix_dim) - pos_y_media + LINEAS_SEP_FILA
-    # min_axis_y = 0 - pos_y_media - LINEAS_SEP_FILA
-    # max_axis_x = max([len(x) for x in matrix_dim]) + 3
-    # min_axis_x = -3
-
+    imprimir_matriz(matrix_dim_reduced, apply_num_inicial_col=False)
+    
     max_axis_y = max([x[1] for x in position_elems.values()]) + 3
     min_axis_y = min([x[1] for x in position_elems.values()]) - 3
     max_axis_x = max([x[0] for x in position_elems.values()]) + 5
@@ -471,9 +455,6 @@ def print_graph(texto, list_palabras, list_relaciones):
 
 
     fig, ax = plt.subplots(figsize=(12, 8))
-
-
-
 
     # Dibujar nodos
     for pal, (x, y) in position_elems.items():
@@ -524,42 +505,45 @@ def print_graph(texto, list_palabras, list_relaciones):
 
 
     # Dibujar aristas
-    for relation in list_relaciones:
-        txt_rel = relation.texto
-        color = dict_color_figura.get(relation.lugar_sintactico, dict_color_figura[None])
-        x_origen = 0
-        x_dest = 0
-        if relation.pal_origen.multiplicador_borde_figura is None:
-            relation.pal_origen.multiplicador_borde_figura = 0
-        if relation.pal_dest.multiplicador_borde_figura is None:
-            relation.pal_dest.multiplicador_borde_figura = 0
+    for relation_draw in list_relaciones:
+        txt_rel = relation_draw.texto
+        color = dict_color_figura.get(relation_draw.lugar_sintactico, dict_color_figura[None])
+        x_origen_draw = 0
+        x_dest_draw = 0
+        if relation_draw.pal_origen.multiplicador_borde_figura is None:
+            relation_draw.pal_origen.multiplicador_borde_figura = 0
+        if relation_draw.pal_dest.multiplicador_borde_figura is None:
+            relation_draw.pal_dest.multiplicador_borde_figura = 0
 
-        x_origen = position_elems_deprec[relation.pal_origen.texto][0]
-        x_dest = position_elems_deprec[relation.pal_dest.texto][0]
-        y_origen = position_elems_deprec[relation.pal_origen.texto][1]
-        y_dest = position_elems_deprec[relation.pal_dest.texto][1]
-        if relation.direction == DIR_DCHA:
-            x_origen = position_elems_deprec[relation.pal_origen.texto][0] + relation.pal_origen.multiplicador_borde_figura - 0.25
-            x_dest = position_elems_deprec[relation.pal_dest.texto][0] - relation.pal_dest.multiplicador_borde_figura
-        elif relation.direction == DIR_IZQ:
-            x_origen = position_elems_deprec[relation.pal_origen.texto][0] - relation.pal_origen.dimension//2
-            x_dest = position_elems_deprec[relation.pal_dest.texto][0] + relation.pal_dest.dimension//2
-        elif relation.direction == DIR_ARRIBA:
-            y_origen = position_elems_deprec[relation.pal_origen.texto][1]
-            y_dest = position_elems_deprec[relation.pal_dest.texto][1] - relation.pal_dest.multiplicador_borde_figura
-            x_dest = position_elems_deprec[relation.pal_dest.texto][0] - relation.pal_dest.multiplicador_borde_figura
-        elif relation.direction == DIR_ABAJO:
-            y_origen = position_elems_deprec[relation.pal_origen.texto][1]
-            y_dest = position_elems_deprec[relation.pal_dest.texto][1]
+        try:
+            x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][0]
+            x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0]
+            y_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][1]
+            y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][1]
+            if relation_draw.direction == DIR_DCHA:
+                x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][0] + relation_draw.pal_origen.multiplicador_borde_figura - 0.25
+                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] - relation_draw.pal_dest.multiplicador_borde_figura
+            elif relation_draw.direction == DIR_IZQ:
+                x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][0] - relation_draw.pal_origen.dimension//2
+                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] + relation_draw.pal_dest.dimension//2
+            elif relation_draw.direction == DIR_ARRIBA:
+                y_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][1]
+                y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][1] - relation_draw.pal_dest.multiplicador_borde_figura
+                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] - relation_draw.pal_dest.multiplicador_borde_figura
+            elif relation_draw.direction == DIR_ABAJO:
+                y_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][1]
+                y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][1]
 
-        draw_edge(
-            ax,
-            (x_origen, y_origen),
-            (x_dest, y_dest),
-            color=color,
-            label=relation.texto,
-            label_offset=(0, 0.4)
-        )
+            draw_edge(
+                ax,
+                (x_origen_draw, y_origen_draw),
+                (x_dest_draw, y_dest_draw),
+                color=color,
+                label=relation_draw.texto,
+                label_offset=(0, 0.4)
+            )
+        except Exception as e:
+            pass
 
     #draw_edge(ax, position_elems_deprec["ruben"], position_elems_deprec["pescado"], color=light_blue, label='come', label_offset=(0, 0.1))
     #draw_edge(ax, position_elems_deprec["pescado"], position_elems_deprec["restaurante"], color=light_blue, label='en', label_offset=(0, 0.1))

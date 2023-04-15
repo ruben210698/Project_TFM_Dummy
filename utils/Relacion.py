@@ -33,7 +33,7 @@ class Relacion:
         Palabra.relaciones_dict_origen[self.pal_origen] = \
             Palabra.reordenar_importancia_list(Palabra.relaciones_dict_origen[self.pal_origen])
         if pal_dest is not None:
-            Palabra.relaciones_dict_dest[self.pal_dest].append(self)
+            Palabra.relaciones_dict_destino[self.pal_dest].append(self)
 
     @classmethod
     def generar_id(cls):
@@ -58,7 +58,7 @@ class Relacion:
         return len(texto)//2 if len(texto) > 2 else 1
 
     def add_rel_dest(self, palabra_dest):
-        Palabra.relaciones_dict_dest[self.pal_dest].append(palabra_dest)
+        Palabra.relaciones_dict_destino[self.pal_dest].append(palabra_dest)
         self.pal_dest = palabra_dest
         self.importancia = \
             self.importancia if self.importancia != 99 else self.generar_importancia(self.pal_origen, self.pal_dest)
@@ -67,10 +67,24 @@ class Relacion:
         return self.texto
 
     def to_create_Relacion_str(self):
-        return "list_relaciones.append(Relacion('" + self.texto + "', " + f"Palabra.palabras_dict.get('{self.pal_origen.txt_lema}') " + ", " +  f"Palabra.palabras_dict.get('{self.pal_dest.txt_lema}')" + ", '" + self.lugar_sintactico + "', " + str(self.id) + ", " + str(self.importancia) + "))"
-
+        if self.tipo_morf is not None:
+            return "list_relaciones.append(Relacion('" + self.texto + "', " + f"Palabra.palabras_dict.get('{self.pal_origen.txt_lema}') " + ", " +  f"Palabra.palabras_dict.get('{self.pal_dest.txt_lema}')" + f", position_doc={self.position_doc} "+", lugar_sintactico='" + self.lugar_sintactico + f"', importancia = {self.importancia}" + ", id=" + str(self.id) + ", tipo_morf = '" + str(self.tipo_morf) + "'))"
+        else:
+            return "list_relaciones.append(Relacion('" + self.texto + "', " + f"Palabra.palabras_dict.get('{self.pal_origen.txt_lema}') " + ", " +  f"Palabra.palabras_dict.get('{self.pal_dest.txt_lema}')" + f", position_doc={self.position_doc} "+", lugar_sintactico='" + self.lugar_sintactico + f"', importancia = {self.importancia}" + ", id=" + str(self.id) + "))"
     def delete_relation(self):
         Palabra.relaciones_dict_origen[self.pal_origen].remove(self)
         if self.pal_dest is not None:
-            Palabra.relaciones_dict_dest[self.pal_dest].remove(self)
+            Palabra.relaciones_dict_destino[self.pal_dest].remove(self)
         del Relacion.relaciones_dict_id[self.id]
+
+    def change_pal_origen(self, pal_origen):
+        Palabra.relaciones_dict_origen[self.pal_origen].remove(self)
+        Palabra.relaciones_dict_origen[pal_origen].append(self)
+        Palabra.relaciones_dict_origen[pal_origen] = \
+            Palabra.reordenar_importancia_list(Palabra.relaciones_dict_origen[pal_origen])
+        self.pal_origen = pal_origen
+
+    def change_pal_dest(self, pal_dest):
+        Palabra.relaciones_dict_destino[self.pal_dest].remove(self)
+        Palabra.relaciones_dict_destino[pal_dest].append(self)
+        self.pal_dest = pal_dest

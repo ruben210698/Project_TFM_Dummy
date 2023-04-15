@@ -246,7 +246,7 @@ def get_y_matrix(matrix, id):
 
 
 def get_pal_suggested_position(matrix_dim, palabra):
-    list_relaciones = Palabra.relaciones_dict_dest[palabra]
+    list_relaciones = Palabra.relaciones_dict_destino[palabra]
 
     y, x = get_most_centered_pos(matrix_dim)
     id_to_find = 0

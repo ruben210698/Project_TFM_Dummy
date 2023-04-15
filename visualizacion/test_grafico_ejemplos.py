@@ -14,7 +14,7 @@ from constants.type_sintax import *
 from constants import type_sintax
 from constants import colores_figura, colores_figura_letra, colores
 
-from grafico13 import print_graph
+from grafico13 import generate_graph
 
 # texto = "Ruben cocina hamburguesas en la Freidora de aire"
 # list_palabras = []
@@ -327,7 +327,7 @@ def test4():
     list_relaciones.append(Relacion('el', Palabra.palabras_dict.get('arquitectura') , Palabra.palabras_dict.get('arte'), '', -25, 197))
     list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('especialmente') , Palabra.palabras_dict.get('Madrid'), '', -26, 197))
     list_relaciones.append(Relacion('y', Palabra.palabras_dict.get('Madrid') , Palabra.palabras_dict.get('Córdoba'), '', -27, 197))
-    testo = "Durante el siglo XVI y XVII, las Austrias gobernaron España y fueron responsables de la Inquisición y la expulsión de los judíos. A pesar de eso, su legado en la arquitectura y el arte, especialmente en Madrid, es visible en la ciudad y en otras regiones como Granada y Córdoba."
+    texto = "Durante el siglo XVI y XVII, las Austrias gobernaron España y fueron responsables de la Inquisición y la expulsión de los judíos. A pesar de eso, su legado en la arquitectura y el arte, especialmente en Madrid, es visible en la ciudad y en otras regiones como Granada y Córdoba."
 
 
 def text5():
@@ -365,7 +365,26 @@ def text5():
     list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('arquitectura') , Palabra.palabras_dict.get('Madrid'), '', -17, 197))
 
 
-text5()
+def text6():
+    texto = "Los Austrias gobernaron España en el siglo XVI, responsables también de la Inquisición"
+    list_palabras.append(Palabra('Austrias', 'PROPN', 'nsubj', 1, 99, 0, False, 'Austrias', 4))
+    list_palabras.append(Palabra('España', 'PROPN', 'obj', 2, 99, 0, False, 'España', 24))
+    list_palabras.append(Palabra('siglo', 'NOUN', 'obl', 3, 99, 0, False, 'siglo', 37))
+    list_palabras.append(Palabra('XVI', 'NOUN', 'compound', 4, 99, 0, False, 'xvi', 43))
+    list_palabras.append(Palabra('responsables', 'ADJ', 'obj', 5, 99, 0, False, 'responsable', 48))
+    list_palabras.append(Palabra('también', 'ADV', 'advmod', 6, 99, 0, False, 'también', 61))
+    list_palabras.append(Palabra('Inquisición', 'PROPN', 'nmod', 7, 99, 0, False, 'Inquisición', 75))
 
-print_graph(texto, list_palabras, list_relaciones)
+    list_relaciones.append(Relacion('gobernaron', Palabra.palabras_dict.get('Austrias') , Palabra.palabras_dict.get('España'), position_doc=13 , lugar_sintactico='obj', importancia = 197, id=-2))
+    list_relaciones.append(Relacion('gobernaron', Palabra.palabras_dict.get('Austrias') , Palabra.palabras_dict.get('siglo'), position_doc=13 , lugar_sintactico='obl', importancia = 197, id=-3))
+    list_relaciones.append(Relacion('gobernaron', Palabra.palabras_dict.get('Austrias') , Palabra.palabras_dict.get('responsable'), position_doc=13 , lugar_sintactico='obj', importancia = 197, id=-4))
+    list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('siglo') , Palabra.palabras_dict.get('xvi'), position_doc=31 , lugar_sintactico='compound', importancia = 197, id=-5))
+    list_relaciones.append(Relacion('el', Palabra.palabras_dict.get('siglo') , Palabra.palabras_dict.get('xvi'), position_doc=34 , lugar_sintactico='compound', importancia = 197, id=-6))
+    list_relaciones.append(Relacion('de', Palabra.palabras_dict.get('responsable') , Palabra.palabras_dict.get('también'), position_doc=69 , lugar_sintactico='advmod', importancia = 197, id=-7))
+    list_relaciones.append(Relacion('de', Palabra.palabras_dict.get('responsable') , Palabra.palabras_dict.get('Inquisición'), position_doc=69 , lugar_sintactico='nmod', importancia = 197, id=-8))
+    list_relaciones.append(Relacion('la', Palabra.palabras_dict.get('también') , Palabra.palabras_dict.get('Inquisición'), position_doc=72 , lugar_sintactico='nmod', importancia = 197, id=-9))
+
+text6()
+
+generate_graph(texto, list_palabras, list_relaciones)
 
