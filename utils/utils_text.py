@@ -27,10 +27,10 @@ def unir_list_all_relaciones(list_relaciones, list_modified = []):
     list_relaciones_new = list_relaciones.copy()
     for rel in list_relaciones:
         if rel.texto == 'de':
-            print("hola, la")
+            print("hola")
         for rel2 in list_relaciones:
             if rel2.texto == 'la':
-                print("hola, la")
+                print("hola")
             # and rel not in list_modified and \
             if rel2 not in list_modified and \
                 rel != rel2 and rel.pal_origen == rel2.pal_origen and rel.pal_dest == rel2.pal_dest:
@@ -75,6 +75,7 @@ def unir_palabras_sin_relacion(pal1, pal2, list_relaciones, list_palabras, texto
             rel.delete_relation()
 
     # Unir 2 palabras en una sola
+    pal1.append_enumeracion(pal2.texto)
     if pal1.position_doc <= pal2.position_doc:
         pal1.texto = pal1.texto + " " + texto_entre_palabras + " " + pal2.texto
         pal1.change_lema(pal1.txt_lema + " " + texto_entre_palabras + " " + pal2.txt_lema)
@@ -131,6 +132,7 @@ def unir_palabras(pal1, pal2, list_relaciones, list_palabras):
     list_relaciones.remove(basic_relation)
 
     # Unir 2 palabras en una sola
+    pal1.append_enumeracion(pal2.texto)
     if pal1.position_doc <= pal2.position_doc:
         pal1.texto = pal1.texto + " " + pal2.texto
         pal1.change_lema(pal1.txt_lema + " " + pal2.txt_lema)
@@ -171,6 +173,9 @@ def detect_numero_romano(txt):
 
 # Lo mismo para meses, dias...
 def unir_siglos_annos_all_list(list_palabras, list_relaciones):
+    # FIXME:
+    #  en este caso me estoy cargando la lista de enumerados, pero es lo que quiero.
+    #  en caso de que no sea asi, solo debo copiar la lista de enumerado de la palabra1 a la 0.
     # esta funcion se debe aplicar después de unir relaciones.
     encontrado = False
     # en la lista de palabras, obtener la palabra que sea del tipo 'compound' en el lugr sintactico
@@ -211,7 +216,16 @@ def unir_conjuncion_y(list_palabras, list_relaciones):
     list_relaciones_copy = list_relaciones.copy()
     for basic_rel_y in list_relaciones_copy:
         if basic_rel_y.texto == 'y' or basic_rel_y.texto == 'e' or basic_rel_y.texto == ',':
+            print(f"Palabra origen relY: {basic_rel_y.pal_origen.texto}")
+            if basic_rel_y.pal_origen.texto == 'Madrid':
+                print("hola")
             relaciones_dict_dest_copy = Palabra.relaciones_dict_destino[basic_rel_y.pal_dest].copy()
+            # TODO: descomentar para jutar "arquitectura y arte"
+            if relaciones_dict_dest_copy.__len__() == 1 and relaciones_dict_dest_copy[0] == basic_rel_y:
+                dict_palabras_juntar.update({basic_rel_y.pal_origen: basic_rel_y.pal_dest})
+                if list_rel_y_eliminar.count(basic_rel_y) == 0:
+                    list_rel_y_eliminar.append(basic_rel_y)
+
             for rel in relaciones_dict_dest_copy:
                 # si en list_relaciones hay una relacion con el mismo texto y la misma posicion pero es distinta Relacion
                 # Significa que ese "y" es un complemento a otra relacion anterior.

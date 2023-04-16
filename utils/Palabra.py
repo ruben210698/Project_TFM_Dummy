@@ -42,6 +42,8 @@ class Palabra:
         self.tam_eje_y_figura = None
         self.pos_x = None
         self.pos_y = None
+        self.list_texto_enumeracion = []
+        self.is_enumeracion = False
 
         Palabra.palabras_dict[self.txt_lema] = self
         Palabra.relaciones_dict_origen[self] = []
@@ -102,6 +104,12 @@ class Palabra:
             for rel in values:
                 if rel.position_doc == '':
                     rel.delete_relation()
+
+    def append_enumeracion(self, new_texto):
+        if not self.is_enumeracion:
+            self.list_texto_enumeracion.append(self.texto)
+        self.list_texto_enumeracion.append(new_texto)
+        self.is_enumeracion = True
 
     def to_create_Palabra_str(self):
         return "list_palabras.append(Palabra('" + self.texto + "', '" + self.tipo + "', '" + self.lugar_sintactico + "', " + str(self.id) + ", " + str(self.importancia) + ", " + str(self.num_relaciones) + ", False, '" + self.txt_lema + "', " + str(self.position_doc) + "))"

@@ -478,4 +478,7 @@ def text9():
 text9()
 
 generate_graph(texto, list_palabras, list_relaciones)
+#from grafico12 import print_graph
+#print_graph(texto, list_palabras, list_relaciones)
+
 
