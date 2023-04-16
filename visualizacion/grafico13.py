@@ -15,7 +15,7 @@ from constants import type_sintax
 from constants import colores_figura, colores_figura_letra, colores
 from constants.figuras import *
 from constants import tam_figuras
-from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_list
+from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_list, unir_conjuncion_y
 
 LINEAS_SEP_FILA = 5
 DIM_Y_MATRIX = 15
@@ -348,10 +348,13 @@ def get_position_dict(list_palabras, list_relaciones):
     list_palabras_ordenadas = list(importance_dict.keys())
     while len(list_palabras_ordenadas) != 0:
         palabra = list_palabras_ordenadas.pop(0)
+        print(f"Matrix: {palabra.texto}")
+        if palabra.texto == "judíos":
+            print("hola")
 
+        # obtener la posicion sugerida
         pos_y_sugerida, pos_x_sugerida, id_to_find = get_pal_suggested_position(matrix_dim, palabra)
         imprimir_matriz(matrix_dim)
-        print(f"Matrix: {palabra.texto}")
 
         # obtener la posicion del primer 0 de la lista
         axis_y = pos_y_sugerida
@@ -399,6 +402,7 @@ def get_position_dict(list_palabras, list_relaciones):
 
 
 def generate_graph(texto, list_palabras, list_relaciones):
+    list_palabras, list_relaciones = unir_conjuncion_y(list_palabras, list_relaciones)
     list_relaciones = unir_list_all_relaciones(list_relaciones)
     list_palabras, list_relaciones = unir_siglos_annos_all_list(list_palabras, list_relaciones)
     list_relaciones = unir_list_all_relaciones(list_relaciones)

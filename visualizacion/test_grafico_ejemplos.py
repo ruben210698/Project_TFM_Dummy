@@ -424,11 +424,13 @@ def text8():
     list_relaciones.append(Relacion('gobernaron', Palabra.palabras_dict.get('Austrias') , Palabra.palabras_dict.get('siglo'), position_doc=13 , lugar_sintactico='obl', importancia = 197, id=-6))
     list_relaciones.append(Relacion('gobernaron', Palabra.palabras_dict.get('Austrias') , Palabra.palabras_dict.get('responsable'), position_doc=13 , lugar_sintactico='obj', importancia = 197, id=-7))
     list_relaciones.append(Relacion('gobernaron', Palabra.palabras_dict.get('Austrias') , Palabra.palabras_dict.get('expulsión'), position_doc=13 , lugar_sintactico='obj', importancia = 197, id=-8))
+
     list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('siglo') , Palabra.palabras_dict.get('xvi'), position_doc=31 , lugar_sintactico='compound', importancia = 197, id=-9))
     list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('siglo') , Palabra.palabras_dict.get('xvii'), position_doc=31 , lugar_sintactico='conj', importancia = 197, id=-10))
     list_relaciones.append(Relacion('el', Palabra.palabras_dict.get('siglo') , Palabra.palabras_dict.get('xvi'), position_doc=34 , lugar_sintactico='compound', importancia = 197, id=-11))
     list_relaciones.append(Relacion('el', Palabra.palabras_dict.get('siglo') , Palabra.palabras_dict.get('xvii'), position_doc=34 , lugar_sintactico='conj', importancia = 197, id=-12))
     list_relaciones.append(Relacion('y', Palabra.palabras_dict.get('siglo') , Palabra.palabras_dict.get('xvii'), position_doc=47 , lugar_sintactico='conj', importancia = 197, id=-13))
+
     list_relaciones.append(Relacion('también', Palabra.palabras_dict.get('responsable') , Palabra.palabras_dict.get('Inquisición'), position_doc=68 , lugar_sintactico='nmod', importancia = 197, id=-14))
     list_relaciones.append(Relacion('de', Palabra.palabras_dict.get('expulsión') , Palabra.palabras_dict.get('judío'), position_doc=105 , lugar_sintactico='nmod', importancia = 197, id=-15))
     list_relaciones.append(Relacion('su', Palabra.palabras_dict.get('legado') , Palabra.palabras_dict.get('arquitectura'), position_doc=116 , lugar_sintactico='appos', importancia = 197, id=-16))

@@ -57,10 +57,48 @@ def get_relation_entre_pal(pal1, pal2):
 
 
 
+def unir_palabras_sin_relacion(pal1, pal2, list_relaciones, list_palabras, texto_entre_palabras =""):
+    # TODO que si hay alguna relacion de la palabra2, que las una.
+
+    list_rel_pal2_palx = Palabra.relaciones_dict_origen[pal2].copy()
+    list_rel_palx_pal2 = Palabra.relaciones_dict_destino[pal2].copy()
+
+    for rel in list_rel_palx_pal2:
+        if rel.pal_origen != pal1:
+            rel.change_pal_dest(pal1)
+        else:
+            rel.delete_relation()
+    for rel in list_rel_pal2_palx:
+        if rel.pal_dest != pal1:
+            rel.change_pal_origen(pal1)
+        else:
+            rel.delete_relation()
+
+    # Unir 2 palabras en una sola
+    if pal1.position_doc <= pal2.position_doc:
+        pal1.texto = pal1.texto + " " + texto_entre_palabras + " " + pal2.texto
+        pal1.change_lema(pal1.txt_lema + " " + texto_entre_palabras + " " + pal2.txt_lema)
+    else:
+        pal1.texto = pal2.texto + " " + pal1.texto
+        pal1.change_lema(pal2.txt_lema + " " + texto_entre_palabras + " " + pal1.txt_lema)
+        pal1.position_doc = pal2.position_doc
+
+    pal1.importancia = min(pal1.importancia, pal2.importancia)
+    pal1.dimension = Palabra.get_dimension(pal1.texto)
+    pal2.delete_palabra()
+    # guarda todas las relaciones menos las de la pal1 y pal2 respectivamente
+    list_palabras.remove(pal2)
+
+    return list_relaciones, list_palabras
+
+
+
 def unir_palabras(pal1, pal2, list_relaciones, list_palabras):
-    if pal2 == 'XVI':
+    if pal2.texto == 'XVI y XVII':
         print("hola")
     basic_relation = get_relation_entre_pal(pal1, pal2)
+    #TODO if basic_relation == None:
+
     # Primero uno todas las relaciones dest en pal1 con las dest pal2, eliminando las comunes y las que hay entre
     # las 2 palabras.
     #######
@@ -95,10 +133,10 @@ def unir_palabras(pal1, pal2, list_relaciones, list_palabras):
     # Unir 2 palabras en una sola
     if pal1.position_doc <= pal2.position_doc:
         pal1.texto = pal1.texto + " " + pal2.texto
-        pal1.txt_lema = pal1.txt_lema + " " + pal2.txt_lema
+        pal1.change_lema(pal1.txt_lema + " " + pal2.txt_lema)
     else:
         pal1.texto = pal2.texto + " " + pal1.texto
-        pal1.txt_lema = pal2.txt_lema + " " + pal1.txt_lema
+        pal1.change_lema(pal2.txt_lema + " " + pal1.txt_lema)
         pal1.position_doc = pal2.position_doc
 
     pal1.importancia = min(pal1.importancia, pal2.importancia)
@@ -110,20 +148,22 @@ def unir_palabras(pal1, pal2, list_relaciones, list_palabras):
     return list_relaciones, list_palabras
 
 
+def detect_numero_int(txt):
+    regex = re.compile(r'^\d{1,3}(,\s*\d{1,3})*(?:\s*(y|e)\s*\d{1,3}(,\s*\d{1,3})*)*$')
 
-Palabra('Austrias', 'PROPN', 'nsubj', 1, 99, 0, False, 'Austrias', 4)
-Palabra('siglo', 'NOUN', 'obl', 3, 99, 0, False, 'siglo', 37)
-Palabra('XVI', 'NOUN', 'compound', 4, 99, 0, False, 'xvi', 43)
-
-Relacion('gobernaron', Palabra.palabras_dict.get('Austrias'), Palabra.palabras_dict.get('siglo'), '', -3, 197)
-Relacion('en', Palabra.palabras_dict.get('siglo'), Palabra.palabras_dict.get('xvi'), '', -5, 197)
-Relacion('el', Palabra.palabras_dict.get('siglo'), Palabra.palabras_dict.get('xvi'), '', -6, 197)
+    if re.search(regex, txt):
+        return True
+    else:
+        return False
 
 
 def detect_numero_romano(txt):
-    #  funcion que detecta si un texto es numero romano
-    import re
-    regex = r"^M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$"
+    # Funcion que detecta si un texto es numero
+    # Acepte conjunciones entre numeros
+    regex = re.compile(
+        r'^M{0,9}(CM|CD|D?C{0,9})(XC|XL|L?X{0,9})(IX|IV|V?I{0,9})(\s*(,|y)\s*M{0,9}(CM|CD|D?C{0,9})(XC|XL|L?X{0,9})(IX|IV|V?I{0,9}))*$')
+    # Sirve tanto para "XVI", 'XVI, XVII, XVIII', 'XVI, XVII y XVIII' ...
+
     if re.search(regex, txt):
         return True
     else:
@@ -141,7 +181,8 @@ def unir_siglos_annos_all_list(list_palabras, list_relaciones):
     for pal in list_palabras_copy:
         if encontrado:
             continue
-        if pal.lugar_sintactico == 'compound' and pal.tipo == 'NOUN' and (detect_numero_romano(pal.texto) or pal.texto.isdigit()):
+        if pal.lugar_sintactico == 'compound' and pal.tipo == 'NOUN' and \
+                (detect_numero_romano(pal.texto) or detect_numero_int(pal.texto)):
             # Esto es el numero del siglo o del año:
             list_relaciones_posibles = Palabra.relaciones_dict_destino[pal]
             for relation in list_relaciones_posibles:
@@ -151,15 +192,63 @@ def unir_siglos_annos_all_list(list_palabras, list_relaciones):
                     list_relaciones, list_palabras = \
                         unir_palabras(relation.pal_origen, pal, list_relaciones, list_palabras)
 
-                    # # unir las relaciones
-                    # rel.texto = rel.texto + " " + pal.texto
-                    # rel.tam_texto = Relacion.get_tam_texto(rel.texto)
-                    # # eliminar la palabra 'obl'
-                    # #pal2.delete_word()
-                    # # eliminar la relacion
-                    # rel.delete_relation()
-                    # # eliminar la palabra 'compound'
-                    # pal.delete_word()
                     return unir_siglos_annos_all_list(list_palabras, list_relaciones)
 
     return list_palabras, list_relaciones
+
+
+
+def unir_conjuncion_y(list_palabras, list_relaciones):
+    # Esto hay que hacerlo lo primero
+    dict_txt_all_relations = {}
+    for a in list_relaciones:
+        dict_txt_all_relations.update({a: a.texto})
+
+    dict_palabras_juntar = {}
+    list_rel_y_eliminar = []
+
+    list_palabras_copy = list_palabras.copy()
+    list_relaciones_copy = list_relaciones.copy()
+    for basic_rel_y in list_relaciones_copy:
+        if basic_rel_y.texto == 'y' or basic_rel_y.texto == 'e' or basic_rel_y.texto == ',':
+            relaciones_dict_dest_copy = Palabra.relaciones_dict_destino[basic_rel_y.pal_dest].copy()
+            for rel in relaciones_dict_dest_copy:
+                # si en list_relaciones hay una relacion con el mismo texto y la misma posicion pero es distinta Relacion
+                # Significa que ese "y" es un complemento a otra relacion anterior.
+                # Es por ello que eliminaremos esa relación.
+                # una vez eliminadas todas las relaciones duplicadas, uniremos las palabras que estén relacionadas.
+
+                dict_txt_withour_me = dict_txt_all_relations.copy()
+                if rel not in dict_txt_withour_me or rel == basic_rel_y:
+                    continue
+
+                dict_txt_withour_me.pop(rel)
+
+                # obtener indices de los valores con el mismo value que el texto
+                list_indices = [i for i, x in enumerate(dict_txt_withour_me.values()) if x == rel.texto]
+                list_relaciones_with_same_text = [list(dict_txt_withour_me.keys())[i] for i in list_indices]
+                # obtener las relaciones con el mismo texto y la misma posicion
+                list_relaciones_with_same_text_and_position = [rel2 for rel2 in list_relaciones_with_same_text if
+                                                                rel2.position_doc == rel.position_doc]
+                for rel2 in list_relaciones_with_same_text_and_position:
+                    if rel2 != rel:# and rel.pal_dest != basic_rel_y.pal_dest:
+                        # Eliminar la relacion 1, dejar solo la relacion 2 y luego unir las palabras
+                        rel.delete_relation()
+                        list_relaciones.remove(rel)
+                        if list_rel_y_eliminar.count(basic_rel_y) == 0:
+                            list_rel_y_eliminar.append(basic_rel_y)
+                        dict_palabras_juntar.update({rel2.pal_dest: basic_rel_y.pal_dest})
+
+    for rel_y in list_rel_y_eliminar:
+        rel_y.delete_relation()
+        list_relaciones.remove(rel_y)
+
+    for pal1, pal2 in dict_palabras_juntar.items():
+        list_relaciones, list_palabras = \
+            unir_palabras_sin_relacion(pal1, pal2, list_relaciones, list_palabras, texto_entre_palabras ="y")
+
+    return list_palabras, list_relaciones
+
+
+
+

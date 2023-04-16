@@ -83,6 +83,12 @@ class Palabra:
     def __str__(self):
         return self.texto
 
+    def change_lema(self, new_txt_lema):
+        del Palabra.palabras_dict[self.txt_lema]
+        self.txt_lema = new_txt_lema
+        Palabra.palabras_dict[new_txt_lema] = self
+
+
     def delete_palabra(self):
         del Palabra.palabras_dict[self.txt_lema]
         del Palabra.relaciones_dict_origen[self]
