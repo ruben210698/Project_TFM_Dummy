@@ -22,7 +22,7 @@ DIM_Y_MATRIX = 15
 DIM_X_MATRIX = 100
 DIM_Y_MATRIX = 500
 DIM_X_MATRIX = 20000
-PRINT_MATRIX = True
+PRINT_MATRIX = False
 
 MODE_DEBUG = "DEBUG"
 MODE_NORMAL = "NORMAL"
@@ -124,7 +124,7 @@ def get_direction_by_pal_plotted(matrix_dim, rel, x_ini, y_ini):
 
     return None, None, None, None
 
-def get_next_direction(matrix_dim, x_ini, x_fin, y, rel):
+def deprecated_get_next_direction(matrix_dim, x_ini, x_fin, y, rel):
     pos_x_media = (x_ini + x_fin) // 2
     # Saco el tamaño texto impar para las relaciones que vayan a abajo o arriba.
     # Ya que deben ocupar de ancho el tamaño del texto de forma simetrica
@@ -329,10 +329,18 @@ def get_y_matrix(matrix, id):
     return None
 
 
+
 def get_pal_suggested_position(matrix_dim, palabra):
     list_relaciones = Palabra.relaciones_dict_destino[palabra]
 
-    y, x = get_most_centered_pos(matrix_dim)
+    if palabra.texto=='Córdoba':
+        print("legado")
+
+    if list_relaciones is None or len(list_relaciones) == 0:
+        y, x = get_new_position_without_relations(matrix_dim)
+    else:
+        y, x = get_most_centered_pos(matrix_dim)
+
     id_to_find = 0
     relacion = None
     # x_ini = -1
@@ -379,6 +387,53 @@ def get_pal_suggested_position(matrix_dim, palabra):
     else:
         return y, x, id_to_find
 
+
+
+def get_new_position_without_relations(matrix):
+    DISTANCE_BETWEEN_WORDS = 5
+
+    rows = len(matrix)
+    cols = len(matrix[0])
+    center_row = rows // 2
+    center_col = cols // 2
+    max_distance = max(center_row, center_col) + 1
+
+    j_left_result = True
+    j_right_result = True
+    for distance in range(max_distance):
+        print(f"distance: {distance}")
+        result = True
+        i_final = -1
+        j_final = -1
+        if distance == 13:
+            print("hola 13")
+
+        for eje_y_inicio in range(center_row - distance, center_row + distance):
+            for eje_x_inicio in range(center_col - distance, center_col + distance):
+                # Ahora compruebo el cuadrante dentro de ese rango
+                for eje_y in range(eje_y_inicio - DISTANCE_BETWEEN_WORDS, eje_y_inicio + DISTANCE_BETWEEN_WORDS):
+                    # Comprobar si las posiciones están dentro de la matriz
+                    if not(eje_y >= 0 and eje_y < rows): #Error
+                        continue
+
+                    # que compruebe que las posiciones de la matriz están a 0 en un rado de DISTANCE_BETWEEN_WORDS
+                    for eje_x in range(eje_x_inicio - DISTANCE_BETWEEN_WORDS, eje_x_inicio + DISTANCE_BETWEEN_WORDS):
+                        if not (eje_x >= 0 and eje_x < cols):  # Error
+                            continue
+
+                        if result and matrix[eje_y][eje_x] == 0:
+                            i_final = center_row - distance
+                            j_final = center_col - distance
+                        else:
+                            result = False
+                            continue
+                    if not result:
+                        continue
+
+                if result and j_final != -1 and i_final != -1:
+                    return (i_final, j_final)
+
+    return None
 
 def get_most_centered_pos(matrix):
     rows = len(matrix)
@@ -431,7 +486,7 @@ def get_position_dict(list_palabras, list_relaciones):
     while len(list_palabras_ordenadas) != 0:
         palabra = list_palabras_ordenadas.pop(0)
         print(f"Matrix: {palabra.texto}")
-        if palabra.texto == "expulsión":
+        if palabra.texto == "legado":
             print("hola")
 
         # obtener la posicion sugerida

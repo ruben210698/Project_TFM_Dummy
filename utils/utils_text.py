@@ -26,7 +26,7 @@ def unir_list_all_relaciones(list_relaciones, list_modified = []):
     list_relaciones = list(set(list_relaciones))
     list_relaciones_new = list_relaciones.copy()
     for rel in list_relaciones:
-        if rel.texto == 'también de':
+        if rel.texto == 'de':
             print("hola, la")
         for rel2 in list_relaciones:
             if rel2.texto == 'la':

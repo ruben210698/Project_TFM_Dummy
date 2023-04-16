@@ -201,7 +201,7 @@ texto = "La dinastía de los Austrias gobernó España desde el siglo XVI hasta 
         "Madrid y en las ciudades andaluzas de Granada y Córdoba."
 
 texto = "Los Austrias gobernaron España en el siglo XVI y XVII, ampliando su territorio pero también responsables de la Inquisición y la expulsión de judíos. Su legado se ve en la arquitectura y el arte, especialmente en Madrid, Granada y Córdoba."
-texto = "Los Austrias gobernaron España en el siglo XVI y XVII, responsables también de la Inquisición, expulsión de judíos. Su legado: arquitectura y arte en Madrid, Córdoba."
+texto = "Los Austrias gobernaron España en el siglo XVI y XVII, responsables también de la Inquisición, expulsión de judíos. Su legado: arquitectura y arte en Madrid y Córdoba."
 #texto = "Los Austrias gobernaron España en el siglo XVI, responsables también de la Inquisición"
 
 #spacy_load ="es_core_news_sm"
