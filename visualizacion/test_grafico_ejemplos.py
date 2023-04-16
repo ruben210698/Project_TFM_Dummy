@@ -14,7 +14,7 @@ from constants.type_sintax import *
 from constants import type_sintax
 from constants import colores_figura, colores_figura_letra, colores
 
-from grafico13 import generate_graph
+from grafico14 import generate_graph
 
 # texto = "Ruben cocina hamburguesas en la Freidora de aire"
 # list_palabras = []

@@ -24,7 +24,7 @@ from utils.Relacion import Relacion
 from constants.type_morfologico import *
 from constants.type_sintax import *
 # from visualizacion.graficoFinal2 import print_graph
-from visualizacion.grafico13 import print_graph, generate_graph
+from visualizacion.grafico14 import print_graph, generate_graph
 
 # python -m spacy download es_core_news_sm
 nlp = spacy.load("es_core_news_sm")
