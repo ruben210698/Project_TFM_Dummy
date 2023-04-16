@@ -22,7 +22,7 @@ DIM_Y_MATRIX = 15
 DIM_X_MATRIX = 100
 DIM_Y_MATRIX = 500
 DIM_X_MATRIX = 20000
-PRINT_MATRIX = False
+PRINT_MATRIX = True
 
 MODE_DEBUG = "DEBUG"
 MODE_NORMAL = "NORMAL"
@@ -172,6 +172,82 @@ def get_next_direction(matrix_dim, x_ini, x_fin, y, rel):
     return None, None, None
 
 
+
+
+def get_next_direction_v2(matrix_dim, x_ini, x_fin, y, rel):
+    print(f"relacion: {rel.texto}")
+    MARGIN_DCHA = 20
+    MARGIN_IZQ = 20
+    MARGIN_UP = 8
+    MARGIN_DOWN = 8
+    pos_x_media = (x_ini + x_fin) // 2
+    # Saco el tamaño texto impar para las relaciones que vayan a abajo o arriba.
+    # Ya que deben ocupar de ancho el tamaño del texto de forma simetrica
+    tam_text_origen = rel.tam_texto if rel.tam_texto > 0 else 1
+    tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
+
+    # comprueba si el espacio a la derecha, con un margen de 20 elementos, está libre:
+    derecha_libre = True
+    for i in range(1, MARGIN_DCHA):
+        if not (x_fin + 1 < len(matrix_dim[y]) and matrix_dim[y][x_fin + i] == 0):
+            derecha_libre = False
+    if derecha_libre:
+        return x_fin + 1, y, DIR_DCHA, tam_text_origen
+
+    # comprueba si el espacio inmediatamente abajo está libre
+    down_libre = True
+    for i in range(1, MARGIN_DOWN+LINEAS_SEP_FILA):
+        if not (y + LINEAS_SEP_FILA < len(matrix_dim) and matrix_dim[y - i][pos_x_media] == 0):
+            down_libre = False
+    if down_libre:
+        return pos_x_media, y - LINEAS_SEP_FILA, DIR_ABAJO, tam_text_impar
+
+    # comprueba si el espacio inmediatamente arriba está libre
+    up_libre = True
+    for i in range(1, MARGIN_UP+LINEAS_SEP_FILA):
+        if not (y - LINEAS_SEP_FILA >= 0 and matrix_dim[y + i][pos_x_media] == 0):
+            up_libre = False
+    if up_libre:
+        return pos_x_media, y + LINEAS_SEP_FILA, DIR_ARRIBA, tam_text_impar
+
+    # comprueba si el espacio inmediatamente a la izquierda está libre
+    izq_libre = True
+    for i in range(1, MARGIN_IZQ):
+        if not (x_ini - 1 >= 0 and matrix_dim[y][x_ini - i] == 0):
+            izq_libre = False
+    if izq_libre:
+        return x_ini - 1, y, DIR_IZQ, tam_text_origen
+
+
+
+    #######
+    # TODO quitar esto
+    #######
+    if y - 4 >= 0 and matrix_dim[y - 4][pos_x_media] == 0:
+        return pos_x_media, y - 4, DIR_ARRIBA, tam_text_impar
+    if y - 6 >= 0 and matrix_dim[y - 6][pos_x_media] == 0:
+        return pos_x_media, y - 6, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 8][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 10][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 12][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 14][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 16][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 18][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+    if y - 8 >= 0 and matrix_dim[y - 20][pos_x_media] == 0:
+        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
+
+    return None, None, None
+
+
+
+
+
 def reducir_tam_matriz(matrix_dim):
 
     # Reducir Matriz
@@ -208,35 +284,41 @@ def reducir_tam_matriz(matrix_dim):
 
 
 def imprimir_matriz(matriz, apply_num_inicial_col = True):
-    if not PRINT_MATRIX:
-        return
-    print("-----------------------------------------------------------------------")
-    if apply_num_inicial_col:
-        NUM_INICIAL_COL = 50
-    else:
-        NUM_INICIAL_COL = 0
+    try:
+        if not PRINT_MATRIX:
+            return
+        matriz = matriz.copy()
+        matriz = reducir_tam_matriz(matriz)
+        print("-----------------------------------------------------------------------")
+        if apply_num_inicial_col:
+            NUM_INICIAL_COL = 50
+        else:
+            NUM_INICIAL_COL = 0
 
-    i, j = 0, 0
-    print(f"    ", end="")
-    for elemento in matriz[0]:
-        if i > NUM_INICIAL_COL:
-            print(f"{i:<4}", end="")
-        i += 1
-    print()
-
-    for fila in matriz:
-        print(f"{j:<4}", end="")
-        num_col = 0
-        for elemento in fila:
-            if num_col > NUM_INICIAL_COL:
-                if elemento == 0:
-                    print(f"{elemento:<4}", end="")
-                else:
-                    print(f"{elemento:<4}", end="")
-            num_col += 1
-        j += 1
+        i, j = 0, 0
+        print(f"    ", end="")
+        for elemento in matriz[0]:
+            if i > NUM_INICIAL_COL:
+                print(f"{i:<4}", end="")
+            i += 1
         print()
-    print("-----------------------------------------------------------------------")
+
+        for fila in matriz:
+            print(f"{j:<4}", end="")
+            num_col = 0
+            for elemento in fila:
+                if num_col > NUM_INICIAL_COL:
+                    if elemento == 0:
+                        print(f"{elemento:<4}", end="")
+                    else:
+                        print(f"{elemento:<4}", end="")
+                num_col += 1
+            j += 1
+            print()
+        print("-----------------------------------------------------------------------")
+    except Exception as e:
+        print(e)
+        pass
 
 
 def get_y_matrix(matrix, id):
@@ -349,7 +431,7 @@ def get_position_dict(list_palabras, list_relaciones):
     while len(list_palabras_ordenadas) != 0:
         palabra = list_palabras_ordenadas.pop(0)
         print(f"Matrix: {palabra.texto}")
-        if palabra.texto == "judíos":
+        if palabra.texto == "expulsión":
             print("hola")
 
         # obtener la posicion sugerida
@@ -371,7 +453,7 @@ def get_position_dict(list_palabras, list_relaciones):
         list_palabras_ordenadas = insert_start_list(list_palabras_ordenadas, added_list_pal_dest)
         for relation in list_relaciones_pal:
             if relation.pal_dest.pos_x is None:
-                rel_x, rel_y, direction, ancho_flecha = get_next_direction(
+                rel_x, rel_y, direction, ancho_flecha = get_next_direction_v2(
                     matrix_dim, pos0, pos0 + palabra.dimension + 1, axis_y, relation)
             else:
                 rel_x, rel_y, direction, ancho_flecha = get_direction_by_pal_plotted(matrix_dim, relation, pos0, axis_y)
