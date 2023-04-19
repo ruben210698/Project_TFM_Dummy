@@ -19,12 +19,12 @@ De esta forma, palabras que se repiten y no queremos que sean iguales en el graf
 y palabras que se repitan y queramos que se relacionen, se guardarán con el id como su hash y serán iguales.
 """
 class Palabra:
-    id_actual = 0
+    id_actual = 9
     palabras_dict = {}
     relaciones_dict_origen = {}
     relaciones_dict_destino = {}
 
-    def __init__(self, texto, tipo, lugar_sintactico, id=None, importancia=99, num_relaciones=0, autoincremental=True,
+    def __init__(self, texto, tipo, lugar_sintactico, id=None, importancia=None, num_relaciones=0, autoincremental=True,
                  txt_lema=None, position_doc = 9999):
 
         self.texto = texto
@@ -32,9 +32,14 @@ class Palabra:
         self.tipo = tipo
         self.lugar_sintactico = lugar_sintactico
         self.id = id if id is not None else self.generar_id(texto, autoincremental)
-        self.importancia = importancia
+        # A menor valor de imporancia, mayor importancia tiene. Valor max=1
+        if importancia is None:
+            self.importancia = 1000 + int(position_doc)
+        else:
+            self.importancia = importancia
         self.num_relaciones = num_relaciones
         self.dimension = self.get_dimension(texto)
+        self.dimension_y = 3
         self.has_been_plotted = False
         self.position_doc = position_doc
         self.figura = None
@@ -44,6 +49,12 @@ class Palabra:
         self.pos_y = None
         self.list_texto_enumeracion = []
         self.is_enumeracion = False
+
+        self.numero_grafos = -1
+        self.grafos_aproximados = []
+
+        self.position_relation_full = \
+            {}
 
         Palabra.palabras_dict[self.txt_lema] = self
         Palabra.relaciones_dict_origen[self] = []
@@ -110,6 +121,26 @@ class Palabra:
             self.list_texto_enumeracion.append(self.texto)
         self.list_texto_enumeracion.append(new_texto)
         self.is_enumeracion = True
+        self.dimension_y = len(self.list_texto_enumeracion)*3 + 2
+
+    @staticmethod
+    def _get_dim_relation_tree(relation):
+        try:
+            return relation.pal_dest.grafos_aproximados[0] # cogemos el grafo mayor, que es la 1a posicion
+        except Exception as _:
+            return 0
+
+    def refresh_grafos_aproximados(self):
+        try:
+            self.grafos_aproximados = []
+            lista_relaciones_directas = Palabra.relaciones_dict_origen[self]
+            self.numero_grafos = len(lista_relaciones_directas)
+            for rel in lista_relaciones_directas:
+                self.grafos_aproximados.append(self._get_dim_relation_tree(rel) + 1) # +1 porque es la relacion actual
+            # ordenar de mayor a menor
+            self.grafos_aproximados = sorted(self.grafos_aproximados, key=lambda x: x, reverse=True)
+        except Exception as _:
+            pass
 
     def to_create_Palabra_str(self):
         return "list_palabras.append(Palabra('" + self.texto + "', '" + self.tipo + "', '" + self.lugar_sintactico + "', " + str(self.id) + ", " + str(self.importancia) + ", " + str(self.num_relaciones) + ", False, '" + self.txt_lema + "', " + str(self.position_doc) + "))"

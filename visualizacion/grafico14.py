@@ -6,7 +6,6 @@ from matplotlib.patches import FancyArrowPatch, RegularPolygon, Ellipse, Rectang
 
 from utils.Palabra import Palabra
 from utils.Relacion import Relacion
-from utils.Relacion import DIR_ABAJO, DIR_ARRIBA, DIR_DCHA, DIR_IZQ
 
 from constants.figuras import *
 from constants.type_morfologico import *
@@ -17,13 +16,18 @@ from constants.figuras import *
 from constants import tam_figuras
 from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_list, unir_conjuncion_y
 
+from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_ARRIBA, DIR_ABAJO, DIR_ARRIBA, \
+    DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
+    FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO
+
+
 LINEAS_SEP_FILA = 5
 DIM_Y_MATRIX = 15
 DIM_X_MATRIX = 100
 DIM_Y_MATRIX = 500
 DIM_X_MATRIX = 20000
-PRINT_MATRIX = False
-PRINT_GRAPH = False
+PRINT_MATRIX = True
+PRINT_GRAPH = True
 
 MODE_DEBUG = "DEBUG"
 MODE_NORMAL = "NORMAL"
@@ -91,18 +95,19 @@ def draw_edge(ax, u, v, width=1.0, color='k', label='', label_offset=(0, 0), bol
     if label:
         x_label = (u[0] + v[0]) / 2 + label_offset[0]
         y_label = (u[1] + v[1]) / 2 + label_offset[1]
-    if bold:
-        ax.text(x_label, y_label, label, fontsize=12, ha='center', va='center', zorder=3, weight='bold')
-    else:
-        ax.text(x_label, y_label, label, fontsize=12, ha='center', va='center', zorder=3)
+        if bold:
+            ax.text(x_label, y_label, label, fontsize=12, ha='center', va='center', zorder=3, weight='bold')
+        else:
+            ax.text(x_label, y_label, label, fontsize=12, ha='center', va='center', zorder=3)
 
 
 def get_importance_dict(list_palabras):
     new_dict = {}
     for pal in list_palabras:
-        new_dict[pal] = {"importancia": pal.importancia, "dimension":pal.dimension}
+        new_dict[pal] = {"importancia": pal.importancia, "dimension": pal.dimension}
     #ordenar el diccionario por importancia
     new_dict = dict(sorted(new_dict.items(), key=lambda item: item[1]["importancia"]))
+
     return new_dict
 
 def get_direction_by_pal_plotted(matrix_dim, rel, x_ini, y_ini):
@@ -291,16 +296,10 @@ def imprimir_matriz(matriz, apply_num_inicial_col = True):
         matriz = matriz.copy()
         matriz = reducir_tam_matriz(matriz)
         print("-----------------------------------------------------------------------")
-        if apply_num_inicial_col:
-            NUM_INICIAL_COL = 50
-        else:
-            NUM_INICIAL_COL = 0
-
         i, j = 0, 0
         print(f"    ", end="")
         for elemento in matriz[0]:
-            if i > NUM_INICIAL_COL:
-                print(f"{i:<4}", end="")
+            print(f"{i:<4}", end="")
             i += 1
         print()
 
@@ -308,11 +307,10 @@ def imprimir_matriz(matriz, apply_num_inicial_col = True):
             print(f"{j:<4}", end="")
             num_col = 0
             for elemento in fila:
-                if num_col > NUM_INICIAL_COL:
-                    if elemento == 0:
-                        print(f"{elemento:<4}", end="")
-                    else:
-                        print(f"{elemento:<4}", end="")
+                if elemento == 0:
+                    print(f"{elemento:<4}", end="")
+                else:
+                    print(f"{elemento:<4}", end="")
                 num_col += 1
             j += 1
             print()
@@ -330,12 +328,19 @@ def get_y_matrix(matrix, id):
     return None
 
 
+def get_next_location(matrix, relation, palabra):
+    print(matrix)
+
+
 
 def get_pal_suggested_position(matrix_dim, palabra):
-    list_relaciones = Palabra.relaciones_dict_destino[palabra]
+    list_relaciones_destino = Palabra.relaciones_dict_destino[palabra]
 
-    if palabra.texto=='Córdoba':
-        print("Córdoba")
+    if list_relaciones_destino is None or len(list_relaciones_destino) == 0:
+        # es el primer elemento de un grafo
+        y, x = get_new_position_without_relations(matrix_dim)
+        return y, x, -1
+
 
     id_to_find = 0
     relacion = None
@@ -343,12 +348,13 @@ def get_pal_suggested_position(matrix_dim, palabra):
         y = palabra.pos_y
         x = palabra.pos_x
     else:
-        if list_relaciones is None or len(list_relaciones) == 0:
+        # TODO quitar porque esto solo se usa para las next locations
+        if list_relaciones_destino is None or len(list_relaciones_destino) == 0:
             y, x = get_new_position_without_relations(matrix_dim)
         else:
             y, x = get_most_centered_pos(matrix_dim)
 
-        for rel in list_relaciones:
+        for rel in list_relaciones_destino:
             for i in range(len(matrix_dim)):
                 for j in range(len(matrix_dim[i])):
                     if matrix_dim[i][j] == rel.id:
@@ -466,15 +472,31 @@ def insert_start_list(original_list, added_list):
     return original_list
 
 
-def get_position_dict(list_palabras, list_relaciones):
-    importance_dict = get_importance_dict(list_palabras)
-    max_importance = max([value['importancia'] for key, value in importance_dict.items()])
+def generate_matrix(list_palabras):
+    dim_y_matrix = 3 * len(list_palabras) + 50
+    dim_x_matrix = 15 * len(list_palabras) + 500
+
+    dim_y_matrix = DIM_Y_MATRIX
+    dim_x_matrix = DIM_X_MATRIX
     matrix_dim = [[] for i in range(DIM_Y_MATRIX)]
-    for y in range(DIM_Y_MATRIX):
-        matrix_dim[y] += [0 for x in range(DIM_X_MATRIX)]
-    #print(matrix_dim)
+    for y in range(dim_y_matrix):
+        matrix_dim[y] += [0 for x in range(dim_x_matrix)]
+    # print(matrix_dim)
     pos_y_media = len(matrix_dim) // 2
     pos_x_media = len(matrix_dim[0]) // 2
+    return matrix_dim, pos_y_media, pos_x_media
+
+
+def update_palabras_in_matrix(matrix_dim, palabra, axis_y, axis_x):
+    # bucle que recorre palabra.dimension_y desde -palabra.dimension_y//2 hasta palabra.dimension_y//2
+    for y in range(palabra.dimension_y):
+        axis_y_loop = axis_y + y -palabra.dimension_y//2
+        matrix_dim[axis_y_loop][axis_x:axis_x + palabra.dimension + 2] = [palabra.id for x in range(palabra.dimension + 2)]
+
+
+def get_position_dict(list_palabras, list_relaciones):
+    importance_dict = get_importance_dict(list_palabras)
+    matrix_dim, pos_y_media, pos_x_media = generate_matrix(list_palabras)
 
     position_elems = {}
     dict_rel_direction = {}
@@ -484,33 +506,42 @@ def get_position_dict(list_palabras, list_relaciones):
         palabra = list_palabras_ordenadas.pop(0)
         print(f"Matrix: {palabra.texto}")
 
-        if palabra.texto == 'Córdoba':
-            print("Córdoba")
-
-
         # obtener la posicion sugerida
-        pos_y_sugerida, pos_x_sugerida, id_to_find = get_pal_suggested_position(matrix_dim, palabra)
+        axis_y, axis_x, _ = get_pal_suggested_position(matrix_dim, palabra)
+
+        ################################################################################################################
+        ################################################################################################################
+        ################################################################################################################
+        ################################################################################################################
+
+        position_elems.update({
+            palabra: (
+                axis_x - pos_x_media,
+                axis_y - pos_y_media
+            )})
+
+        # reemplazar los 0s por IDs para range(value['dimension']+2)
+        update_palabras_in_matrix(matrix_dim, palabra, axis_y, axis_x)
+
         imprimir_matriz(matrix_dim)
-
-        # obtener la posicion del primer 0 de la lista
-        axis_y = pos_y_sugerida
-        pos0 = pos_x_sugerida #+ matrix_dim[axis_y][pos_x_sugerida:].index(id_to_find)
-
-        position_elems.update({palabra: (pos0 - palabra.dimension // 2 - pos_x_media, axis_y - pos_y_media)})
-
-        # reemplazar los 0s por 1s para range(value['dimension']+2)
-        matrix_dim[axis_y][pos0:pos0 + palabra.dimension + 2] = [palabra.id for x in range(palabra.dimension + 2)]
 
         palabra.has_been_plotted = True
         list_relaciones_pal = Palabra.relaciones_dict_origen.get(palabra)
+
+        # crear una lista con las palabras destino de las relaciones de la palabra ordenadas por el primer numero de la lista grafos_aproximados
         added_list_pal_dest = [rel.pal_dest for rel in list_relaciones_pal]
+        added_list_pal_dest.sort(key=lambda x: x.grafos_aproximados[0] if len(x.grafos_aproximados) > 0 else 0, reverse=True)
+        ################################################################################################################
+        ################################################################################################################
+        ################################################################################################################
+        ################################################################################################################
         list_palabras_ordenadas = insert_start_list(list_palabras_ordenadas, added_list_pal_dest)
         for relation in list_relaciones_pal:
             if relation.pal_dest.pos_x is None:
                 rel_x, rel_y, direction, ancho_flecha = get_next_direction_v2(
-                    matrix_dim, pos0, pos0 + palabra.dimension + 1, axis_y, relation)
+                    matrix_dim, axis_x, axis_x + palabra.dimension + 1, axis_y, relation)
             else:
-                rel_x, rel_y, direction, ancho_flecha = get_direction_by_pal_plotted(matrix_dim, relation, pos0, axis_y)
+                rel_x, rel_y, direction, ancho_flecha = get_direction_by_pal_plotted(matrix_dim, relation, axis_x, axis_y)
 
             relation.direction = direction
             dict_rel_direction.update({relation.id: direction})
@@ -538,41 +569,77 @@ def get_position_dict(list_palabras, list_relaciones):
 
 
 
-def generate_graph(texto, list_palabras, list_relaciones):
-    list_palabras, list_relaciones = unir_conjuncion_y(list_palabras, list_relaciones)
-    list_relaciones = unir_list_all_relaciones(list_relaciones)
-    list_palabras, list_relaciones = unir_siglos_annos_all_list(list_palabras, list_relaciones)
-    list_relaciones = unir_list_all_relaciones(list_relaciones)
 
-    dict_palabras = {}
-    for palabra in list_palabras:
-        dict_palabras[palabra.id] = palabra
 
-    palabras_dict = Palabra.palabras_dict
 
-    dic_relaciones = {}
-    for r in list_relaciones:
-        dic_relaciones[r.id] = r
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
 
-    # Crear un grafo dirigido
-    G = nx.DiGraph()
 
+
+def insertar_grafos_aproximados_palabras(list_palabras):
+    for i in range(len(list_palabras) - 1, -1, -1):
+        list_palabras[i].refresh_grafos_aproximados()
+
+def remove_relations_without_words(list_relaciones):
     # Añadir nodos y aristas
     list_relaciones_to_remove = []
     for relation in list_relaciones:
         if relation.pal_origen is None or relation.pal_dest is None:
             list_relaciones_to_remove.append(relation)
-        else:
-            G.add_edge(relation.pal_origen, relation.pal_dest)
 
     for relation in list_relaciones_to_remove:
         list_relaciones.remove(relation)
         relation.delete_relation()
+    return list_relaciones
+
+def text_tranformations(list_palabras, list_relaciones):
+    list_palabras, list_relaciones = unir_conjuncion_y(list_palabras, list_relaciones)
+    list_relaciones = unir_list_all_relaciones(list_relaciones)
+    list_palabras, list_relaciones = unir_siglos_annos_all_list(list_palabras, list_relaciones)
+    list_relaciones = unir_list_all_relaciones(list_relaciones)
+    list_relaciones = remove_relations_without_words(list_relaciones)
+
+    # al final:
+    insertar_grafos_aproximados_palabras(list_palabras)
+    return list_palabras, list_relaciones
+
+
+
+def generate_graph(texto, list_palabras, list_relaciones):
+    list_palabras, list_relaciones = text_tranformations(list_palabras, list_relaciones)
+
+    # Crear un grafo dirigido
+    G = nx.DiGraph()
+    for relation in list_relaciones:
+        G.add_edge(relation.pal_origen, relation.pal_dest)
 
     # Crear posiciones de nodos
     position_elems, matrix_dim = get_position_dict(list_palabras, list_relaciones)
 
     print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
+
+
+
+
 
 def print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
 

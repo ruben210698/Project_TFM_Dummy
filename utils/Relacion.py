@@ -3,13 +3,12 @@ import re
 
 from utils.Palabra import Palabra
 
-DIR_ABAJO = "abajo"
-DIR_ARRIBA = "arriba"
-DIR_DCHA = "derecha"
-DIR_IZQ = "izquierda"
+
+
+
 
 class Relacion:
-    id_actual = -1
+    id_actual = -9
     relaciones_dict = {}
     relaciones_dict_id = {}
     # TODO que no coja el lugar sintactico de la relacion, sino que coja el lugar sintactico de la palabra 2
@@ -32,8 +31,10 @@ class Relacion:
         Palabra.relaciones_dict_origen[self.pal_origen].append(self)
         Palabra.relaciones_dict_origen[self.pal_origen] = \
             Palabra.reordenar_importancia_list(Palabra.relaciones_dict_origen[self.pal_origen])
+        pal_origen.refresh_grafos_aproximados()
         if pal_dest is not None:
             Palabra.relaciones_dict_destino[self.pal_dest].append(self)
+            pal_dest.refresh_grafos_aproximados()
 
     @classmethod
     def generar_id(cls):
@@ -43,8 +44,8 @@ class Relacion:
     @classmethod
     def generar_importancia(cls, relacion1, relacion2):
         if relacion2 is None:
-            return 99
-        return relacion1.importancia + relacion2.importancia - 1
+            return 1000 + relacion1.importancia
+        return relacion1.importancia + relacion2.importancia
 
     @staticmethod
     def limpiar_texto(texto):
@@ -62,6 +63,7 @@ class Relacion:
         self.pal_dest = palabra_dest
         self.importancia = \
             self.importancia if self.importancia != 99 else self.generar_importancia(self.pal_origen, self.pal_dest)
+        palabra_dest.refresh_grafos_aproximados()
 
     def __str__(self):
         return self.texto
@@ -95,8 +97,10 @@ class Relacion:
         Palabra.relaciones_dict_origen[pal_origen] = \
             Palabra.reordenar_importancia_list(Palabra.relaciones_dict_origen[pal_origen])
         self.pal_origen = pal_origen
+        pal_origen.refresh_grafos_aproximados()
 
     def change_pal_dest(self, pal_dest):
         Palabra.relaciones_dict_destino[self.pal_dest].remove(self)
         Palabra.relaciones_dict_destino[pal_dest].append(self)
         self.pal_dest = pal_dest
+        pal_dest.refresh_grafos_aproximados()
