@@ -2,7 +2,7 @@
 import re
 
 from utils.Palabra import Palabra
-
+from constants.direcciones_relaciones import CENTRO
 
 
 
@@ -19,12 +19,12 @@ class Relacion:
         self.pal_origen = pal_origen
         self.pal_dest = pal_dest
         self.lugar_sintactico = lugar_sintactico
-        self.tam_texto = self.get_tam_texto(texto)
+        self.tam_text = self.get_tam_texto(texto)
         self.id = id if id is not None else self.generar_id()
         self.importancia = importancia if importancia is not None else self.generar_importancia(pal_origen, pal_dest)
-        self.direccion = None
         self.position_doc = position_doc
         self.tipo_morf = tipo_morf
+        self.direccion_actual = CENTRO
 
         Relacion.relaciones_dict[self.texto] = self
         Relacion.relaciones_dict_id[self.id] = self

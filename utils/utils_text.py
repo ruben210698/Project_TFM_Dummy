@@ -15,7 +15,7 @@ def unir_2_relaciones(rel1, rel2, remove_rel2=True):
         rel1.texto = rel2.texto + " " + rel1.texto
         rel1.position_doc = rel2.position_doc
     rel1.importancia = min(rel1.importancia, rel2.importancia)
-    rel1.tam_texto = Relacion.get_tam_texto(rel1.texto)
+    rel1.tam_text = Relacion.get_tam_texto(rel1.texto)
     if remove_rel2:
         rel2.delete_relation()
 

@@ -101,7 +101,7 @@ def get_direction_by_pal_plotted(matrix_dim, rel, x_ini, y_ini):
     if rel.pal_dest.pos_x is None:
         return None, None, None, None
 
-    tam_text_origen = rel.tam_texto if rel.tam_texto > 0 else 1
+    tam_text_origen = rel.tam_text if rel.tam_text > 0 else 1
     tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
 
     x_fin = rel.pal_dest.pos_x
@@ -121,7 +121,7 @@ def get_next_direction(matrix_dim, x_ini, x_fin, y, rel):
     pos_x_media = (x_ini + x_fin) // 2
     # Saco el tamaño texto impar para las relaciones que vayan a abajo o arriba.
     # Ya que deben ocupar de ancho el tamaño del texto de forma simetrica
-    tam_text_origen = rel.tam_texto if rel.tam_texto > 0 else 1
+    tam_text_origen = rel.tam_text if rel.tam_text > 0 else 1
     tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
 
     # comprueba si el espacio inmediatamente a la derecha está libre
@@ -389,7 +389,7 @@ def unir_relaciones(list_relaciones):
                     rel.texto = rel2.texto + " " + rel.texto
                     rel.position_doc = rel2.position_doc
                 rel.importancia = min(rel.importancia, rel2.importancia)
-                rel.tam_texto = Relacion.get_tam_texto(rel.texto)
+                rel.tam_text = Relacion.get_tam_texto(rel.texto)
                 list_relaciones_new.remove(rel2)
                 list_modified.append(rel)
                 rel2.delete_relation()

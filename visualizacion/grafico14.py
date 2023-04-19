@@ -18,16 +18,14 @@ from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_lis
 
 from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_ARRIBA, DIR_ABAJO, DIR_ARRIBA, \
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
-    FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO
-
+    FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO
+from visualizacion.utils.direcciones import get_next_location
+from visualizacion.utils.matrix_functions import generate_matrix
 
 LINEAS_SEP_FILA = 5
-DIM_Y_MATRIX = 15
-DIM_X_MATRIX = 100
-DIM_Y_MATRIX = 500
-DIM_X_MATRIX = 20000
-PRINT_MATRIX = True
-PRINT_GRAPH = True
+
+PRINT_MATRIX = False
+PRINT_GRAPH = False
 
 MODE_DEBUG = "DEBUG"
 MODE_NORMAL = "NORMAL"
@@ -114,7 +112,7 @@ def get_direction_by_pal_plotted(matrix_dim, rel, x_ini, y_ini):
     if rel.pal_dest.pos_x is None:
         return None, None, None, None
 
-    tam_text_origen = rel.tam_texto if rel.tam_texto > 0 else 1
+    tam_text_origen = rel.tam_text if rel.tam_text > 0 else 1
     tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
 
     x_fin = rel.pal_dest.pos_x
@@ -134,7 +132,7 @@ def deprecated_get_next_direction(matrix_dim, x_ini, x_fin, y, rel):
     pos_x_media = (x_ini + x_fin) // 2
     # Saco el tamaño texto impar para las relaciones que vayan a abajo o arriba.
     # Ya que deben ocupar de ancho el tamaño del texto de forma simetrica
-    tam_text_origen = rel.tam_texto if rel.tam_texto > 0 else 1
+    tam_text_origen = rel.tam_text if rel.tam_text > 0 else 1
     tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
 
     # comprueba si el espacio inmediatamente a la derecha está libre
@@ -189,7 +187,7 @@ def get_next_direction_v2(matrix_dim, x_ini, x_fin, y, rel):
     pos_x_media = (x_ini + x_fin) // 2
     # Saco el tamaño texto impar para las relaciones que vayan a abajo o arriba.
     # Ya que deben ocupar de ancho el tamaño del texto de forma simetrica
-    tam_text_origen = rel.tam_texto if rel.tam_texto > 0 else 1
+    tam_text_origen = rel.tam_text if rel.tam_text > 0 else 1
     tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
 
     # comprueba si el espacio a la derecha, con un margen de 20 elementos, está libre:
@@ -328,8 +326,45 @@ def get_y_matrix(matrix, id):
     return None
 
 
-def get_next_location(matrix, relation, palabra):
-    print(matrix)
+
+def loop_reducir_posiciones_finales_eje_y(posiciones_finales, cambiado):
+    ultima_y_leida = 0
+    dim_y_reducir = 0
+    i = -1
+    posiciones_finales_loop = posiciones_finales.copy()
+    cambiado = False
+    for palabra, posicion in posiciones_finales_loop.items():
+        i += 1
+        pos_y_actual = posicion[1]
+        if (pos_y_actual - ultima_y_leida) > 5:
+            dim_y_reducir += (pos_y_actual - ultima_y_leida - 5)
+        if dim_y_reducir > 0:
+            nueva_pos_y = pos_y_actual - dim_y_reducir
+            posiciones_finales.update({palabra: (posicion[0], nueva_pos_y)})
+            cambiado = True
+        ultima_y_leida = pos_y_actual
+    return posiciones_finales, cambiado
+
+def reducir_posiciones_finales_eje_y(posiciones_finales):
+    posiciones_finales = posiciones_finales.copy()
+    #TODO lo que hace esta funcion es
+    # 1. ordena de menor a mayor todos los elementos y
+    # 2. mira si entre 1 y otro de alguno hay más de 10 elementos (recurda que están ordenados de menor a mayor)
+    # 3. si existe, cojo las posiciones finales iniciales y reduzco esa diferencia "excesiva" a todas las ys
+    #  de todos los elementos que estén por encima de ese numero :)
+
+    # tengo que crear un diccionario de {palabra: {pos_x: pos_y}}
+    # y que ordene por pos_y en orden.
+
+    posiciones_finales = dict(sorted(posiciones_finales.items(), key=lambda x: x[1][1]))
+
+    cambiado = False
+    posiciones_finales, cambiado = loop_reducir_posiciones_finales_eje_y(posiciones_finales, cambiado)
+
+    while cambiado == True:
+        posiciones_finales, cambiado = loop_reducir_posiciones_finales_eje_y(posiciones_finales, cambiado)
+
+    return posiciones_finales
 
 
 
@@ -340,6 +375,7 @@ def get_pal_suggested_position(matrix_dim, palabra):
         # es el primer elemento de un grafo
         y, x = get_new_position_without_relations(matrix_dim)
         return y, x, -1
+
 
 
     id_to_find = 0
@@ -460,6 +496,7 @@ def get_most_centered_pos(matrix):
     return None
 
 def insert_start_list(original_list, added_list):
+    added_list = added_list.copy()
     added_list.reverse()
     for pal in added_list:
         try:
@@ -472,26 +509,66 @@ def insert_start_list(original_list, added_list):
     return original_list
 
 
-def generate_matrix(list_palabras):
-    dim_y_matrix = 3 * len(list_palabras) + 50
-    dim_x_matrix = 15 * len(list_palabras) + 500
-
-    dim_y_matrix = DIM_Y_MATRIX
-    dim_x_matrix = DIM_X_MATRIX
-    matrix_dim = [[] for i in range(DIM_Y_MATRIX)]
-    for y in range(dim_y_matrix):
-        matrix_dim[y] += [0 for x in range(dim_x_matrix)]
-    # print(matrix_dim)
-    pos_y_media = len(matrix_dim) // 2
-    pos_x_media = len(matrix_dim[0]) // 2
-    return matrix_dim, pos_y_media, pos_x_media
-
 
 def update_palabras_in_matrix(matrix_dim, palabra, axis_y, axis_x):
     # bucle que recorre palabra.dimension_y desde -palabra.dimension_y//2 hasta palabra.dimension_y//2
     for y in range(palabra.dimension_y):
         axis_y_loop = axis_y + y -palabra.dimension_y//2
         matrix_dim[axis_y_loop][axis_x:axis_x + palabra.dimension + 2] = [palabra.id for x in range(palabra.dimension + 2)]
+
+
+def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media, pos_x_media, list_relaciones,
+                                relation=None):
+    list_palabras_representadas = []
+    print(f"Matrix: {palabra.texto}")
+
+    axis_y, axis_x = get_next_location(matrix_dim, palabra, relation)
+    palabra.pos_y = axis_y
+    palabra.pos_x = axis_x
+    position_elems.update({
+        palabra: (
+            axis_x - pos_x_media,
+            axis_y - pos_y_media
+        )})
+
+    # reemplazar los 0s por IDs para range(value['dimension']+2)
+    update_palabras_in_matrix(matrix_dim, palabra, axis_y, axis_x)
+
+    imprimir_matriz(matrix_dim)
+    palabra.has_been_plotted = True
+
+    list_relaciones_pal = Palabra.relaciones_dict_origen.get(palabra)
+    list_relaciones_pal.sort(key=lambda x: x.pal_dest.grafos_aproximados[0] if len(x.pal_dest.grafos_aproximados) > 0 else 0, reverse=True)
+
+    list_direcciones_orden = []
+    if len(list_relaciones_pal) > 0:
+        find_dir = DICT_DIR_BY_ORIGEN.get(palabra.direccion_origen)
+        # FIXME: meter aqui un try-except por si supera 7 elementos.
+        list_direcciones_orden = find_dir[len(list_relaciones_pal)-1]
+        palabra.lista_direcciones_orden = list_direcciones_orden
+
+    num_dir_orden = -1
+    for relation in list_relaciones_pal:
+        num_dir_orden += 1
+        palabra.pos_actual_recorrer_dir_relaciones = num_dir_orden
+        if relation.pal_dest.has_been_plotted:
+            continue
+
+        dir_actual = list_direcciones_orden[num_dir_orden]
+        relation.direccion_actual = dir_actual
+        relation.pal_dest.direccion_origen = dir_actual
+
+        print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
+        list_palabras_representadas_new, position_elems, matrix_dim = \
+            get_position_word_recursive(position_elems, matrix_dim, relation.pal_dest, pos_y_media, pos_x_media,
+                                        list_relaciones, relation)
+
+        list_palabras_representadas += list_palabras_representadas_new
+
+    list_palabras_representadas.append(palabra)
+
+    return list_palabras_representadas, position_elems, matrix_dim
+
 
 
 def get_position_dict(list_palabras, list_relaciones):
@@ -504,65 +581,72 @@ def get_position_dict(list_palabras, list_relaciones):
     list_palabras_ordenadas = list(importance_dict.keys())
     while len(list_palabras_ordenadas) != 0:
         palabra = list_palabras_ordenadas.pop(0)
-        print(f"Matrix: {palabra.texto}")
 
-        # obtener la posicion sugerida
-        axis_y, axis_x, _ = get_pal_suggested_position(matrix_dim, palabra)
+        list_palabras_representadas, position_elems, matrix_dim = \
+            get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media, pos_x_media, list_relaciones)
+
+        print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
+        #quitar de list_palabras_ordenadas las palabras que ya han sido representadas
+        list_palabras_ordenadas = [pal for pal in list_palabras_ordenadas if pal not in list_palabras_representadas]
+        list_palabras_ordenadas.sort(key=lambda x: x.grafos_aproximados[0] if len(x.grafos_aproximados) > 0 else 0,
+                                 reverse=True)
 
         ################################################################################################################
         ################################################################################################################
         ################################################################################################################
         ################################################################################################################
 
-        position_elems.update({
-            palabra: (
-                axis_x - pos_x_media,
-                axis_y - pos_y_media
-            )})
 
-        # reemplazar los 0s por IDs para range(value['dimension']+2)
-        update_palabras_in_matrix(matrix_dim, palabra, axis_y, axis_x)
-
-        imprimir_matriz(matrix_dim)
-
-        palabra.has_been_plotted = True
-        list_relaciones_pal = Palabra.relaciones_dict_origen.get(palabra)
 
         # crear una lista con las palabras destino de las relaciones de la palabra ordenadas por el primer numero de la lista grafos_aproximados
-        added_list_pal_dest = [rel.pal_dest for rel in list_relaciones_pal]
-        added_list_pal_dest.sort(key=lambda x: x.grafos_aproximados[0] if len(x.grafos_aproximados) > 0 else 0, reverse=True)
-        ################################################################################################################
-        ################################################################################################################
-        ################################################################################################################
-        ################################################################################################################
-        list_palabras_ordenadas = insert_start_list(list_palabras_ordenadas, added_list_pal_dest)
-        for relation in list_relaciones_pal:
-            if relation.pal_dest.pos_x is None:
-                rel_x, rel_y, direction, ancho_flecha = get_next_direction_v2(
-                    matrix_dim, axis_x, axis_x + palabra.dimension + 1, axis_y, relation)
-            else:
-                rel_x, rel_y, direction, ancho_flecha = get_direction_by_pal_plotted(matrix_dim, relation, axis_x, axis_y)
+        # added_list_pal_dest = [rel.pal_dest for rel in list_relaciones_pal]
+        # added_list_pal_dest.sort(key=lambda x: x.grafos_aproximados[0] if len(x.grafos_aproximados) > 0 else 0, reverse=True)
+        # list_palabras_ordenadas = insert_start_list(list_palabras_ordenadas, added_list_pal_dest)
 
-            relation.direction = direction
-            dict_rel_direction.update({relation.id: direction})
-            if not relation.pal_dest.has_been_plotted and direction == DIR_DCHA:
-                for i in range(ancho_flecha + ancho_flecha // 2):
-                    matrix_dim[rel_y][rel_x + i] = relation.id
-            elif not relation.pal_dest.has_been_plotted and direction == DIR_IZQ:
-                for i in range(ancho_flecha + 1):
-                    matrix_dim[rel_y][rel_x - i] = relation.id
-            elif not relation.pal_dest.has_been_plotted:
-                matrix_dim[rel_y][rel_x] = relation.id
-                for i in range(ancho_flecha):
-                    matrix_dim[rel_y][rel_x - ancho_flecha // 2 + i] = relation.id
+        # Ordenar list_relaciones_pal por el primer numero de la lista grafos_aproximados
 
-            if not relation.pal_dest.has_been_plotted:
-                pal_y, pal_x, _ = get_pal_suggested_position(matrix_dim, relation.pal_dest)
-                relation.pal_dest.pos_x = pal_x
-                relation.pal_dest.pos_y = pal_y
-            imprimir_matriz(matrix_dim)
-        if PRINT_GRAPH:
-            print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
+
+
+        ################################################################################################################
+        ################################################################################################################
+        ################################################################################################################
+        ################################################################################################################
+
+
+
+
+
+
+
+
+            # if relation.pal_dest.pos_x is None:
+            #     rel_x, rel_y, direction, ancho_flecha = get_next_direction_v2(
+            #         matrix_dim, axis_x, axis_x + palabra.dimension + 1, axis_y, relation)
+            # else:
+            #     rel_x, rel_y, direction, ancho_flecha = get_direction_by_pal_plotted(matrix_dim, relation, axis_x, axis_y)
+
+            # relation.direction = direction
+            # dict_rel_direction.update({relation.id: direction})
+            # if not relation.pal_dest.has_been_plotted and direction == DIR_DCHA:
+            #     for i in range(ancho_flecha + ancho_flecha // 2):
+            #         matrix_dim[rel_y][rel_x + i] = relation.id
+            # elif not relation.pal_dest.has_been_plotted and direction == DIR_IZQ:
+            #     for i in range(ancho_flecha + 1):
+            #         matrix_dim[rel_y][rel_x - i] = relation.id
+            # elif not relation.pal_dest.has_been_plotted:
+            #     matrix_dim[rel_y][rel_x] = relation.id
+            #     for i in range(ancho_flecha):
+            #         matrix_dim[rel_y][rel_x - ancho_flecha // 2 + i] = relation.id
+
+            # if not relation.pal_dest.has_been_plotted:
+            #     pal_y, pal_x, _ = get_pal_suggested_position(matrix_dim, relation.pal_dest)
+            #     relation.pal_dest.pos_x = pal_x
+            #     relation.pal_dest.pos_y = pal_y
+            # imprimir_matriz(matrix_dim)
+
+        print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
+
+    position_elems = reducir_posiciones_finales_eje_y(position_elems)
 
     return position_elems, matrix_dim
 
@@ -635,13 +719,16 @@ def generate_graph(texto, list_palabras, list_relaciones):
     # Crear posiciones de nodos
     position_elems, matrix_dim = get_position_dict(list_palabras, list_relaciones)
 
-    print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
+    print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=True)
 
 
 
+def print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=False):
+    if PRINT_GRAPH or final:
+        _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
 
 
-def print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
+def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
 
     #Convertir el position elements sustituyendo el primero objeto por el texto
     position_elems_deprec = {}
@@ -742,20 +829,25 @@ def print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
             x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0]
             y_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][1]
             y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][1]
-            if relation_draw.direction == DIR_DCHA:
+            if relation_draw.direccion_actual == DIR_DCHA:
                 x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][0] + relation_draw.pal_origen.multiplicador_borde_figura - 0.25
                 x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] - relation_draw.pal_dest.multiplicador_borde_figura
-            elif relation_draw.direction == DIR_IZQ:
+            elif relation_draw.direccion_actual == DIR_IZQ:
                 x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][0] - relation_draw.pal_origen.dimension//2
                 x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] + relation_draw.pal_dest.dimension//2
-            elif relation_draw.direction == DIR_ARRIBA:
+            elif relation_draw.direccion_actual == DIR_ARRIBA:
                 y_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][1]
                 y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][1] - relation_draw.pal_dest.tam_eje_y_figura
                 x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] - relation_draw.pal_dest.multiplicador_borde_figura
-            elif relation_draw.direction == DIR_ABAJO:
+            elif relation_draw.direccion_actual == DIR_ABAJO:
                 y_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][1]
                 y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][1] + relation_draw.pal_dest.tam_eje_y_figura
                 x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] + relation_draw.pal_dest.multiplicador_borde_figura
+            else:
+                #TODO me faltan las de los 45º
+                x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][0] + relation_draw.pal_origen.multiplicador_borde_figura - 0.25
+                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] - relation_draw.pal_dest.multiplicador_borde_figura - 0.25
+
 
             draw_edge(
                 ax,

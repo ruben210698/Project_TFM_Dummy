@@ -9,6 +9,7 @@ Importancia: un valor numérico que indica la importancia de la palabra en el te
 
 """
 import re
+from constants.direcciones_relaciones import CENTRO
 
 """
 ¿Por qué hay un id_actual que a veces es autoincremental y a veces no?
@@ -39,7 +40,7 @@ class Palabra:
             self.importancia = importancia
         self.num_relaciones = num_relaciones
         self.dimension = self.get_dimension(texto)
-        self.dimension_y = 3
+        self.dimension_y = 1
         self.has_been_plotted = False
         self.position_doc = position_doc
         self.figura = None
@@ -52,6 +53,9 @@ class Palabra:
 
         self.numero_grafos = -1
         self.grafos_aproximados = []
+        self.direccion_origen = CENTRO
+        self.pos_actual_recorrer_dir_relaciones = 0
+        self.lista_direcciones_orden = []
 
         self.position_relation_full = \
             {}

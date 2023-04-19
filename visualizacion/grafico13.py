@@ -109,7 +109,7 @@ def get_direction_by_pal_plotted(matrix_dim, rel, x_ini, y_ini):
     if rel.pal_dest.pos_x is None:
         return None, None, None, None
 
-    tam_text_origen = rel.tam_texto if rel.tam_texto > 0 else 1
+    tam_text_origen = rel.tam_text if rel.tam_text > 0 else 1
     tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
 
     x_fin = rel.pal_dest.pos_x
@@ -129,7 +129,7 @@ def deprecated_get_next_direction(matrix_dim, x_ini, x_fin, y, rel):
     pos_x_media = (x_ini + x_fin) // 2
     # Saco el tamaño texto impar para las relaciones que vayan a abajo o arriba.
     # Ya que deben ocupar de ancho el tamaño del texto de forma simetrica
-    tam_text_origen = rel.tam_texto if rel.tam_texto > 0 else 1
+    tam_text_origen = rel.tam_text if rel.tam_text > 0 else 1
     tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
 
     # comprueba si el espacio inmediatamente a la derecha está libre
@@ -184,7 +184,7 @@ def get_next_direction_v2(matrix_dim, x_ini, x_fin, y, rel):
     pos_x_media = (x_ini + x_fin) // 2
     # Saco el tamaño texto impar para las relaciones que vayan a abajo o arriba.
     # Ya que deben ocupar de ancho el tamaño del texto de forma simetrica
-    tam_text_origen = rel.tam_texto if rel.tam_texto > 0 else 1
+    tam_text_origen = rel.tam_text if rel.tam_text > 0 else 1
     tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
 
     # comprueba si el espacio a la derecha, con un margen de 20 elementos, está libre:

@@ -1,5 +1,6 @@
 # Por orden de importancia y con el valor el grado en el circulo.
 # No son grados precisos, simplemente son aproximaciones para hacerse una idea de la direccion si se ve como un circulo
+CENTRO = "CENTRO"
 DIR_DCHA = "0"
 DIR_DCHA_ABAJO = "315"  # Abajo
 DIR_DCHA_ARRIBA = "45"  # Arriba
@@ -111,3 +112,17 @@ LIST_DIR_IZQ_ABAJO_7 = [DIR_IZQ, DIR_IZQ_ABAJO, DIR_ABAJO, DIR_IZQ_ARRIBA, DIR_A
 
 FIND_DIR_IZQ_ABAJO = [LIST_DIR_IZQ_ABAJO_1, LIST_DIR_IZQ_ABAJO_2, LIST_DIR_IZQ_ABAJO_3, LIST_DIR_IZQ_ABAJO_4,
                       LIST_DIR_IZQ_ABAJO_5, LIST_DIR_IZQ_ABAJO_6, LIST_DIR_IZQ_ABAJO_7]
+
+
+DICT_DIR_BY_ORIGEN = \
+    {
+        CENTRO: FIND_DIR_CENTRO,
+        DIR_DCHA: FIND_DIR_DCHA,
+        DIR_DCHA_ABAJO: FIND_DIR_DCHA_ABAJO,
+        DIR_DCHA_ARRIBA: FIND_DIR_DCHA_ARRIBA,
+        DIR_ABAJO: FIND_DIR_ABAJO,
+        DIR_ARRIBA: FIND_DIR_ARRIBA,
+        DIR_IZQ: FIND_DIR_IZQ,
+        DIR_IZQ_ARRIBA: FIND_DIR_IZQ_ARRIBA,
+        DIR_IZQ_ABAJO: FIND_DIR_IZQ_ABAJO
+    }
