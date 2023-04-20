@@ -2,8 +2,8 @@
 
 DIM_Y_MATRIX = 15
 DIM_X_MATRIX = 100
-DIM_Y_MATRIX = 500
-DIM_X_MATRIX = 20000
+DIM_Y_MATRIX = 50
+DIM_X_MATRIX = 200
 def get_pos_media_matrix(matrix_dim):
     pos_y_media = len(matrix_dim) // 2
     pos_x_media = len(matrix_dim[0]) // 2

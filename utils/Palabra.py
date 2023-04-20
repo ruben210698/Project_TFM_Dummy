@@ -64,9 +64,6 @@ class Palabra:
         self.pos_actual_recorrer_dir_relaciones = 0
         self.lista_direcciones_orden = []
 
-        self.position_relation_full = \
-            {}
-
         Palabra.palabras_dict[self.txt_lema + "-" + str(self.position_doc)] = self
         Palabra.relaciones_dict_origen[self] = []
         Palabra.relaciones_dict_destino[self] = []

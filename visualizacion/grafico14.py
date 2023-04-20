@@ -26,7 +26,7 @@ from visualizacion.utils.matrix_functions import generate_matrix
 LINEAS_SEP_FILA = 5
 
 PRINT_MATRIX = False
-PRINT_GRAPH = True
+PRINT_GRAPH = False
 
 MODE_DEBUG = "DEBUG"
 MODE_NORMAL = "NORMAL"
@@ -209,144 +209,6 @@ def reducir_posiciones_finales_eje_y(posiciones_finales):
     return posiciones_finales
 
 
-def get_pal_suggested_position(matrix_dim, palabra):
-    list_relaciones_destino = Palabra.relaciones_dict_destino[palabra]
-
-    if list_relaciones_destino is None or len(list_relaciones_destino) == 0:
-        # es el primer elemento de un grafo
-        y, x = get_new_position_without_relations(matrix_dim)
-        return y, x, -1
-
-    id_to_find = 0
-    relacion = None
-    if palabra.pos_x is not None and palabra.pos_y is not None:
-        y = palabra.pos_y
-        x = palabra.pos_x
-    else:
-        # TODO quitar porque esto solo se usa para las next locations
-        if list_relaciones_destino is None or len(list_relaciones_destino) == 0:
-            y, x = get_new_position_without_relations(matrix_dim)
-        else:
-            y, x = get_most_centered_pos(matrix_dim)
-
-        for rel in list_relaciones_destino:
-            for i in range(len(matrix_dim)):
-                for j in range(len(matrix_dim[i])):
-                    if matrix_dim[i][j] == rel.id:
-                        y = i
-                        x = j
-                        # y_ini = i if y_ini == -1 else y_ini
-                        # y_fin = i
-                        # x_ini = j if x_ini == -1 else x_ini
-                        # x_fin = j
-                        id_to_find = rel.id
-                        relacion = rel
-                        break
-
-        if relacion is not None and relacion.direction == DIR_DCHA:
-            x = x + (relacion.tam_texto if relacion.tam_texto > 0 else 1)
-        if relacion is not None and relacion.direction == DIR_IZQ:
-            x = x - (relacion.tam_texto if relacion.tam_texto > 0 else 1)
-    # cabe????
-    rango = palabra.dimension + 4
-    if relacion is not None and relacion.direction == DIR_IZQ:
-        rango = -rango
-    for x_test in range(rango):
-        if matrix_dim[y][x_test + x] != id_to_find and matrix_dim[y][x_test + x] != 0:
-            imprimir_matriz(matrix_dim)
-            matrix_dim[y][x] = 0
-            x = x - palabra.dimension // 2 - 1
-            matrix_dim[y][x] = id_to_find
-            imprimir_matriz(matrix_dim)
-            break
-    # TODO: ya se completará esto para que suba otra fila o para que haga cosas más complicadas
-    if palabra.pos_x is None:
-        return y, x + rango // 2, id_to_find
-    else:
-        return y, x, id_to_find
-
-
-def get_new_position_without_relations(matrix):
-    DISTANCE_BETWEEN_WORDS = 5
-
-    rows = len(matrix)
-    cols = len(matrix[0])
-    center_row = rows // 2
-    center_col = cols // 2
-    max_distance = max(center_row, center_col) + 1
-
-    j_left_result = True
-    j_right_result = True
-    for distance in range(max_distance):
-        print(f"distance: {distance}")
-        result = True
-        i_final = -1
-        j_final = -1
-        if distance == 13:
-            print("hola 13")
-
-        for eje_y_inicio in range(center_row - distance, center_row + distance):
-            for eje_x_inicio in range(center_col - distance, center_col + distance):
-                # Ahora compruebo el cuadrante dentro de ese rango
-                for eje_y in range(eje_y_inicio - DISTANCE_BETWEEN_WORDS, eje_y_inicio + DISTANCE_BETWEEN_WORDS):
-                    # Comprobar si las posiciones están dentro de la matriz
-                    if not (eje_y >= 0 and eje_y < rows):  # Error
-                        continue
-
-                    # que compruebe que las posiciones de la matriz están a 0 en un rado de DISTANCE_BETWEEN_WORDS
-                    for eje_x in range(eje_x_inicio - DISTANCE_BETWEEN_WORDS, eje_x_inicio + DISTANCE_BETWEEN_WORDS):
-                        if not (eje_x >= 0 and eje_x < cols):  # Error
-                            continue
-
-                        if result and matrix[eje_y][eje_x] == 0:
-                            i_final = center_row - distance
-                            j_final = center_col - distance
-                        else:
-                            result = False
-                            continue
-                    if not result:
-                        continue
-
-                if result and j_final != -1 and i_final != -1:
-                    return (i_final, j_final)
-
-    return None
-
-
-def get_most_centered_pos(matrix):
-    rows = len(matrix)
-    cols = len(matrix[0])
-    center_row = rows // 2
-    center_col = cols // 2
-    max_distance = max(center_row, center_col) + 1
-
-    for distance in range(max_distance):
-        for i in range(center_row - distance, center_row + distance + 1):
-            j_left = center_col - distance
-            j_right = center_col + distance
-
-            # Comprobar si las posiciones están dentro de la matriz
-            if i >= 0 and i < rows:
-                if j_left >= 0 and j_left < cols and matrix[i][j_left] == 0:
-                    return (i, j_left)
-                if j_right >= 0 and j_right < cols and matrix[i][j_right] == 0:
-                    return (i, j_right)
-
-    return None
-
-
-def insert_start_list(original_list, added_list):
-    added_list = added_list.copy()
-    added_list.reverse()
-    for pal in added_list:
-        try:
-            if pal in added_list:
-                original_list.remove(pal)
-                original_list.insert(0, pal)
-        except Exception as e:
-            pass
-
-    return original_list
 
 
 def update_palabras_in_matrix(matrix_dim, palabra, axis_y, axis_x):
@@ -361,8 +223,13 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media
                                 relation=None):
     list_palabras_representadas = []
     print(f"Matrix: {palabra.texto}")
+    aaaaaaaaaaa = palabra.texto
+    if palabra.texto == 'majestuosas y extensas':
+        print("hola")
 
-    axis_y, axis_x = get_next_location(matrix_dim, palabra, relation)
+    axis_y, axis_x, matrix_dim = get_next_location(matrix_dim, palabra, relation)
+    if axis_y is None or axis_x is None:
+        return None, None, None
     palabra.pos_y = axis_y
     palabra.pos_x = axis_x
     position_elems.update({
@@ -377,8 +244,6 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media
     imprimir_matriz(matrix_dim)
     palabra.has_been_plotted = True
 
-    if palabra.texto == 'arte y arte':
-        print(palabra)
     list_relaciones_pal = Palabra.relaciones_dict_origen.get(palabra, [])
 
     list_direcciones_orden = []
@@ -392,8 +257,12 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media
         palabra.lista_direcciones_orden = list_direcciones_orden
 
     num_dir_orden = -1
-    for relation in list_relaciones_pal:
+    num_relacion = -1
+    while num_dir_orden < len(list_direcciones_orden) - 1:
         num_dir_orden += 1
+        num_relacion += 1
+        relation = list_relaciones_pal[num_relacion]
+
         palabra.pos_actual_recorrer_dir_relaciones = num_dir_orden
         if relation.pal_dest.has_been_plotted:
             continue
@@ -403,9 +272,22 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media
         relation.pal_dest.direccion_origen = dir_actual
 
         print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
-        list_palabras_representadas_new, position_elems, matrix_dim = \
+        if palabra.texto == 'majestuosas y extensas':
+            print("hola")
+
+        list_palabras_representadas_new, position_elems_2, matrix_dim_2 = \
             get_position_word_recursive(position_elems, matrix_dim, relation.pal_dest, pos_y_media, pos_x_media,
                                         list_relaciones, relation)
+
+        if list_palabras_representadas_new is None or position_elems is None or matrix_dim is None:
+            print("No se ha podido representar el grafo")
+            list_direcciones_orden = palabra.lista_direcciones_orden
+            list_palabras_representadas_new = []
+            num_relacion -= 1
+        else:
+            position_elems = position_elems_2
+            matrix_dim = matrix_dim_2
+
 
         list_palabras_representadas += list_palabras_representadas_new
 
@@ -594,7 +476,7 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
             pal.tam_eje_y_figura = tam_figuras.RECTANGULO[1]
             pal.multiplicador_borde_figura = tam_figuras.RECTANGULO[0] * len(node_text)
             rectangle_width = tam_figuras.RECTANGULO[0] * 2 * len(node_text)
-            height = pal.dimension_y
+            height = 1 #pal.dimension_y
             tamano_texto = 12
 
             rectangle = Rectangle(
