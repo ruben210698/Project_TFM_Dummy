@@ -7,6 +7,17 @@ from utils.Relacion import Relacion
 # Las excepciones que se han visto que se deben aplicar al texto.
 
 
+def truncate_a_8_relaciones(list_palabras):
+    #TODO que borre las relaciones con el grafo mas pequeño
+    for pal in list_palabras:
+        print(pal.numero_grafos)
+        print(pal.texto)
+        if pal.numero_grafos > 8:
+            raise Exception("Hay mas de 8 relaciones")
+
+    return list_palabras
+
+
 def unir_2_relaciones(rel1, rel2, remove_rel2=True):
     print("Uniendo relaciones: " + rel1.texto + " y " + rel2.texto)
     if rel1.position_doc <= rel2.position_doc:
@@ -26,12 +37,7 @@ def unir_list_all_relaciones(list_relaciones, list_modified = []):
     list_relaciones = list(set(list_relaciones))
     list_relaciones_new = list_relaciones.copy()
     for rel in list_relaciones:
-        if rel.texto == 'de':
-            print("hola")
         for rel2 in list_relaciones:
-            if rel2.texto == 'la':
-                print("hola")
-            # and rel not in list_modified and \
             if rel2 not in list_modified and \
                 rel != rel2 and rel.pal_origen == rel2.pal_origen and rel.pal_dest == rel2.pal_dest:
                 print(rel2.position_doc)
@@ -45,10 +51,8 @@ def unir_list_all_relaciones(list_relaciones, list_modified = []):
 
 
 def get_relation_entre_pal(pal1, pal2):
-    print("Buscando relación entre " + pal1.texto)
-    if pal2.texto == 'XVI':
-        print("hola")
-    print("Buscando relación entre " + pal2.texto)
+    print("Buscando relación entre1 " + pal1.texto)
+    print("Buscando relación entre2 " + pal2.texto)
     # Devuelve la relación entre 2 palabras
     for rel in Palabra.relaciones_dict_destino[pal2]:
         if rel.pal_origen == pal1:
@@ -59,9 +63,16 @@ def get_relation_entre_pal(pal1, pal2):
 
 def unir_palabras_sin_relacion(pal1, pal2, list_relaciones, list_palabras, texto_entre_palabras =""):
     # TODO que si hay alguna relacion de la palabra2, que las una.
+    print(f"Uniendo palabras {pal1.texto} --- {pal2.texto}")
+    if pal2.texto == 'expulsión' and pal1.texto == 'judíos':
+        print("hola")
 
-    list_rel_pal2_palx = Palabra.relaciones_dict_origen[pal2].copy()
-    list_rel_palx_pal2 = Palabra.relaciones_dict_destino[pal2].copy()
+    list_rel_pal2_palx = Palabra.relaciones_dict_origen.get(pal2, [])
+    if list_rel_pal2_palx:
+        list_rel_pal2_palx = list_rel_pal2_palx.copy()
+    list_rel_palx_pal2 = Palabra.relaciones_dict_destino.get(pal2, [])
+    if list_rel_palx_pal2:
+        list_rel_palx_pal2 = list_rel_palx_pal2.copy()
 
     for rel in list_rel_palx_pal2:
         if rel.pal_origen != pal1:
@@ -88,15 +99,14 @@ def unir_palabras_sin_relacion(pal1, pal2, list_relaciones, list_palabras, texto
     pal1.dimension = Palabra.get_dimension(pal1.texto)
     pal2.delete_palabra()
     # guarda todas las relaciones menos las de la pal1 y pal2 respectivamente
-    list_palabras.remove(pal2)
+    if pal2 in list_palabras:
+        list_palabras.remove(pal2)
 
     return list_relaciones, list_palabras
 
 
 
 def unir_palabras(pal1, pal2, list_relaciones, list_palabras):
-    if pal2.texto == 'XVI y XVII':
-        print("hola")
     basic_relation = get_relation_entre_pal(pal1, pal2)
     #TODO if basic_relation == None:
 
@@ -215,51 +225,59 @@ def unir_conjuncion_y(list_palabras, list_relaciones):
     list_palabras_copy = list_palabras.copy()
     list_relaciones_copy = list_relaciones.copy()
     for basic_rel_y in list_relaciones_copy:
-        if basic_rel_y.texto == 'y' or basic_rel_y.texto == 'e' or basic_rel_y.texto == ',':
-            print(f"Palabra origen relY: {basic_rel_y.pal_origen.texto}")
-            if basic_rel_y.pal_origen.texto == 'Madrid':
-                print("hola")
-            relaciones_dict_dest_copy = Palabra.relaciones_dict_destino[basic_rel_y.pal_dest].copy()
-            # TODO: descomentar para jutar "arquitectura y arte"
-            if relaciones_dict_dest_copy.__len__() == 1 and relaciones_dict_dest_copy[0] == basic_rel_y:
-                dict_palabras_juntar.update({basic_rel_y.pal_origen: basic_rel_y.pal_dest})
-                if list_rel_y_eliminar.count(basic_rel_y) == 0:
-                    list_rel_y_eliminar.append(basic_rel_y)
+        try:
+            if basic_rel_y.texto == 'y' or basic_rel_y.texto == 'e' or basic_rel_y.texto == ',':
+                print(f"Palabra origen relY: {basic_rel_y.pal_origen.texto}")
+                if basic_rel_y.pal_origen.texto == 'Carlos':
+                    print("hola")
 
-            for rel in relaciones_dict_dest_copy:
-                # si en list_relaciones hay una relacion con el mismo texto y la misma posicion pero es distinta Relacion
-                # Significa que ese "y" es un complemento a otra relacion anterior.
-                # Es por ello que eliminaremos esa relación.
-                # una vez eliminadas todas las relaciones duplicadas, uniremos las palabras que estén relacionadas.
+                relaciones_dict_dest_copy = Palabra.relaciones_dict_destino[basic_rel_y.pal_dest].copy()
+                # TODO: descomentar para jutar "arquitectura y arte"
+                if relaciones_dict_dest_copy.__len__() == 1 and relaciones_dict_dest_copy[0] == basic_rel_y:
+                    dict_palabras_juntar.update({basic_rel_y.pal_origen: basic_rel_y.pal_dest})
+                    if list_rel_y_eliminar.count(basic_rel_y) == 0:
+                        list_rel_y_eliminar.append(basic_rel_y)
 
-                dict_txt_withour_me = dict_txt_all_relations.copy()
-                if rel not in dict_txt_withour_me or rel == basic_rel_y:
-                    continue
+                for rel in relaciones_dict_dest_copy:
+                    # si en list_relaciones hay una relacion con el mismo texto y la misma posicion pero es distinta Relacion
+                    # Significa que ese "y" es un complemento a otra relacion anterior.
+                    # Es por ello que eliminaremos esa relación.
+                    # una vez eliminadas todas las relaciones duplicadas, uniremos las palabras que estén relacionadas.
 
-                dict_txt_withour_me.pop(rel)
+                    dict_txt_withour_me = dict_txt_all_relations.copy()
+                    if rel not in dict_txt_withour_me or rel == basic_rel_y:
+                        continue
 
-                # obtener indices de los valores con el mismo value que el texto
-                list_indices = [i for i, x in enumerate(dict_txt_withour_me.values()) if x == rel.texto]
-                list_relaciones_with_same_text = [list(dict_txt_withour_me.keys())[i] for i in list_indices]
-                # obtener las relaciones con el mismo texto y la misma posicion
-                list_relaciones_with_same_text_and_position = [rel2 for rel2 in list_relaciones_with_same_text if
-                                                                rel2.position_doc == rel.position_doc]
-                for rel2 in list_relaciones_with_same_text_and_position:
-                    if rel2 != rel:# and rel.pal_dest != basic_rel_y.pal_dest:
-                        # Eliminar la relacion 1, dejar solo la relacion 2 y luego unir las palabras
-                        rel.delete_relation()
-                        list_relaciones.remove(rel)
-                        if list_rel_y_eliminar.count(basic_rel_y) == 0:
-                            list_rel_y_eliminar.append(basic_rel_y)
-                        dict_palabras_juntar.update({rel2.pal_dest: basic_rel_y.pal_dest})
+                    dict_txt_withour_me.pop(rel)
+
+                    # obtener indices de los valores con el mismo value que el texto
+                    list_indices = [i for i, x in enumerate(dict_txt_withour_me.values()) if x == rel.texto]
+                    list_relaciones_with_same_text = [list(dict_txt_withour_me.keys())[i] for i in list_indices]
+                    # obtener las relaciones con el mismo texto y la misma posicion
+                    list_relaciones_with_same_text_and_position = [rel2 for rel2 in list_relaciones_with_same_text if
+                                                                    rel2.position_doc == rel.position_doc]
+                    for rel2 in list_relaciones_with_same_text_and_position:
+                        if rel2 != rel:# and rel.pal_dest != basic_rel_y.pal_dest:
+                            # Eliminar la relacion 1, dejar solo la relacion 2 y luego unir las palabras
+                            rel.delete_relation()
+                            if rel in list_relaciones:
+                                list_relaciones.remove(rel)
+                            if list_rel_y_eliminar.count(basic_rel_y) == 0:
+                                list_rel_y_eliminar.append(basic_rel_y)
+                            dict_palabras_juntar.update({rel2.pal_dest: basic_rel_y.pal_dest})
+        except Exception as e:
+            print(f"Error al unir palabras con conjunsion y: {e}")
 
     for rel_y in list_rel_y_eliminar:
         rel_y.delete_relation()
         list_relaciones.remove(rel_y)
 
     for pal1, pal2 in dict_palabras_juntar.items():
-        list_relaciones, list_palabras = \
-            unir_palabras_sin_relacion(pal1, pal2, list_relaciones, list_palabras, texto_entre_palabras ="y")
+        try:
+            list_relaciones, list_palabras = \
+                unir_palabras_sin_relacion(pal1, pal2, list_relaciones, list_palabras, texto_entre_palabras ="y")
+        except Exception as e:
+            print(f"Error al unir palabras: {e}")
 
     return list_palabras, list_relaciones
 

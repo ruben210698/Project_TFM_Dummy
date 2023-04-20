@@ -58,7 +58,7 @@ class Relacion:
     @staticmethod
     def get_tam_texto(texto):
         # Método que calcula la dimensión dependiendo del tamaño de la palabra
-        return len(texto)//2 if len(texto) > 2 else 1
+        return len(texto) if len(texto) > 2 else 2
 
     def add_rel_dest(self, palabra_dest):
         Palabra.relaciones_dict_destino[self.pal_dest].append(palabra_dest)

@@ -41,10 +41,12 @@ class Palabra:
         else:
             self.importancia = importancia
         self.num_relaciones = num_relaciones
+
         self.dimension = self.get_dimension(texto)
+        self.dimension_y = 1
         self.cte_sum_x = 5
         self.cte_sum_y = 2
-        self.dimension_y = 1
+
         self.has_been_plotted = False
         self.position_doc = position_doc
         self.figura = None
@@ -52,6 +54,7 @@ class Palabra:
         self.tam_eje_y_figura = None
         self.pos_x = None
         self.pos_y = None
+
         self.list_texto_enumeracion = []
         self.is_enumeracion = False
 
@@ -110,9 +113,18 @@ class Palabra:
         Palabra.palabras_dict[new_txt_lema + "-" + str(self.position_doc)] = self
 
     def delete_palabra(self):
-        del Palabra.palabras_dict[self.txt_lema + "-" + str(self.position_doc)]
-        del Palabra.relaciones_dict_origen[self]
-        del Palabra.relaciones_dict_destino[self]
+        try:
+            del Palabra.palabras_dict[self.txt_lema + "-" + str(self.position_doc)]
+        except Exception as _:
+            pass
+        try:
+            del Palabra.relaciones_dict_origen[self]
+        except Exception as _:
+            pass
+        try:
+            del Palabra.relaciones_dict_destino[self]
+        except Exception as _:
+            pass
 
     @staticmethod
     def refresh_dict_palabras():

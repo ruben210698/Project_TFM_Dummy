@@ -31,12 +31,8 @@ def find_better_center_position(matrix_dim, palabra, pos_y_media, pos_x_media):
 def get_pos_dir_dcha(matrix_dim, palabra, relation):
     DISTANCIA_DE_INTENTO_X = 15
     DISTANCIA_DE_INTENTO_X = 1500
-    print("-------")
-    print(f"{relation.pal_origen.pos_y}")
-    print(f"{relation.pal_origen.pos_x}")
-    print("-------")
     pos_y = relation.pal_origen.pos_y + relation.cte_sum_y
-    pos_x = relation.pal_origen.pos_x + (relation.tam_text*2 + relation.cte_sum_x)
+    pos_x = relation.pal_origen.pos_x + (relation.tam_text + relation.cte_sum_x)
 
     for x_loop in range(pos_x, pos_x+DISTANCIA_DE_INTENTO_X):
         if is_empty_pos_matrix(

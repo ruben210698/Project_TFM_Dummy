@@ -14,7 +14,8 @@ from constants import type_sintax
 from constants import colores_figura, colores_figura_letra, colores
 from constants.figuras import *
 from constants import tam_figuras
-from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_list, unir_conjuncion_y
+from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_list, unir_conjuncion_y, \
+    truncate_a_8_relaciones
 
 from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_ARRIBA, DIR_ABAJO, DIR_ARRIBA, \
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
@@ -25,12 +26,11 @@ from visualizacion.utils.matrix_functions import generate_matrix
 LINEAS_SEP_FILA = 5
 
 PRINT_MATRIX = False
-PRINT_GRAPH = False
+PRINT_GRAPH = True
 
 MODE_DEBUG = "DEBUG"
 MODE_NORMAL = "NORMAL"
 EX_MODE = MODE_DEBUG
-
 
 dict_color_figura = {
     getattr(type_sintax, nombre_variable): valor_variable
@@ -45,7 +45,6 @@ dict_color_figura_letra = {
     if nombre_variable.startswith("TYPE_SINTAX_")
 }
 dict_color_figura_letra.update({None: colores.default, "": colores.default})
-
 
 """
 ¿Qué necesito aqui?
@@ -74,16 +73,11 @@ Futuro Avanzado:
 - Que cuando las relaciones sean 2, se queden bonitas con un angulo de 45º. Si son 3, con un angulo de 30º. Y no putos cuadrados.
 """
 
-#TODO:
+
+# TODO:
 #  Que se añada el numero de relaciones de cada palabra y de esa forma se pueda calcular la importancia de cada palabra
 #  y la posicion en la que colocarla y en la que colocar las demás.
 #  - Añadir 1s cuando la relación vaya a pasar por ahi en la matriz.
-
-
-
-
-
-
 
 
 # Función para dibujar aristas con flechas
@@ -103,23 +97,13 @@ def get_importance_dict(list_palabras):
     new_dict = {}
     for pal in list_palabras:
         new_dict[pal] = {"importancia": pal.importancia, "dimension": pal.dimension}
-    #ordenar el diccionario por importancia
+    # ordenar el diccionario por importancia
     new_dict = dict(sorted(new_dict.items(), key=lambda item: item[1]["importancia"]))
 
     return new_dict
 
 
-
-
-
-
-
-
-
-
-
 def reducir_tam_matriz(matrix_dim):
-
     # Reducir Matriz
     matrix_dim = matrix_dim.copy()
     matrix_dim_copy = matrix_dim.copy()
@@ -153,7 +137,7 @@ def reducir_tam_matriz(matrix_dim):
     return matrix_dim
 
 
-def imprimir_matriz(matriz, apply_num_inicial_col = True):
+def imprimir_matriz(matriz, apply_num_inicial_col=True):
     try:
         if not PRINT_MATRIX:
             return
@@ -184,9 +168,6 @@ def imprimir_matriz(matriz, apply_num_inicial_col = True):
         pass
 
 
-
-
-
 def loop_reducir_posiciones_finales_eje_y(posiciones_finales, cambiado):
     ultima_y_leida = 0
     dim_y_reducir = 0
@@ -205,9 +186,10 @@ def loop_reducir_posiciones_finales_eje_y(posiciones_finales, cambiado):
         ultima_y_leida = pos_y_actual
     return posiciones_finales, cambiado
 
+
 def reducir_posiciones_finales_eje_y(posiciones_finales):
     posiciones_finales = posiciones_finales.copy()
-    #TODO lo que hace esta funcion es
+    # TODO lo que hace esta funcion es
     # 1. ordena de menor a mayor todos los elementos y
     # 2. mira si entre 1 y otro de alguno hay más de 10 elementos (recurda que están ordenados de menor a mayor)
     # 3. si existe, cojo las posiciones finales iniciales y reduzco esa diferencia "excesiva" a todas las ys
@@ -227,7 +209,6 @@ def reducir_posiciones_finales_eje_y(posiciones_finales):
     return posiciones_finales
 
 
-
 def get_pal_suggested_position(matrix_dim, palabra):
     list_relaciones_destino = Palabra.relaciones_dict_destino[palabra]
 
@@ -235,8 +216,6 @@ def get_pal_suggested_position(matrix_dim, palabra):
         # es el primer elemento de un grafo
         y, x = get_new_position_without_relations(matrix_dim)
         return y, x, -1
-
-
 
     id_to_find = 0
     relacion = None
@@ -256,10 +235,10 @@ def get_pal_suggested_position(matrix_dim, palabra):
                     if matrix_dim[i][j] == rel.id:
                         y = i
                         x = j
-                        #y_ini = i if y_ini == -1 else y_ini
-                        #y_fin = i
-                        #x_ini = j if x_ini == -1 else x_ini
-                        #x_fin = j
+                        # y_ini = i if y_ini == -1 else y_ini
+                        # y_fin = i
+                        # x_ini = j if x_ini == -1 else x_ini
+                        # x_fin = j
                         id_to_find = rel.id
                         relacion = rel
                         break
@@ -282,10 +261,9 @@ def get_pal_suggested_position(matrix_dim, palabra):
             break
     # TODO: ya se completará esto para que suba otra fila o para que haga cosas más complicadas
     if palabra.pos_x is None:
-        return y, x + rango//2, id_to_find
+        return y, x + rango // 2, id_to_find
     else:
         return y, x, id_to_find
-
 
 
 def get_new_position_without_relations(matrix):
@@ -312,7 +290,7 @@ def get_new_position_without_relations(matrix):
                 # Ahora compruebo el cuadrante dentro de ese rango
                 for eje_y in range(eje_y_inicio - DISTANCE_BETWEEN_WORDS, eje_y_inicio + DISTANCE_BETWEEN_WORDS):
                     # Comprobar si las posiciones están dentro de la matriz
-                    if not(eje_y >= 0 and eje_y < rows): #Error
+                    if not (eje_y >= 0 and eje_y < rows):  # Error
                         continue
 
                     # que compruebe que las posiciones de la matriz están a 0 en un rado de DISTANCE_BETWEEN_WORDS
@@ -333,6 +311,7 @@ def get_new_position_without_relations(matrix):
                     return (i_final, j_final)
 
     return None
+
 
 def get_most_centered_pos(matrix):
     rows = len(matrix)
@@ -355,6 +334,7 @@ def get_most_centered_pos(matrix):
 
     return None
 
+
 def insert_start_list(original_list, added_list):
     added_list = added_list.copy()
     added_list.reverse()
@@ -369,12 +349,12 @@ def insert_start_list(original_list, added_list):
     return original_list
 
 
-
 def update_palabras_in_matrix(matrix_dim, palabra, axis_y, axis_x):
     # bucle que recorre palabra.dimension_y desde -palabra.dimension_y//2 hasta palabra.dimension_y//2
     for y in range(palabra.dimension_y):
-        axis_y_loop = axis_y + y -palabra.dimension_y//2
-        matrix_dim[axis_y_loop][axis_x:axis_x + palabra.dimension + palabra.cte_sum_x] = [palabra.id for x in range(palabra.dimension + 2)]
+        axis_y_loop = axis_y + y - palabra.dimension_y // 2
+        matrix_dim[axis_y_loop][axis_x:axis_x + palabra.dimension + palabra.cte_sum_x] = [palabra.id for x in
+                                                                                          range(palabra.dimension + 2)]
 
 
 def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media, pos_x_media, list_relaciones,
@@ -397,14 +377,18 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media
     imprimir_matriz(matrix_dim)
     palabra.has_been_plotted = True
 
-    list_relaciones_pal = Palabra.relaciones_dict_origen.get(palabra)
-    list_relaciones_pal.sort(key=lambda x: x.pal_dest.grafos_aproximados[0] if len(x.pal_dest.grafos_aproximados) > 0 else 0, reverse=True)
+    if palabra.texto == 'arte y arte':
+        print(palabra)
+    list_relaciones_pal = Palabra.relaciones_dict_origen.get(palabra, [])
 
     list_direcciones_orden = []
     if len(list_relaciones_pal) > 0:
+        list_relaciones_pal.sort(
+            key=lambda x: x.pal_dest.grafos_aproximados[0] if len(x.pal_dest.grafos_aproximados) > 0 else 0,
+            reverse=True)
         find_dir = DICT_DIR_BY_ORIGEN.get(palabra.direccion_origen)
         # FIXME: meter aqui un try-except por si supera 7 elementos.
-        list_direcciones_orden = find_dir[len(list_relaciones_pal)-1]
+        list_direcciones_orden = find_dir[len(list_relaciones_pal) - 1]
         palabra.lista_direcciones_orden = list_direcciones_orden
 
     num_dir_orden = -1
@@ -430,7 +414,6 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media
     return list_palabras_representadas, position_elems, matrix_dim
 
 
-
 def get_position_dict(list_palabras, list_relaciones):
     importance_dict = get_importance_dict(list_palabras)
     matrix_dim, pos_y_media, pos_x_media = generate_matrix(list_palabras)
@@ -446,10 +429,10 @@ def get_position_dict(list_palabras, list_relaciones):
             get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media, pos_x_media, list_relaciones)
 
         print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
-        #quitar de list_palabras_ordenadas las palabras que ya han sido representadas
+        # quitar de list_palabras_ordenadas las palabras que ya han sido representadas
         list_palabras_ordenadas = [pal for pal in list_palabras_ordenadas if pal not in list_palabras_representadas]
         list_palabras_ordenadas.sort(key=lambda x: x.grafos_aproximados[0] if len(x.grafos_aproximados) > 0 else 0,
-                                 reverse=True)
+                                     reverse=True)
 
         print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
 
@@ -458,11 +441,6 @@ def get_position_dict(list_palabras, list_relaciones):
     return position_elems, matrix_dim
 
 
-
-
-
-
-
 #######################################################################################################################
 #######################################################################################################################
 #######################################################################################################################
@@ -483,12 +461,12 @@ def get_position_dict(list_palabras, list_relaciones):
 #######################################################################################################################
 #######################################################################################################################
 #######################################################################################################################
-
 
 
 def insertar_grafos_aproximados_palabras(list_palabras):
     for i in range(len(list_palabras) - 1, -1, -1):
         list_palabras[i].refresh_grafos_aproximados()
+
 
 def remove_relations_without_words(list_relaciones):
     # Añadir nodos y aristas
@@ -502,6 +480,7 @@ def remove_relations_without_words(list_relaciones):
         relation.delete_relation()
     return list_relaciones
 
+
 def text_tranformations(list_palabras, list_relaciones):
     list_palabras, list_relaciones = unir_conjuncion_y(list_palabras, list_relaciones)
     list_relaciones = unir_list_all_relaciones(list_relaciones)
@@ -511,8 +490,10 @@ def text_tranformations(list_palabras, list_relaciones):
 
     # al final:
     insertar_grafos_aproximados_palabras(list_palabras)
-    return list_palabras, list_relaciones
+    truncate_a_8_relaciones(list_palabras)
+    insertar_grafos_aproximados_palabras(list_palabras)
 
+    return list_palabras, list_relaciones
 
 
 def generate_graph(texto, list_palabras, list_relaciones):
@@ -529,15 +510,11 @@ def generate_graph(texto, list_palabras, list_relaciones):
     print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=True)
 
 
-
 def print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=False):
     if PRINT_GRAPH or final:
         _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
 
-
 def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
-
-    #Convertir el position elements sustituyendo el primero objeto por el texto
     position_elems_deprec = {}
     for pal in list_palabras:
         try:
@@ -556,58 +533,79 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
     max_axis_x = max([x[0] for x in position_elems.values()]) + 5
     min_axis_x = min([x[0] for x in position_elems.values()]) - 5
 
+    dif_y = abs(max_axis_y - min_axis_y)//2
+    dif_x = abs(max_axis_x - min_axis_x)//2
 
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(dif_x, dif_y))
+    #fig, ax = plt.subplots(figsize=(24, 16))
+    #fig, ax = plt.subplots()
 
     # Dibujar nodos
     for pal, (x, y) in position_elems.items():
-        node = pal.texto
+        node_text = pal.texto
         print(pal.texto)
         if pal.lugar_sintactico.lower() in (TYPE_SINTAX_ROOT):
             pal.figura = FIGURA_ELIPSE
             pal.tam_eje_y_figura = tam_figuras.ELIPSE[1]
-            pal.multiplicador_borde_figura = tam_figuras.ELIPSE[0] * len(node)
-            ellipse_width = 0.6 * len(node)
-            ellipse = Ellipse((x, y), width=ellipse_width, height=1, color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
+            pal.multiplicador_borde_figura = tam_figuras.ELIPSE[0] * len(node_text)
+            ellipse_width = 0.6 * len(node_text)
+            ellipse = Ellipse((x, y), width=ellipse_width, height=1,
+                              color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
             ax.add_patch(ellipse)
-            ax.text(x, y, node, fontsize=12, ha='center', va='center', zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
+            ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
+                    color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
 
         elif pal.lugar_sintactico.lower() in (TYPE_SINTAX_AMOD, TYPE_SINTAX_NMOD):
             pal.figura = FIGURA_RECTANGULO
             pal.tam_eje_y_figura = tam_figuras.RECTANGULO[1]
-            pal.multiplicador_borde_figura = tam_figuras.RECTANGULO[0] * len(node)
-            rectangle_width = tam_figuras.RECTANGULO[0]*2 * len(node)
-            rectangle = Rectangle((x - rectangle_width / 2, y - 0.4), width=rectangle_width, height=1, color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
+            pal.multiplicador_borde_figura = tam_figuras.RECTANGULO[0] * len(node_text)
+            rectangle_width = tam_figuras.RECTANGULO[0] * 2 * len(node_text)
+            rectangle = Rectangle((x - rectangle_width / 2, y - 0.4), width=rectangle_width, height=1,
+                                  color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
             ax.add_patch(rectangle)
-            ax.text(x, y, node, fontsize=12, ha='center', va='center', zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
-#
+            ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
+                    color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
+        #
         elif pal.lugar_sintactico.lower() in (TYPE_SINTAX_FLAT):
             pal.figura = FIGURA_HEXAGONO
-            pal.tam_eje_y_figura = tam_figuras.HEXAGONO[1] * len(node)
-            pal.multiplicador_borde_figura = tam_figuras.HEXAGONO[0] * len(node)
-            polygon_radius = 0.4 * len(node)
-            polygon = RegularPolygon((x, y), numVertices=6, radius=polygon_radius, orientation=0, color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
+            pal.tam_eje_y_figura = tam_figuras.HEXAGONO[1] * len(node_text)
+            pal.multiplicador_borde_figura = tam_figuras.HEXAGONO[0] * len(node_text)
+            polygon_radius = 0.4 * len(node_text)
+            polygon = RegularPolygon((x, y), numVertices=6, radius=polygon_radius, orientation=0,
+                                     color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
             ax.add_patch(polygon)
-            ax.text(x, y, node, fontsize=12, ha='center', va='center', zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
-#
+            ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
+                    color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
+        #
         elif pal.lugar_sintactico.lower() in ():
             pal.figura = FIGURA_RECTANGULO
             pal.tam_eje_y_figura = tam_figuras.RECTANGULO[1]
-            pal.multiplicador_borde_figura = tam_figuras.RECTANGULO[0] * len(node)
-            #TODO
-            rectangle_width = 0.1 * len(node) + 0.2
-            rectangle = Rectangle((x - rectangle_width / 2, y - 0.25), width=rectangle_width, height=0.5, color=dict_color_figura.get(pal.lugar_sintactico, colores.default),
+            pal.multiplicador_borde_figura = tam_figuras.RECTANGULO[0] * len(node_text)
+            # TODO
+            rectangle_width = 0.1 * len(node_text) + 0.2
+            rectangle = Rectangle((x - rectangle_width / 2, y - 0.25), width=rectangle_width, height=0.5,
+                                  color=dict_color_figura.get(pal.lugar_sintactico, colores.default),
                                   zorder=2)
             ax.add_patch(rectangle)
-            ax.text(x, y, node, fontsize=12, ha='center', va='center', zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
+            ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
+                    color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
         else:
             pal.figura = FIGURA_RECTANGULO
             pal.tam_eje_y_figura = tam_figuras.RECTANGULO[1]
-            pal.multiplicador_borde_figura = tam_figuras.RECTANGULO[0] * len(node)
-            rectangle_width = tam_figuras.RECTANGULO[0]*2 * len(node)
-            rectangle = Rectangle((x - rectangle_width / 2, y - 0.4), width=rectangle_width, height=1, color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
+            pal.multiplicador_borde_figura = tam_figuras.RECTANGULO[0] * len(node_text)
+            rectangle_width = tam_figuras.RECTANGULO[0] * 2 * len(node_text)
+            height = pal.dimension_y
+            tamano_texto = 12
+
+            rectangle = Rectangle(
+                xy=(x - rectangle_width / 2, y - height * 0.4),
+                width=rectangle_width,
+                height=height,
+                color=dict_color_figura.get(pal.lugar_sintactico, colores.default),
+                zorder=2)
             ax.add_patch(rectangle)
-            ax.text(x, y, node, fontsize=12, ha='center', va='center', zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
+            ax.text(x, y, node_text, fontsize=12, ha='center', va='center',
+                    zorder=3,  color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
 
 
             # ellipse_width = 0.1 * len(node) + 0.2
@@ -615,8 +613,6 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
             # ellipse = Ellipse((x, y), width=ellipse_width, height=ellipse_height, color=dict_color_figura[None], zorder=2)
             # ax.add_patch(ellipse)
             # ax.text(x, y, node, fontsize=12, ha='center', va='center', zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
-
-
 
 
 
@@ -637,24 +633,33 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
             y_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][1]
             y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][1]
             if relation_draw.direccion_actual == DIR_DCHA:
-                x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][0] + relation_draw.pal_origen.multiplicador_borde_figura - 0.25
-                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] - relation_draw.pal_dest.multiplicador_borde_figura
+                x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][
+                                    0] + relation_draw.pal_origen.multiplicador_borde_figura - 0.25
+                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
+                                  0] - relation_draw.pal_dest.multiplicador_borde_figura
             elif relation_draw.direccion_actual == DIR_IZQ:
-                x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][0] - relation_draw.pal_origen.dimension//2
-                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] + relation_draw.pal_dest.dimension//2
+                x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][
+                                    0] - relation_draw.pal_origen.dimension // 2
+                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
+                                  0] + relation_draw.pal_dest.dimension // 2
             elif relation_draw.direccion_actual == DIR_ARRIBA:
                 y_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][1]
-                y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][1] - relation_draw.pal_dest.tam_eje_y_figura
-                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] - relation_draw.pal_dest.multiplicador_borde_figura
+                y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
+                                  1] - relation_draw.pal_dest.tam_eje_y_figura
+                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
+                                  0] - relation_draw.pal_dest.multiplicador_borde_figura
             elif relation_draw.direccion_actual == DIR_ABAJO:
                 y_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][1]
-                y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][1] + relation_draw.pal_dest.tam_eje_y_figura
-                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] + relation_draw.pal_dest.multiplicador_borde_figura
+                y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
+                                  1] + relation_draw.pal_dest.tam_eje_y_figura
+                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
+                                  0] + relation_draw.pal_dest.multiplicador_borde_figura
             else:
-                #TODO me faltan las de los 45º
-                x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][0] + relation_draw.pal_origen.multiplicador_borde_figura - 0.25
-                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0] - relation_draw.pal_dest.multiplicador_borde_figura - 0.25
-
+                # TODO me faltan las de los 45º
+                x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][
+                                    0] + relation_draw.pal_origen.multiplicador_borde_figura - 0.25
+                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
+                                  0] - relation_draw.pal_dest.multiplicador_borde_figura - 0.25
 
             draw_edge(
                 ax,
@@ -667,11 +672,9 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
         except Exception as e:
             pass
 
-    #draw_edge(ax, position_elems_deprec["ruben"], position_elems_deprec["pescado"], color=light_blue, label='come', label_offset=(0, 0.1))
-    #draw_edge(ax, position_elems_deprec["pescado"], position_elems_deprec["restaurante"], color=light_blue, label='en', label_offset=(0, 0.1))
-    #draw_edge(ax, position_elems_deprec["restaurante"], position_elems_deprec["pepe"], color=green, label='de', label_offset=(0, 0.1))
-
-
+    # draw_edge(ax, position_elems_deprec["ruben"], position_elems_deprec["pescado"], color=light_blue, label='come', label_offset=(0, 0.1))
+    # draw_edge(ax, position_elems_deprec["pescado"], position_elems_deprec["restaurante"], color=light_blue, label='en', label_offset=(0, 0.1))
+    # draw_edge(ax, position_elems_deprec["restaurante"], position_elems_deprec["pepe"], color=green, label='de', label_offset=(0, 0.1))
 
     # Configurar límites y aspecto del gráfico
     ax.set_ylim(min_axis_y, max_axis_y)
@@ -680,6 +683,3 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
     ax.axis('on')
 
     plt.show()
-
-
-
