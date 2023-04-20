@@ -159,7 +159,6 @@ def update_list_dir_order(relation):
 RECTA_DISTANCIA_DE_INTENTO_X = 15
 
 def get_pos_dir_dcha(matrix_dim, palabra, relation):
-
     if relation is None:
         return None, None, matrix_dim
     pos_y = relation.pal_origen.pos_y

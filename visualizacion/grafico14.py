@@ -1,4 +1,5 @@
 import math
+import time
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -21,7 +22,7 @@ from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
     FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO
 from visualizacion.utils.direcciones import get_next_location
-from visualizacion.utils.matrix_functions import generate_matrix
+from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_matrix
 
 LINEAS_SEP_FILA = 5
 
@@ -210,6 +211,47 @@ def reducir_posiciones_finales_eje_y(posiciones_finales):
 
 
 
+def loop_reducir_posiciones_finales_eje_x(posiciones_finales, cambiado):
+    ultima_x_leida = 0
+    dim_x_reducir = 0
+    i = -1
+    posiciones_finales_loop = posiciones_finales.copy()
+    cambiado = False
+    for palabra, posicion in posiciones_finales_loop.items():
+        i += 1
+        pos_x_actual = posicion[0]
+        if (pos_x_actual - ultima_x_leida) > 15:
+            dim_x_reducir += (pos_x_actual - ultima_x_leida - 15)
+        if dim_x_reducir > 0:
+            nueva_pos_x = pos_x_actual - dim_x_reducir
+            posiciones_finales.update({palabra: (nueva_pos_x, posicion[1])})
+            cambiado = True
+        ultima_x_leida = pos_x_actual
+    return posiciones_finales, cambiado
+
+
+def reducir_posiciones_finales_eje_x(posiciones_finales):
+    posiciones_finales = posiciones_finales.copy()
+    # TODO lo que hace esta funcion es
+    # 1. ordena de menor a mayor todos los elementos y
+    # 2. mira si entre 1 y otro de alguno hay más de 10 elementos (recurda que están ordenados de menor a mayor)
+    # 3. si existe, cojo las posiciones finales iniciales y reduzco esa diferencia "excesiva" a todas las ys
+    #  de todos los elementos que estén por encima de ese numero :)
+
+    # tengo que crear un diccionario de {palabra: {pos_x: pos_y}}
+    # y que ordene por pos_y en orden.
+
+    posiciones_finales = dict(sorted(posiciones_finales.items(), key=lambda x: x[1][0]))
+
+    cambiado = False
+    posiciones_finales, cambiado = loop_reducir_posiciones_finales_eje_x(posiciones_finales, cambiado)
+
+    while cambiado == True:
+        posiciones_finales, cambiado = loop_reducir_posiciones_finales_eje_x(posiciones_finales, cambiado)
+
+    return posiciones_finales
+
+
 
 def update_palabras_in_matrix(matrix_dim, palabra, axis_y, axis_x):
     # bucle que recorre palabra.dimension_y desde -palabra.dimension_y//2 hasta palabra.dimension_y//2
@@ -219,17 +261,12 @@ def update_palabras_in_matrix(matrix_dim, palabra, axis_y, axis_x):
                                                                                           range(palabra.dimension + 2)]
 
 
-def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media, pos_x_media, list_relaciones,
-                                relation=None):
-    list_palabras_representadas = []
-    print(f"Matrix: {palabra.texto}")
-    aaaaaaaaaaa = palabra.texto
-    if palabra.texto == 'majestuosas y extensas':
-        print("hola")
-
+def represent_word(matrix_dim, palabra, relation, position_elems):
+    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
     axis_y, axis_x, matrix_dim = get_next_location(matrix_dim, palabra, relation)
     if axis_y is None or axis_x is None:
-        return None, None, None
+        print("No se ha podido representar la palabra: ", palabra.texto)
+        return matrix_dim, None, relation, position_elems
     palabra.pos_y = axis_y
     palabra.pos_x = axis_x
     position_elems.update({
@@ -244,6 +281,19 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media
     imprimir_matriz(matrix_dim)
     palabra.has_been_plotted = True
 
+    return matrix_dim, palabra, relation, position_elems
+
+def get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaciones, relation=None):
+    list_palabras_representadas = []
+    print(f"Matrix: {palabra.texto}")
+    aaaaaaaaaaa = palabra.texto
+    if palabra.texto == 'órganos y pulmones':
+        print("hola")
+    #time.sleep(10)
+    matrix_dim, palabra, relation, position_elems = represent_word(matrix_dim, palabra, relation, position_elems)
+    if palabra is None:
+        return None, None, None
+
     list_relaciones_pal = Palabra.relaciones_dict_origen.get(palabra, [])
 
     list_direcciones_orden = []
@@ -253,7 +303,10 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media
             reverse=True)
         find_dir = DICT_DIR_BY_ORIGEN.get(palabra.direccion_origen)
         # FIXME: meter aqui un try-except por si supera 7 elementos.
-        list_direcciones_orden = find_dir[len(list_relaciones_pal) - 1]
+        if len(list_relaciones_pal) > len(find_dir) :
+            list_direcciones_orden = find_dir[-1]
+        else:
+            list_direcciones_orden = find_dir[len(list_relaciones_pal) - 1]
         palabra.lista_direcciones_orden = list_direcciones_orden
 
     num_dir_orden = -1
@@ -276,8 +329,7 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media
             print("hola")
 
         list_palabras_representadas_new, position_elems_2, matrix_dim_2 = \
-            get_position_word_recursive(position_elems, matrix_dim, relation.pal_dest, pos_y_media, pos_x_media,
-                                        list_relaciones, relation)
+            get_position_word_recursive(position_elems, matrix_dim, relation.pal_dest, list_relaciones, relation)
 
         if list_palabras_representadas_new is None or position_elems is None or matrix_dim is None:
             print("No se ha podido representar el grafo")
@@ -308,7 +360,7 @@ def get_position_dict(list_palabras, list_relaciones):
         palabra = list_palabras_ordenadas.pop(0)
 
         list_palabras_representadas, position_elems, matrix_dim = \
-            get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media, pos_x_media, list_relaciones)
+            get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaciones)
 
         print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
         # quitar de list_palabras_ordenadas las palabras que ya han sido representadas
@@ -319,6 +371,7 @@ def get_position_dict(list_palabras, list_relaciones):
         print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
 
     position_elems = reducir_posiciones_finales_eje_y(position_elems)
+    position_elems = reducir_posiciones_finales_eje_x(position_elems)
 
     return position_elems, matrix_dim
 
