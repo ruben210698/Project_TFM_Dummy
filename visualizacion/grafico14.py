@@ -108,145 +108,11 @@ def get_importance_dict(list_palabras):
 
     return new_dict
 
-def get_direction_by_pal_plotted(matrix_dim, rel, x_ini, y_ini):
-    if rel.pal_dest.pos_x is None:
-        return None, None, None, None
-
-    tam_text_origen = rel.tam_text if rel.tam_text > 0 else 1
-    tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
-
-    x_fin = rel.pal_dest.pos_x
-    y_fin = rel.pal_dest.pos_y
-    if y_ini == y_fin and x_ini < x_fin:
-        return x_ini, y_fin, DIR_DCHA, tam_text_origen
-    elif y_ini == y_fin and x_ini > x_fin:
-        return x_fin, y_fin, DIR_IZQ, tam_text_origen
-    elif y_ini > y_fin:
-        return x_fin, y_ini, DIR_ABAJO, tam_text_impar
-    elif y_ini < y_fin:
-        return x_fin, y_fin, DIR_ARRIBA, tam_text_impar
-
-    return None, None, None, None
-
-def deprecated_get_next_direction(matrix_dim, x_ini, x_fin, y, rel):
-    pos_x_media = (x_ini + x_fin) // 2
-    # Saco el tamaño texto impar para las relaciones que vayan a abajo o arriba.
-    # Ya que deben ocupar de ancho el tamaño del texto de forma simetrica
-    tam_text_origen = rel.tam_text if rel.tam_text > 0 else 1
-    tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
-
-    # comprueba si el espacio inmediatamente a la derecha está libre
-    if x_fin + 1 < len(matrix_dim[y]) and matrix_dim[y][x_fin + 1] == 0 and matrix_dim[y][x_fin + 2] == 0:
-        return x_fin + 1, y, DIR_DCHA, tam_text_origen
-
-    # comprueba si el espacio inmediatamente abajo está libre
-    if y + LINEAS_SEP_FILA < len(matrix_dim) and matrix_dim[y + LINEAS_SEP_FILA][pos_x_media] == 0 * (len(matrix_dim[y]) - x_ini):
-        return pos_x_media, y + LINEAS_SEP_FILA, DIR_ABAJO, tam_text_impar
-
-    # comprueba si el espacio inmediatamente arriba está libre
-    if y - LINEAS_SEP_FILA >= 0 and matrix_dim[y - LINEAS_SEP_FILA][pos_x_media] == 0 * (len(matrix_dim[y]) - x_ini):
-        return pos_x_media, y - LINEAS_SEP_FILA, DIR_ARRIBA, tam_text_impar
-
-    # comprueba si el espacio inmediatamente a la izquierda está libre
-    if x_ini - 1 >= 0 and x_ini - 1 >= 0 and matrix_dim[y][x_ini - 1] == 0:
-        return x_ini - 1 , y, DIR_IZQ, tam_text_origen
-
-    #######
-    # TODO quitar esto
-    #######
-    if y - 4 >= 0 and matrix_dim[y - 4][pos_x_media] == 0:
-        return pos_x_media, y - 4, DIR_ARRIBA, tam_text_impar
-    if y - 6 >= 0 and matrix_dim[y - 6][pos_x_media] == 0:
-        return pos_x_media, y - 6, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 8][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 10][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 12][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 14][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 16][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 18][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 20][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-
-    return None, None, None
 
 
 
 
-def get_next_direction_v2(matrix_dim, x_ini, x_fin, y, rel):
-    print(f"relacion: {rel.texto}")
-    MARGIN_DCHA = 20
-    MARGIN_IZQ = 20
-    MARGIN_UP = 8
-    MARGIN_DOWN = 8
-    pos_x_media = (x_ini + x_fin) // 2
-    # Saco el tamaño texto impar para las relaciones que vayan a abajo o arriba.
-    # Ya que deben ocupar de ancho el tamaño del texto de forma simetrica
-    tam_text_origen = rel.tam_text if rel.tam_text > 0 else 1
-    tam_text_impar = tam_text_origen if tam_text_origen % 2 != 0 else tam_text_origen + 1
 
-    # comprueba si el espacio a la derecha, con un margen de 20 elementos, está libre:
-    derecha_libre = True
-    for i in range(1, MARGIN_DCHA):
-        if not (x_fin + 1 < len(matrix_dim[y]) and matrix_dim[y][x_fin + i] == 0):
-            derecha_libre = False
-    if derecha_libre:
-        return x_fin + 1, y, DIR_DCHA, tam_text_origen
-
-    # comprueba si el espacio inmediatamente abajo está libre
-    down_libre = True
-    for i in range(1, MARGIN_DOWN+LINEAS_SEP_FILA):
-        if not (y + LINEAS_SEP_FILA < len(matrix_dim) and matrix_dim[y - i][pos_x_media] == 0):
-            down_libre = False
-    if down_libre:
-        return pos_x_media, y - LINEAS_SEP_FILA, DIR_ABAJO, tam_text_impar
-
-    # comprueba si el espacio inmediatamente arriba está libre
-    up_libre = True
-    for i in range(1, MARGIN_UP+LINEAS_SEP_FILA):
-        if not (y - LINEAS_SEP_FILA >= 0 and matrix_dim[y + i][pos_x_media] == 0):
-            up_libre = False
-    if up_libre:
-        return pos_x_media, y + LINEAS_SEP_FILA, DIR_ARRIBA, tam_text_impar
-
-    # comprueba si el espacio inmediatamente a la izquierda está libre
-    izq_libre = True
-    for i in range(1, MARGIN_IZQ):
-        if not (x_ini - 1 >= 0 and matrix_dim[y][x_ini - i] == 0):
-            izq_libre = False
-    if izq_libre:
-        return x_ini - 1, y, DIR_IZQ, tam_text_origen
-
-
-
-    #######
-    # TODO quitar esto
-    #######
-    if y - 4 >= 0 and matrix_dim[y - 4][pos_x_media] == 0:
-        return pos_x_media, y - 4, DIR_ARRIBA, tam_text_impar
-    if y - 6 >= 0 and matrix_dim[y - 6][pos_x_media] == 0:
-        return pos_x_media, y - 6, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 8][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 10][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 12][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 14][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 16][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 18][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-    if y - 8 >= 0 and matrix_dim[y - 20][pos_x_media] == 0:
-        return pos_x_media, y - 8, DIR_ARRIBA, tam_text_impar
-
-    return None, None, None
 
 
 
@@ -318,12 +184,6 @@ def imprimir_matriz(matriz, apply_num_inicial_col = True):
         pass
 
 
-def get_y_matrix(matrix, id):
-    for i in range(len(matrix)):
-        for j in range(len(matrix[i])):
-            if matrix[i][j] == id:
-                return i
-    return None
 
 
 
@@ -514,7 +374,7 @@ def update_palabras_in_matrix(matrix_dim, palabra, axis_y, axis_x):
     # bucle que recorre palabra.dimension_y desde -palabra.dimension_y//2 hasta palabra.dimension_y//2
     for y in range(palabra.dimension_y):
         axis_y_loop = axis_y + y -palabra.dimension_y//2
-        matrix_dim[axis_y_loop][axis_x:axis_x + palabra.dimension + 2] = [palabra.id for x in range(palabra.dimension + 2)]
+        matrix_dim[axis_y_loop][axis_x:axis_x + palabra.dimension + palabra.cte_sum_x] = [palabra.id for x in range(palabra.dimension + 2)]
 
 
 def get_position_word_recursive(position_elems, matrix_dim, palabra, pos_y_media, pos_x_media, list_relaciones,
@@ -590,59 +450,6 @@ def get_position_dict(list_palabras, list_relaciones):
         list_palabras_ordenadas = [pal for pal in list_palabras_ordenadas if pal not in list_palabras_representadas]
         list_palabras_ordenadas.sort(key=lambda x: x.grafos_aproximados[0] if len(x.grafos_aproximados) > 0 else 0,
                                  reverse=True)
-
-        ################################################################################################################
-        ################################################################################################################
-        ################################################################################################################
-        ################################################################################################################
-
-
-
-        # crear una lista con las palabras destino de las relaciones de la palabra ordenadas por el primer numero de la lista grafos_aproximados
-        # added_list_pal_dest = [rel.pal_dest for rel in list_relaciones_pal]
-        # added_list_pal_dest.sort(key=lambda x: x.grafos_aproximados[0] if len(x.grafos_aproximados) > 0 else 0, reverse=True)
-        # list_palabras_ordenadas = insert_start_list(list_palabras_ordenadas, added_list_pal_dest)
-
-        # Ordenar list_relaciones_pal por el primer numero de la lista grafos_aproximados
-
-
-
-        ################################################################################################################
-        ################################################################################################################
-        ################################################################################################################
-        ################################################################################################################
-
-
-
-
-
-
-
-
-            # if relation.pal_dest.pos_x is None:
-            #     rel_x, rel_y, direction, ancho_flecha = get_next_direction_v2(
-            #         matrix_dim, axis_x, axis_x + palabra.dimension + 1, axis_y, relation)
-            # else:
-            #     rel_x, rel_y, direction, ancho_flecha = get_direction_by_pal_plotted(matrix_dim, relation, axis_x, axis_y)
-
-            # relation.direction = direction
-            # dict_rel_direction.update({relation.id: direction})
-            # if not relation.pal_dest.has_been_plotted and direction == DIR_DCHA:
-            #     for i in range(ancho_flecha + ancho_flecha // 2):
-            #         matrix_dim[rel_y][rel_x + i] = relation.id
-            # elif not relation.pal_dest.has_been_plotted and direction == DIR_IZQ:
-            #     for i in range(ancho_flecha + 1):
-            #         matrix_dim[rel_y][rel_x - i] = relation.id
-            # elif not relation.pal_dest.has_been_plotted:
-            #     matrix_dim[rel_y][rel_x] = relation.id
-            #     for i in range(ancho_flecha):
-            #         matrix_dim[rel_y][rel_x - ancho_flecha // 2 + i] = relation.id
-
-            # if not relation.pal_dest.has_been_plotted:
-            #     pal_y, pal_x, _ = get_pal_suggested_position(matrix_dim, relation.pal_dest)
-            #     relation.pal_dest.pos_x = pal_x
-            #     relation.pal_dest.pos_y = pal_y
-            # imprimir_matriz(matrix_dim)
 
         print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
 

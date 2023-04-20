@@ -20,13 +20,15 @@ class Relacion:
         self.pal_dest = pal_dest
         self.lugar_sintactico = lugar_sintactico
         self.tam_text = self.get_tam_texto(texto)
+        self.cte_sum_x = 5
+        self.cte_sum_y = 0
         self.id = id if id is not None else self.generar_id()
         self.importancia = importancia if importancia is not None else self.generar_importancia(pal_origen, pal_dest)
         self.position_doc = position_doc
         self.tipo_morf = tipo_morf
         self.direccion_actual = CENTRO
 
-        Relacion.relaciones_dict[self.texto] = self
+        Relacion.relaciones_dict[self.texto] = self # TODO añadir la posicion del documento
         Relacion.relaciones_dict_id[self.id] = self
         Palabra.relaciones_dict_origen[self.pal_origen].append(self)
         Palabra.relaciones_dict_origen[self.pal_origen] = \
@@ -70,9 +72,9 @@ class Relacion:
 
     def to_create_Relacion_str(self):
         if self.tipo_morf is not None:
-            return "list_relaciones.append(Relacion('" + self.texto + "', " + f"Palabra.palabras_dict.get('{self.pal_origen.txt_lema}') " + ", " +  f"Palabra.palabras_dict.get('{self.pal_dest.txt_lema}')" + f", position_doc={self.position_doc} "+", lugar_sintactico='" + self.lugar_sintactico + f"', importancia = {self.importancia}" + ", id=" + str(self.id) + ", tipo_morf = '" + str(self.tipo_morf) + "'))"
+            return "list_relaciones.append(Relacion('" + self.texto + "', " + f"Palabra.palabras_dict.get('{self.pal_origen.txt_lema}-{self.pal_origen.position_doc}') " + ", " +  f"Palabra.palabras_dict.get('{self.pal_dest.txt_lema}-{self.pal_dest.position_doc}')" + f", position_doc={self.position_doc} "+", lugar_sintactico='" + self.lugar_sintactico + f"', importancia = {self.importancia}" + ", id=" + str(self.id) + ", tipo_morf = '" + str(self.tipo_morf) + "'))"
         else:
-            return "list_relaciones.append(Relacion('" + self.texto + "', " + f"Palabra.palabras_dict.get('{self.pal_origen.txt_lema}') " + ", " +  f"Palabra.palabras_dict.get('{self.pal_dest.txt_lema}')" + f", position_doc={self.position_doc} "+", lugar_sintactico='" + self.lugar_sintactico + f"', importancia = {self.importancia}" + ", id=" + str(self.id) + "))"
+            return "list_relaciones.append(Relacion('" + self.texto + "', " + f"Palabra.palabras_dict.get('{self.pal_origen.txt_lema}-{self.pal_origen.position_doc}') " + ", " +  f"Palabra.palabras_dict.get('{self.pal_dest.txt_lema}-{self.pal_dest.position_doc}')" + f", position_doc={self.position_doc} "+", lugar_sintactico='" + self.lugar_sintactico + f"', importancia = {self.importancia}" + ", id=" + str(self.id) + "))"
     def delete_relation(self):
         try:
             if Palabra.relaciones_dict_origen.get(self.pal_origen) is not None:

@@ -19,6 +19,8 @@ Sin embargo, si hay palabras iguales como nombres propios, nombres de ciudades..
 De esta forma, palabras que se repiten y no queremos que sean iguales en el grafo, serán autoimcrementales
 y palabras que se repitan y queramos que se relacionen, se guardarán con el id como su hash y serán iguales.
 """
+
+
 class Palabra:
     id_actual = 9
     palabras_dict = {}
@@ -26,7 +28,7 @@ class Palabra:
     relaciones_dict_destino = {}
 
     def __init__(self, texto, tipo, lugar_sintactico, id=None, importancia=None, num_relaciones=0, autoincremental=True,
-                 txt_lema=None, position_doc = 9999):
+                 txt_lema=None, position_doc=9999):
 
         self.texto = texto
         self.txt_lema = txt_lema if txt_lema is not None else self.limpiar_texto(texto)
@@ -40,6 +42,8 @@ class Palabra:
             self.importancia = importancia
         self.num_relaciones = num_relaciones
         self.dimension = self.get_dimension(texto)
+        self.cte_sum_x = 5
+        self.cte_sum_y = 2
         self.dimension_y = 1
         self.has_been_plotted = False
         self.position_doc = position_doc
@@ -60,14 +64,15 @@ class Palabra:
         self.position_relation_full = \
             {}
 
-        Palabra.palabras_dict[self.txt_lema] = self
+        Palabra.palabras_dict[self.txt_lema + "-" + str(self.position_doc)] = self
         Palabra.relaciones_dict_origen[self] = []
         Palabra.relaciones_dict_destino[self] = []
 
-    #get palabra by lema si existe
+    # get palabra by lema si existe
     @classmethod
     def get_palabra_by_lema(cls, txt_lema, position_doc):
-        if Palabra.palabras_dict.get(txt_lema, None) is not None and Palabra.palabras_dict[txt_lema].position_doc == position_doc:
+        if Palabra.palabras_dict.get(txt_lema, None) is not None and Palabra.palabras_dict[
+            txt_lema].position_doc == position_doc:
             return Palabra.palabras_dict[txt_lema]
         else:
             return None
@@ -85,7 +90,6 @@ class Palabra:
     def reordenar_importancia_list(cls, lista):
         return sorted(lista, key=lambda x: x.importancia, reverse=False)
 
-
     @staticmethod
     def limpiar_texto(texto):
         texto_limpio = texto.lower()
@@ -95,19 +99,18 @@ class Palabra:
     @staticmethod
     def get_dimension(texto):
         # Método que calcula la dimensión dependiendo del tamaño de la palabra
-        return len(texto)//2
+        return len(texto) - len(texto) // 4
 
     def __str__(self):
         return self.texto
 
     def change_lema(self, new_txt_lema):
-        del Palabra.palabras_dict[self.txt_lema]
+        del Palabra.palabras_dict[self.txt_lema + "-" + str(self.position_doc)]
         self.txt_lema = new_txt_lema
-        Palabra.palabras_dict[new_txt_lema] = self
-
+        Palabra.palabras_dict[new_txt_lema + "-" + str(self.position_doc)] = self
 
     def delete_palabra(self):
-        del Palabra.palabras_dict[self.txt_lema]
+        del Palabra.palabras_dict[self.txt_lema + "-" + str(self.position_doc)]
         del Palabra.relaciones_dict_origen[self]
         del Palabra.relaciones_dict_destino[self]
 
@@ -125,12 +128,12 @@ class Palabra:
             self.list_texto_enumeracion.append(self.texto)
         self.list_texto_enumeracion.append(new_texto)
         self.is_enumeracion = True
-        self.dimension_y = len(self.list_texto_enumeracion)*3 + 2
+        self.dimension_y = len(self.list_texto_enumeracion) * 3 + 2
 
     @staticmethod
     def _get_dim_relation_tree(relation):
         try:
-            return relation.pal_dest.grafos_aproximados[0] # cogemos el grafo mayor, que es la 1a posicion
+            return relation.pal_dest.grafos_aproximados[0]  # cogemos el grafo mayor, que es la 1a posicion
         except Exception as _:
             return 0
 
@@ -140,11 +143,13 @@ class Palabra:
             lista_relaciones_directas = Palabra.relaciones_dict_origen[self]
             self.numero_grafos = len(lista_relaciones_directas)
             for rel in lista_relaciones_directas:
-                self.grafos_aproximados.append(self._get_dim_relation_tree(rel) + 1) # +1 porque es la relacion actual
+                self.grafos_aproximados.append(self._get_dim_relation_tree(rel) + 1)  # +1 porque es la relacion actual
             # ordenar de mayor a menor
             self.grafos_aproximados = sorted(self.grafos_aproximados, key=lambda x: x, reverse=True)
         except Exception as _:
             pass
 
     def to_create_Palabra_str(self):
-        return "list_palabras.append(Palabra('" + self.texto + "', '" + self.tipo + "', '" + self.lugar_sintactico + "', " + str(self.id) + ", " + str(self.importancia) + ", " + str(self.num_relaciones) + ", False, '" + self.txt_lema + "', " + str(self.position_doc) + "))"
+        return "list_palabras.append(Palabra('" + self.texto + "', '" + self.tipo + "', '" + self.lugar_sintactico + "', " + str(
+            self.id) + ", " + str(self.importancia) + ", " + str(
+            self.num_relaciones) + ", False, '" + self.txt_lema + "', " + str(self.position_doc) + "))"

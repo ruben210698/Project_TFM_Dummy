@@ -502,6 +502,8 @@ def text10():
     list_relaciones.append(Relacion('de', Palabra.palabras_dict.get('responsable') , Palabra.palabras_dict.get('Inquisición'), position_doc=76 , lugar_sintactico='nmod', importancia = 2137, id=-36))
     list_relaciones.append(Relacion('la', Palabra.palabras_dict.get('responsable') , Palabra.palabras_dict.get('Inquisición'), position_doc=79 , lugar_sintactico='nmod', importancia = 2137, id=-37))
 
+
+
 # test2()
 text10()
 

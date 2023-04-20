@@ -45,11 +45,11 @@ def get_relation(rel, fifo_heads, fifo_children):
         list_value = fifo_heads[key]
         for pal in list_value:
             if isinstance(pal, Token) and pal == rel and key not in possible_relations and \
-                    Palabra.palabras_dict.get(key.lemma_, None) is not None: # es decir, que existe una palabra y no es una relacion
+                    Palabra.palabras_dict.get(key.lemma_ + '-' + str(key.idx), None) is not None: # es decir, que existe una palabra y no es una relacion
                 possible_relations.append(key)
             # El caso de que la palabra anterior sea una relacion y si esté relacionada con esta otra
             elif isinstance(pal, Token) and (pal == rel.head or pal == rel.left_edge or pal == rel.right_edge) \
-                    and key not in possible_relations and Palabra.palabras_dict.get(key.lemma_, None) is not None:
+                    and key not in possible_relations and Palabra.palabras_dict.get(key.lemma_ + '-' + str(key.idx), None) is not None:
                 possible_relations.append(key)
 
     for key in fifo_children:
@@ -58,7 +58,7 @@ def get_relation(rel, fifo_heads, fifo_children):
         list_value = fifo_children[key]
         for pal in list_value:
             if isinstance(pal, Token) and pal == rel and key not in possible_relations and \
-                    Palabra.palabras_dict.get(key.lemma_, None) is not None: # es decir, que existe una palabra y no es una relacion
+                    Palabra.palabras_dict.get(key.lemma_ + '-' + str(key.idx), None) is not None: # es decir, que existe una palabra y no es una relacion
                 possible_relations.append(key)
 
     # Obtener los heads de las palabras relacionadas. Asi engordar la lista de posibles relaciones
@@ -135,7 +135,7 @@ def get_list_palabras_relaciones(texto,spacy_load):
         if fifo_heads_copy == []:
             relation_possible_list = get_relation(relation, fifo_heads, fifo_children)
             for rel_possibl in relation_possible_list:
-                palabra = Palabra.palabras_dict.get(rel_possibl.lemma_, None)
+                palabra = Palabra.palabras_dict.get(rel_possibl.lemma_ + '-' + str(rel_possibl.idx), None)
                 if palabra is not None:
                     fifo_heads_copy.append(palabra)
 
@@ -157,7 +157,7 @@ def get_list_palabras_relaciones(texto,spacy_load):
             if len(fifo_heads_copy) <= 1:
                 relation_possible_list_new = get_relation(relation, fifo_heads, fifo_children)
                 for rel_possibl in relation_possible_list_new:
-                    palabra = Palabra.palabras_dict.get(rel_possibl.lemma_, None)
+                    palabra = Palabra.palabras_dict.get(rel_possibl.lemma_ + '-' + str(rel_possibl.idx), None)
                     if palabra is not None and palabra not in fifo_heads_copy:
                         fifo_heads_copy.append(palabra)
 
@@ -201,7 +201,7 @@ texto = "La dinastía de los Austrias gobernó España desde el siglo XVI hasta 
         "Madrid y en las ciudades andaluzas de Granada y Córdoba."
 
 #texto = "Los Austrias gobernaron España en el siglo XVI y XVII, ampliando su territorio pero también responsables de la Inquisición y la expulsión de judíos. Su legado se ve en la arquitectura y el arte, especialmente en Madrid, Granada y Córdoba."
-#texto = "Los Austrias gobernaron España en el siglo XVI y XVII, responsables también de la Inquisición, expulsión de judíos. Su legado: arquitectura y arte en Madrid y Córdoba."
+texto = "Los Austrias gobernaron España en el siglo XVI y XVII, responsables también de la Inquisición, expulsión de judíos. Su legado: arquitectura y arte en Madrid y Córdoba."
 #texto = "Los Austrias gobernaron España en el siglo XVI, responsables también de la Inquisición"
 
 #spacy_load ="es_core_news_sm"
