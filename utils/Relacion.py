@@ -26,7 +26,7 @@ class Relacion:
         self.importancia = importancia if importancia is not None else self.generar_importancia(pal_origen, pal_dest)
         self.position_doc = position_doc
         self.tipo_morf = tipo_morf
-        self.direccion_actual = CENTRO
+        self.direccion_actual = None
 
         Relacion.relaciones_dict[self.texto] = self # TODO añadir la posicion del documento
         Relacion.relaciones_dict_id[self.id] = self

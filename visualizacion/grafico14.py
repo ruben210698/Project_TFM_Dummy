@@ -444,18 +444,32 @@ def generate_graph(texto, list_palabras, list_relaciones):
 
     print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=True)
 
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
+#######################################################################################################################
 
 def print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=False):
     if PRINT_GRAPH or final:
         _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
 
 def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
-    position_elems_deprec = {}
-    for pal in list_palabras:
-        try:
-            position_elems_deprec[pal.texto] = position_elems[pal]
-        except Exception as _:
-            pass
+    position_elems = position_elems.copy()
 
     imprimir_matriz(matrix_dim, apply_num_inicial_col=False)
     matrix_dim_reduced = matrix_dim.copy()
@@ -468,14 +482,128 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
     max_axis_x = max([x[0] for x in position_elems.values()]) + 5
     min_axis_x = min([x[0] for x in position_elems.values()]) - 5
 
-    dif_y = abs(max_axis_y - min_axis_y)//2
-    dif_x = abs(max_axis_x - min_axis_x)//2
+    dif_y = abs(max_axis_y - min_axis_y)//2 - abs(max_axis_y - min_axis_y)//5
+    dif_x = abs(max_axis_x - min_axis_x)//2 - abs(max_axis_x - min_axis_x)//5
 
     fig, ax = plt.subplots(figsize=(dif_x, dif_y))
     #fig, ax = plt.subplots(figsize=(24, 16))
     #fig, ax = plt.subplots()
 
     # Dibujar nodos
+    draw_all_nodes(ax, position_elems)
+
+    # Dibujar aristas
+    draw_all_edges(ax, list_relaciones, position_elems)
+
+    # draw_edge(ax, position_elems_deprec["ruben"], position_elems_deprec["pescado"], color=light_blue, label='come', label_offset=(0, 0.1))
+    # draw_edge(ax, position_elems_deprec["pescado"], position_elems_deprec["restaurante"], color=light_blue, label='en', label_offset=(0, 0.1))
+    # draw_edge(ax, position_elems_deprec["restaurante"], position_elems_deprec["pepe"], color=green, label='de', label_offset=(0, 0.1))
+
+    # Configurar límites y aspecto del gráfico
+    ax.set_ylim(min_axis_y, max_axis_y)
+    ax.set_xlim(min_axis_x, max_axis_x)
+    ax.set_aspect('equal')
+    ax.axis('on')
+
+    plt.show()
+
+def calcular_direccion_aprox(relation_draw, position_elems):
+    print("-- Calcular Dir Aprox: ", relation_draw.texto)
+    print("Calcular Dir Aprox origen: ", relation_draw.pal_origen)
+    print("Calcular Dir Aprox dest: ", relation_draw.pal_dest)
+    pal_origen = relation_draw.pal_origen
+    pal_dest = relation_draw.pal_dest
+    coord_pal_origen = position_elems[pal_origen]
+    coord_pal_dest = position_elems[pal_dest]
+    x_origen_draw = coord_pal_origen[0]
+    x_dest_draw = coord_pal_dest[0]
+    y_origen_draw = coord_pal_origen[1]
+    y_dest_draw = coord_pal_dest[1]
+    if x_origen_draw == x_dest_draw and y_origen_draw < y_dest_draw:
+        return DIR_ARRIBA
+    elif x_origen_draw == x_dest_draw and y_origen_draw > y_dest_draw:
+        return DIR_ABAJO
+    elif x_origen_draw < x_dest_draw and y_origen_draw == y_dest_draw:
+        return DIR_DCHA
+    elif x_origen_draw > x_dest_draw and y_origen_draw == y_dest_draw:
+        return DIR_IZQ
+    elif x_origen_draw < x_dest_draw and y_origen_draw < y_dest_draw:
+        return DIR_DCHA_ARRIBA
+    elif x_origen_draw < x_dest_draw and y_origen_draw > y_dest_draw:
+        return DIR_DCHA_ABAJO
+    elif x_origen_draw > x_dest_draw and y_origen_draw < y_dest_draw:
+        return DIR_IZQ_ARRIBA
+    elif x_origen_draw > x_dest_draw and y_origen_draw > y_dest_draw:
+        return DIR_IZQ_ABAJO
+    else:
+        return None
+
+
+def draw_all_edges(ax, list_relaciones, position_elems):
+    for relation_draw in list_relaciones:
+        txt_rel = relation_draw.texto
+        color = dict_color_figura.get(relation_draw.lugar_sintactico, dict_color_figura[None])
+        x_origen_draw = 0
+        x_dest_draw = 0
+        if relation_draw.pal_origen.multiplicador_borde_figura is None:
+            relation_draw.pal_origen.multiplicador_borde_figura = 0
+        if relation_draw.pal_dest.multiplicador_borde_figura is None:
+            relation_draw.pal_dest.multiplicador_borde_figura = 0
+
+        try:
+            pal_origen = relation_draw.pal_origen
+            pal_dest = relation_draw.pal_dest
+            coord_pal_origen = position_elems[pal_origen]
+            coord_pal_dest = position_elems[pal_dest]
+
+            x_origen_draw = coord_pal_origen[0]
+            x_dest_draw = coord_pal_dest[0]
+            y_origen_draw = coord_pal_origen[1]
+            y_dest_draw = coord_pal_dest[1]
+
+            if relation_draw.direccion_actual == None:
+                relation_draw.direccion_actual = calcular_direccion_aprox(relation_draw, position_elems)
+
+            if relation_draw.direccion_actual == DIR_DCHA:
+                x_dest_draw = coord_pal_dest[0] - pal_dest.multiplicador_borde_figura
+            elif relation_draw.direccion_actual == DIR_IZQ:
+                x_dest_draw = coord_pal_dest[0] + pal_dest.multiplicador_borde_figura
+            elif relation_draw.direccion_actual == DIR_ARRIBA:
+                y_dest_draw = coord_pal_dest[1] - pal_dest.tam_eje_y_figura
+                x_dest_draw = coord_pal_dest[0]
+            elif relation_draw.direccion_actual == DIR_ABAJO:
+                y_dest_draw = coord_pal_dest[1] + pal_dest.tam_eje_y_figura
+                x_dest_draw = coord_pal_dest[0]
+            elif relation_draw.direccion_actual == DIR_DCHA_ARRIBA:
+                x_dest_draw = coord_pal_dest[0] - pal_dest.multiplicador_borde_figura
+                y_dest_draw = coord_pal_dest[1] - pal_dest.tam_eje_y_figura
+            elif relation_draw.direccion_actual == DIR_DCHA_ABAJO:
+                x_dest_draw = coord_pal_dest[0] - pal_dest.multiplicador_borde_figura
+                y_dest_draw = coord_pal_dest[1] + pal_dest.tam_eje_y_figura
+            elif relation_draw.direccion_actual == DIR_IZQ_ARRIBA:
+                x_dest_draw = coord_pal_dest[0] + pal_dest.multiplicador_borde_figura
+                y_dest_draw = coord_pal_dest[1] - pal_dest.tam_eje_y_figura
+            elif relation_draw.direccion_actual == DIR_IZQ_ABAJO:
+                x_dest_draw = coord_pal_dest[0] + pal_dest.multiplicador_borde_figura
+                y_dest_draw = coord_pal_dest[1] + pal_dest.tam_eje_y_figura
+            else:
+                # TODO: que si no tiene direccion_actual, la calcule :)
+                print("Error: dirección no contemplada", relation_draw.texto)
+                print("###########")
+
+            draw_edge(
+                ax,
+                (x_origen_draw, y_origen_draw),
+                (x_dest_draw, y_dest_draw),
+                color=color,
+                label=relation_draw.texto,
+                label_offset=(0, 0.4)
+            )
+        except Exception as e:
+            print("Error al dibujar la relación", e)
+
+
+def draw_all_nodes(ax, position_elems):
     for pal, (x, y) in position_elems.items():
         node_text = pal.texto
         print(pal.texto)
@@ -529,7 +657,7 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
             pal.tam_eje_y_figura = tam_figuras.RECTANGULO[1]
             pal.multiplicador_borde_figura = tam_figuras.RECTANGULO[0] * len(node_text)
             rectangle_width = tam_figuras.RECTANGULO[0] * 2 * len(node_text)
-            height = 1 #pal.dimension_y
+            height = 1  # pal.dimension_y
             tamano_texto = 12
 
             rectangle = Rectangle(
@@ -540,81 +668,10 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
                 zorder=2)
             ax.add_patch(rectangle)
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center',
-                    zorder=3,  color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
-
+                    zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
 
             # ellipse_width = 0.1 * len(node) + 0.2
             # ellipse_height = 0.4
             # ellipse = Ellipse((x, y), width=ellipse_width, height=ellipse_height, color=dict_color_figura[None], zorder=2)
             # ax.add_patch(ellipse)
             # ax.text(x, y, node, fontsize=12, ha='center', va='center', zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
-
-
-
-    # Dibujar aristas
-    for relation_draw in list_relaciones:
-        txt_rel = relation_draw.texto
-        color = dict_color_figura.get(relation_draw.lugar_sintactico, dict_color_figura[None])
-        x_origen_draw = 0
-        x_dest_draw = 0
-        if relation_draw.pal_origen.multiplicador_borde_figura is None:
-            relation_draw.pal_origen.multiplicador_borde_figura = 0
-        if relation_draw.pal_dest.multiplicador_borde_figura is None:
-            relation_draw.pal_dest.multiplicador_borde_figura = 0
-
-        try:
-            x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][0]
-            x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][0]
-            y_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][1]
-            y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][1]
-            if relation_draw.direccion_actual == DIR_DCHA:
-                x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][
-                                    0] + relation_draw.pal_origen.multiplicador_borde_figura - 0.25
-                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
-                                  0] - relation_draw.pal_dest.multiplicador_borde_figura
-            elif relation_draw.direccion_actual == DIR_IZQ:
-                x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][
-                                    0] - relation_draw.pal_origen.dimension // 2
-                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
-                                  0] + relation_draw.pal_dest.dimension // 2
-            elif relation_draw.direccion_actual == DIR_ARRIBA:
-                y_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][1]
-                y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
-                                  1] - relation_draw.pal_dest.tam_eje_y_figura
-                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
-                                  0] - relation_draw.pal_dest.multiplicador_borde_figura
-            elif relation_draw.direccion_actual == DIR_ABAJO:
-                y_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][1]
-                y_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
-                                  1] + relation_draw.pal_dest.tam_eje_y_figura
-                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
-                                  0] + relation_draw.pal_dest.multiplicador_borde_figura
-            else:
-                # TODO me faltan las de los 45º
-                x_origen_draw = position_elems_deprec[relation_draw.pal_origen.texto][
-                                    0] + relation_draw.pal_origen.multiplicador_borde_figura - 0.25
-                x_dest_draw = position_elems_deprec[relation_draw.pal_dest.texto][
-                                  0] - relation_draw.pal_dest.multiplicador_borde_figura - 0.25
-
-            draw_edge(
-                ax,
-                (x_origen_draw, y_origen_draw),
-                (x_dest_draw, y_dest_draw),
-                color=color,
-                label=relation_draw.texto,
-                label_offset=(0, 0.4)
-            )
-        except Exception as e:
-            pass
-
-    # draw_edge(ax, position_elems_deprec["ruben"], position_elems_deprec["pescado"], color=light_blue, label='come', label_offset=(0, 0.1))
-    # draw_edge(ax, position_elems_deprec["pescado"], position_elems_deprec["restaurante"], color=light_blue, label='en', label_offset=(0, 0.1))
-    # draw_edge(ax, position_elems_deprec["restaurante"], position_elems_deprec["pepe"], color=green, label='de', label_offset=(0, 0.1))
-
-    # Configurar límites y aspecto del gráfico
-    ax.set_ylim(min_axis_y, max_axis_y)
-    ax.set_xlim(min_axis_x, max_axis_x)
-    ax.set_aspect('equal')
-    ax.axis('on')
-
-    plt.show()

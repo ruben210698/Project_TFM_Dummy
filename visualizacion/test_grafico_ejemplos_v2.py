@@ -437,7 +437,8 @@ def test7():
 
 #test2()
 #test4()
-test6()
+#test6()
+test5()
 
 generate_graph(texto, list_palabras, list_relaciones)
 #from grafico12 import print_graph
