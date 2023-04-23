@@ -43,8 +43,8 @@ def get_pos_dir_dcha(matrix_dim, palabra, relation):
     if relation is None:
         return None, None, matrix_dim
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
-    pos_y = relation.pal_origen.pos_y + pos_y_media
-    pos_x = relation.pal_origen.pos_x + pos_x_media + (relation.tam_text + relation.cte_sum_x)
+    pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media
+    pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media + (relation.tam_text + relation.cte_sum_x)
 
     for x_loop in range(pos_x, pos_x + RECTA_DISTANCIA_DE_INTENTO_X, 1):
         is_empty, matrix_dim = is_empty_pos_matrix(
@@ -70,8 +70,8 @@ def get_pos_dir_arriba(matrix_dim, palabra, relation):
     if relation is None:
         return None, None, matrix_dim
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
-    pos_y = relation.pal_origen.pos_y + pos_y_media + (palabra.dimension_y + palabra.cte_sum_y)//2 + ARRIBA_MARGIN_MIN
-    pos_x = relation.pal_origen.pos_x + pos_x_media
+    pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media + (palabra.dimension_y + palabra.cte_sum_y)//2 + ARRIBA_MARGIN_MIN
+    pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media
 
     for y_loop in range(pos_y, pos_y + RECTA_DISTANCIA_DE_INTENTO_Y, 1):
         is_empty, matrix_dim = is_empty_pos_matrix(
@@ -93,8 +93,8 @@ def get_pos_dir_abajo(matrix_dim, palabra, relation):
     if relation is None:
         return None, None, matrix_dim
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
-    pos_y = relation.pal_origen.pos_y + pos_y_media - (palabra.dimension_y + palabra.cte_sum_y)//2 - ARRIBA_MARGIN_MIN
-    pos_x = relation.pal_origen.pos_x + pos_x_media
+    pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media - (palabra.dimension_y + palabra.cte_sum_y)//2 - ARRIBA_MARGIN_MIN
+    pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media
 
     for y_loop in range(pos_y, pos_y - RECTA_DISTANCIA_DE_INTENTO_Y, -1):
         is_empty, matrix_dim = is_empty_pos_matrix(
@@ -117,8 +117,8 @@ def get_pos_dir_izq(matrix_dim, palabra, relation):
         return None, None, matrix_dim
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
 
-    pos_y = relation.pal_origen.pos_y + pos_y_media
-    pos_x = relation.pal_origen.pos_x + pos_x_media - (palabra.dimension + palabra.cte_sum_x)//2 - \
+    pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media
+    pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media - (palabra.dimension + palabra.cte_sum_x)//2 - \
             (relation.tam_text + relation.cte_sum_x)
 
     for x_loop in range(pos_x, pos_x - RECTA_DISTANCIA_DE_INTENTO_X, -1):
@@ -157,8 +157,8 @@ def get_pos_dir_dcha_arriba(matrix_dim, palabra, relation):
 
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
     for i in range(0, len(DIAGONAL_LIST_YS)):
-        pos_y = relation.pal_origen.pos_y + pos_y_media + DIAGONAL_LIST_YS[i]
-        pos_x = relation.pal_origen.pos_x + pos_x_media + relation.pal_origen.dimension + relation.pal_origen.cte_sum_x +  DIAGONAL_LIST_XS[i]
+        pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media + DIAGONAL_LIST_YS[i]
+        pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media + relation.pal_tmp_opuesta.dimension + relation.pal_tmp_opuesta.cte_sum_x +  DIAGONAL_LIST_XS[i]
 
         for y_loop in range(pos_y, pos_y + DIAGONAL_DISTANCIA_DE_INTENTO_Y, 1):
             for x_loop in range(pos_x, pos_x + DIAGONAL_DISTANCIA_DE_INTENTO_X, 1):
@@ -182,8 +182,8 @@ def get_pos_dir_dcha_abajo(matrix_dim, palabra, relation):
 
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
     for i in range(0, len(DIAGONAL_LIST_YS)):
-        pos_y = relation.pal_origen.pos_y + pos_y_media - DIAGONAL_LIST_YS[i]
-        pos_x = relation.pal_origen.pos_x + pos_x_media + relation.pal_origen.dimension + relation.pal_origen.cte_sum_x + DIAGONAL_LIST_XS[i]
+        pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media - DIAGONAL_LIST_YS[i]
+        pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media + relation.pal_tmp_opuesta.dimension + relation.pal_tmp_opuesta.cte_sum_x + DIAGONAL_LIST_XS[i]
 
 
         for y_loop in range(pos_y, pos_y - DIAGONAL_DISTANCIA_DE_INTENTO_Y, -1):
@@ -209,8 +209,8 @@ def get_pos_dir_izq_abajo(matrix_dim, palabra, relation):
 
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
     for i in range(0, len(DIAGONAL_LIST_YS)):
-        pos_y = relation.pal_origen.pos_y + pos_y_media - DIAGONAL_LIST_YS[i]
-        pos_x = relation.pal_origen.pos_x + pos_x_media - (relation.pal_origen.dimension + relation.pal_origen.cte_sum_x) - DIAGONAL_LIST_XS[i]
+        pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media - DIAGONAL_LIST_YS[i]
+        pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media - (relation.pal_tmp_opuesta.dimension + relation.pal_tmp_opuesta.cte_sum_x) - DIAGONAL_LIST_XS[i]
 
         for y_loop in range(pos_y, pos_y - DIAGONAL_DISTANCIA_DE_INTENTO_Y, -1):
             for x_loop in range(pos_x, pos_x - DIAGONAL_DISTANCIA_DE_INTENTO_X, -1):
@@ -234,8 +234,8 @@ def get_pos_dir_izq_arriba(matrix_dim, palabra, relation):
 
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
     for i in range(0, len(DIAGONAL_LIST_YS)):
-        pos_y = relation.pal_origen.pos_y + pos_y_media + DIAGONAL_LIST_YS[i]
-        pos_x = relation.pal_origen.pos_x + pos_x_media - (relation.pal_origen.dimension + relation.pal_origen.cte_sum_x) - DIAGONAL_LIST_XS[i]
+        pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media + DIAGONAL_LIST_YS[i]
+        pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media - (relation.pal_tmp_opuesta.dimension + relation.pal_tmp_opuesta.cte_sum_x) - DIAGONAL_LIST_XS[i]
 
         for y_loop in range(pos_y, pos_y + DIAGONAL_DISTANCIA_DE_INTENTO_Y, 1):
             for x_loop in range(pos_x, pos_x - DIAGONAL_DISTANCIA_DE_INTENTO_X, -1):

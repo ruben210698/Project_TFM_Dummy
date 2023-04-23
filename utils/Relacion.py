@@ -18,6 +18,10 @@ class Relacion:
         self.texto = self.limpiar_texto(texto)
         self.pal_origen = pal_origen
         self.pal_dest = pal_dest
+        self.pal_tmp = None # esta es la palabra, u origen o destino, que queremos que lea
+        # es decir, si buscamos la palabra de la que es origen nuestra relacion, la ponemos aqui y asi no tenemos
+        # que estar comprobando si es la de origen o la de destino
+        self.pal_tmp_opuesta = None
         self.lugar_sintactico = lugar_sintactico
         self.tam_text = self.get_tam_texto(texto)
         self.cte_sum_x = 1

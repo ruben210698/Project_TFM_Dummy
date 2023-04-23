@@ -11,6 +11,10 @@ Importancia: un valor numérico que indica la importancia de la palabra en el te
 import re
 from constants.direcciones_relaciones import CENTRO
 
+from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_ARRIBA, DIR_ABAJO, DIR_ARRIBA, \
+    DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
+    FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO
+
 """
 ¿Por qué hay un id_actual que a veces es autoincremental y a veces no?
 Pues porque hay palabras como verbos, adjetivos o sustantivos que se van a repetir en la oración pero
@@ -48,6 +52,7 @@ class Palabra:
         self.cte_sum_y = 2
 
         self.has_been_plotted = False
+        self.has_been_plotted_relations = False
         self.position_doc = position_doc
         self.figura = None
         self.multiplicador_borde_figura = None
@@ -58,11 +63,31 @@ class Palabra:
         self.list_texto_enumeracion = []
         self.is_enumeracion = False
 
+        self.grafo = None
         self.numero_grafos = -1
         self.grafos_aproximados = []
         self.direccion_origen = CENTRO
         self.pos_actual_recorrer_dir_relaciones = 0
         self.lista_direcciones_orden = []
+        self.list_palabras_relacionadas_1er_grado = []
+        self.list_palabras_relacionadas_2o_grado = []
+        self.list_palabras_relacionadas_dest_1er_grado = []
+        self.list_palabras_relacionadas_dest_2o_grado = []
+
+        self.subgrafo_completado = False
+        self.relations_pending = []
+        self.relations_origen_and_dest = []
+        self.palabras_relaciones_proximas = []
+        self.dict_posiciones = {
+            DIR_ARRIBA: None,
+            DIR_DCHA_ARRIBA: None,
+            DIR_DCHA: None,
+            DIR_DCHA_ABAJO: None,
+            DIR_ABAJO: None,
+            DIR_IZQ_ABAJO: None,
+            DIR_IZQ: None,
+            DIR_IZQ_ARRIBA: None
+        }
 
         Palabra.palabras_dict[self.txt_lema + "-" + str(self.position_doc)] = self
         Palabra.relaciones_dict_origen[self] = []
@@ -71,8 +96,8 @@ class Palabra:
     # get palabra by lema si existe
     @classmethod
     def get_palabra_by_lema(cls, txt_lema, position_doc):
-        if Palabra.palabras_dict.get(txt_lema, None) is not None and Palabra.palabras_dict[
-            txt_lema].position_doc == position_doc:
+        if Palabra.palabras_dict.get(txt_lema, None) is not None and \
+                Palabra.palabras_dict[ txt_lema].position_doc == position_doc:
             return Palabra.palabras_dict[txt_lema]
         else:
             return None
@@ -157,6 +182,140 @@ class Palabra:
             self.grafos_aproximados = sorted(self.grafos_aproximados, key=lambda x: x, reverse=True)
         except Exception as _:
             pass
+
+    def refresh_relaciones_proximas_1er_grado(self):
+        list_pal_to_check = [a for a in self.list_palabras_relacionadas_1er_grado if a != self]
+
+        pal_to_check_2 = []
+        self.palabras_relaciones_proximas = []
+
+
+        for pal in list_pal_to_check:
+            list_to_check = [a for a in pal.list_palabras_relacionadas_dest_2o_grado if a != self and a != pal] + \
+                            [a for a in pal.list_palabras_relacionadas_1er_grado if a != self and a != pal]
+            for pal2 in list_to_check:
+                if pal2 in list_pal_to_check and pal2 not in pal_to_check_2:
+                    pal_to_check_2.append(pal2)
+        print(pal_to_check_2)
+        # que cree listas diferentes para los elementos que estan relacionados entre si:
+
+        pal_to_check_2_copy = pal_to_check_2.copy()
+        new_rel_origin= []
+        while pal_to_check_2 != []:
+            pal = pal_to_check_2.pop(0)
+            new_rel = []
+            for pal2 in [a for a in pal.list_palabras_relacionadas_1er_grado if a != self and a != pal]:
+                if pal2 in pal_to_check_2_copy and pal2 not in new_rel:
+                    new_rel.append(pal2)
+            if new_rel == []:
+                pass
+                #new_rel_origin.append(pal)
+            else:
+                new_rel.append(pal)
+                self.palabras_relaciones_proximas.append(new_rel)
+
+        # aqui tengo que quitar todos los duplicados y todas las que son de 2 pero hay otra lista mayor de 3 con lo mismo
+        if len(self.palabras_relaciones_proximas)>=2:
+            i = 1
+            new_palabras_relaciones_proximas = self.palabras_relaciones_proximas.copy()
+            for elem in self.palabras_relaciones_proximas:
+                for elem2 in self.palabras_relaciones_proximas[i:]:
+                    same_elem = False
+                    if len(elem) == len(elem2):
+                        # toda palabra dentro de elem esta en elem2
+                        # [True for pal1 in elem if pal1 in elem2 else False]
+                        same_elem = all([True if pal1 in elem2 else False for pal1 in elem])
+                        same_elem = same_elem and all([True if pal2 in elem else False for pal2 in elem2])
+                        if same_elem and elem2 in new_palabras_relaciones_proximas:
+                            new_palabras_relaciones_proximas.remove(elem2)
+                    if len(elem) > len(elem2):
+                        same_elem = all([True if pal2 in elem else False for pal2 in elem2])
+                        if same_elem and elem2 in new_palabras_relaciones_proximas:
+                            new_palabras_relaciones_proximas.remove(elem2)
+                i += 1
+            self.palabras_relaciones_proximas = new_palabras_relaciones_proximas
+        if len(self.palabras_relaciones_proximas) >= 2:
+            i = 1
+            new_palabras_relaciones_proximas = self.palabras_relaciones_proximas.copy()
+            #recorrer la lista al reves:
+            for elem in self.palabras_relaciones_proximas[::-1]:
+                list_reverse = self.palabras_relaciones_proximas[::-1]
+                for elem2 in list_reverse[i:]:
+                    same_elem = False
+                    if len(elem) == len(elem2):
+                        # toda palabra dentro de elem esta en elem2
+                        same_elem = all([True if pal1 in elem2 else False for pal1 in elem])
+                        same_elem = same_elem and all([True if pal2 in elem else False for pal2 in elem2])
+                        if same_elem and elem2 in new_palabras_relaciones_proximas:
+                            new_palabras_relaciones_proximas.remove(elem2)
+                    if len(elem) > len(elem2):
+                        same_elem = all([True if pal2 in elem else False for pal2 in elem2])
+                        if same_elem and elem2 in new_palabras_relaciones_proximas:
+                            new_palabras_relaciones_proximas.remove(elem2)
+                i += 1
+            self.palabras_relaciones_proximas = new_palabras_relaciones_proximas
+        print(self.palabras_relaciones_proximas)
+
+
+    def refresh_palabras_relacionadas_2o_grado(self):
+        try:
+            list_pal_to_check = [a.pal_dest for a in self.relations_origen_and_dest if a != self] + \
+                                [a.pal_origen for a in self.relations_origen_and_dest if a != self]
+            if self in list_pal_to_check:
+                list_pal_to_check.remove(self)
+            self.list_palabras_relacionadas_1er_grado = list_pal_to_check.copy()
+            self.list_palabras_relacionadas_2o_grado = list_pal_to_check.copy()
+            for pal_2 in list_pal_to_check:
+                list_pal_2 = [a.pal_dest for a in pal_2.relations_origen_and_dest] + \
+                             [a.pal_origen for a in pal_2.relations_origen_and_dest]
+                for pal_3 in list_pal_2:
+                    if pal_3 not in self.list_palabras_relacionadas_2o_grado and pal_3 != self:
+                        self.list_palabras_relacionadas_2o_grado.append(pal_3)
+            if self in self.list_palabras_relacionadas_2o_grado:
+                self.list_palabras_relacionadas_2o_grado.remove(self)
+            if self in self.list_palabras_relacionadas_1er_grado:
+                self.list_palabras_relacionadas_1er_grado.remove(self)
+        except Exception as _:
+            pass
+
+        try:
+            list_pal_to_check = [a.pal_dest for a in Palabra.relaciones_dict_origen.get(self, []) if a != self]
+
+            self.list_palabras_relacionadas_dest_1er_grado = list_pal_to_check.copy()
+            self.list_palabras_relacionadas_dest_2o_grado = list_pal_to_check.copy()
+            for pal_2 in list_pal_to_check:
+                list_pal_2 = [a.pal_dest for a in Palabra.relaciones_dict_origen.get(pal_2, [])]
+                for pal_3 in list_pal_2:
+                    if pal_3 not in self.list_palabras_relacionadas_dest_2o_grado:
+                        self.list_palabras_relacionadas_dest_2o_grado.append(pal_3)
+            if self in self.list_palabras_relacionadas_dest_2o_grado:
+                self.list_palabras_relacionadas_dest_2o_grado.remove(self)
+            if self in self.list_palabras_relacionadas_dest_1er_grado:
+                self.list_palabras_relacionadas_dest_1er_grado.remove(self)
+        except Exception as _:
+            pass
+
+
+    def refresh_pal_relations(self):
+        try:
+            list_relaciones_pal_origen = Palabra.relaciones_dict_origen.get(self, [])
+            for rel in list_relaciones_pal_origen:
+                rel.pal_tmp = rel.pal_dest
+                rel.pal_tmp_opuesta = rel.pal_origen
+            list_relaciones_pal_dest = Palabra.relaciones_dict_destino.get(self, [])
+            for rel in list_relaciones_pal_dest:
+                rel.pal_tmp = rel.pal_origen
+                rel.pal_tmp_opuesta = rel.pal_dest
+            list_relaciones_pal = list(set(list_relaciones_pal_origen + list_relaciones_pal_dest))
+            # ordenar por el numero de grado de aproximacion
+            list_relaciones_pal.sort(key=lambda x: x.pal_tmp.numero_grafos, reverse=True)
+            self.relations_origen_and_dest = list_relaciones_pal
+            self.relations_pending = list_relaciones_pal
+
+        except Exception as _:
+            self.relations_origen_and_dest = []
+            self.relations_pending = []
+
 
     def to_create_Palabra_str(self):
         return "list_palabras.append(Palabra('" + self.texto + "', '" + self.tipo + "', '" + self.lugar_sintactico + "', " + str(
