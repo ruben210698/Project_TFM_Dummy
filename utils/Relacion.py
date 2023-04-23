@@ -20,13 +20,14 @@ class Relacion:
         self.pal_dest = pal_dest
         self.lugar_sintactico = lugar_sintactico
         self.tam_text = self.get_tam_texto(texto)
-        self.cte_sum_x = 2
+        self.cte_sum_x = 1
         self.cte_sum_y = 0
         self.id = id if id is not None else self.generar_id()
         self.importancia = importancia if importancia is not None else self.generar_importancia(pal_origen, pal_dest)
         self.position_doc = position_doc
         self.tipo_morf = tipo_morf
         self.direccion_actual = None
+        self.has_been_plotted = False
 
         Relacion.relaciones_dict[self.texto] = self # TODO añadir la posicion del documento
         Relacion.relaciones_dict_id[self.id] = self
@@ -58,7 +59,7 @@ class Relacion:
     @staticmethod
     def get_tam_texto(texto):
         # Método que calcula la dimensión dependiendo del tamaño de la palabra
-        return len(texto) if len(texto) > 2 else 2
+        return len(texto)//2 if len(texto) > 2 else 2
 
     def add_rel_dest(self, palabra_dest):
         Palabra.relaciones_dict_destino[self.pal_dest].append(palabra_dest)

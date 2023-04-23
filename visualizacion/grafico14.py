@@ -22,12 +22,12 @@ from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
     FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO
 from visualizacion.utils.direcciones import get_next_location
-from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_matrix
+from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_matrix, imprimir_matriz, \
+    reducir_tam_matriz, ampliar_matriz
 
 LINEAS_SEP_FILA = 5
 
-PRINT_MATRIX = False
-PRINT_GRAPH = False
+PRINT_GRAPH = True
 
 MODE_DEBUG = "DEBUG"
 MODE_NORMAL = "NORMAL"
@@ -104,69 +104,6 @@ def get_importance_dict(list_palabras):
     return new_dict
 
 
-def reducir_tam_matriz(matrix_dim):
-    # Reducir Matriz
-    matrix_dim = matrix_dim.copy()
-    matrix_dim_copy = matrix_dim.copy()
-    for x in matrix_dim_copy:
-        if sum(x) == 0:
-            matrix_dim.pop(0)
-        else:
-            break
-    matrix_dim_reverse = matrix_dim.copy()
-    matrix_dim_reverse.reverse()
-    for x in matrix_dim_reverse:
-        if sum(x) == 0:
-            matrix_dim.pop()
-        else:
-            break
-    matrix_dim_transpose = [list(fila) for fila in zip(*matrix_dim)]
-    matrix_dim_transpose_copy = matrix_dim_transpose.copy()
-    for x in matrix_dim_transpose_copy:
-        if sum(x) == 0:
-            matrix_dim_transpose.pop(0)
-        else:
-            break
-    matrix_dim_transpose_reverse = matrix_dim_transpose.copy()
-    matrix_dim_transpose_reverse.reverse()
-    for x in matrix_dim_transpose_reverse:
-        if sum(x) == 0:
-            matrix_dim_transpose.pop()
-        else:
-            break
-    matrix_dim = [list(fila) for fila in zip(*matrix_dim_transpose)]
-    return matrix_dim
-
-
-def imprimir_matriz(matriz, apply_num_inicial_col=True):
-    try:
-        if not PRINT_MATRIX:
-            return
-        matriz = matriz.copy()
-        matriz = reducir_tam_matriz(matriz)
-        print("-----------------------------------------------------------------------")
-        i, j = 0, 0
-        print(f"    ", end="")
-        for elemento in matriz[0]:
-            print(f"{i:<4}", end="")
-            i += 1
-        print()
-
-        for fila in matriz:
-            print(f"{j:<4}", end="")
-            num_col = 0
-            for elemento in fila:
-                if elemento == 0:
-                    print(f"{elemento:<4}", end="")
-                else:
-                    print(f"{elemento:<4}", end="")
-                num_col += 1
-            j += 1
-            print()
-        print("-----------------------------------------------------------------------")
-    except Exception as e:
-        print(e)
-        pass
 
 
 def loop_reducir_posiciones_finales_eje_y(posiciones_finales, cambiado):
@@ -252,23 +189,134 @@ def reducir_posiciones_finales_eje_x(posiciones_finales):
     return posiciones_finales
 
 
+def update_relations_in_matrix_by_pal(matrix_dim, palabra):
+    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
+    list_rel = Palabra.relaciones_dict_origen.get(palabra) + Palabra.relaciones_dict_destino.get(palabra)
+    for rel in list_rel:
+        id = rel.id
+        print(palabra.texto)
+        imprimir_matriz(matrix_dim)
+        if not rel.has_been_plotted:
+            pal_origen = rel.pal_origen
+            pal_dest = rel.pal_dest
+            x_origen = pal_origen.pos_x
+            x_dest = pal_dest.pos_x
+            y_origen = pal_origen.pos_y
+            y_dest = pal_dest.pos_y
+            if x_origen is None or x_dest is None or y_origen is None or y_dest is None:
+                continue
 
-def update_palabras_in_matrix(matrix_dim, palabra, axis_y, axis_x):
+            x_origen += pos_x_media
+            x_dest += pos_x_media
+            y_origen += pos_y_media
+            y_dest += pos_y_media
+
+            y = min(y_origen, y_dest)
+            x = min(x_origen, x_dest)
+            x_repres = x
+            y_repres = y
+
+            if (x_dest - x_origen) == 0: # ARRIBA O ABAJO
+                while y_repres < max(y_origen, y_dest):
+                    try:
+                        if matrix_dim[y_repres][x_repres] == 0:
+                            matrix_dim[y_repres][x_repres] = id
+                        y_repres += 1
+                    except Exception as _:
+                        matrix_dim = ampliar_matriz(matrix_dim)
+                        pos_y_media_old, pos_x_media_old = pos_y_media, pos_x_media
+                        y_origen_old, x_origen_old = y_origen, x_origen
+                        y_dest_old, x_dest_old = y_dest, x_dest
+                        pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
+                        y_repres = y_repres - pos_y_media_old + pos_y_media
+                        x_repres = x_repres - pos_x_media_old + pos_x_media
+                        y_origen = y_origen - pos_y_media_old + pos_y_media
+                        y_dest = y_dest - pos_y_media_old + pos_y_media
+                        x_origen = x_origen - pos_x_media_old + pos_x_media
+                        x_dest = x_dest - pos_x_media_old + pos_x_media
+                continue
+
+            if (y_dest - y_origen) == 0:  # DCHA O IZQ
+                while x_repres < max(x_origen, x_dest):
+                    try:
+                        if matrix_dim[y_repres][x_repres] == 0:
+                            matrix_dim[y_repres][x_repres] = id
+                        x_repres += 1
+                    except Exception as _:
+                        matrix_dim = ampliar_matriz(matrix_dim)
+                        pos_y_media_old, pos_x_media_old = pos_y_media, pos_x_media
+                        y_origen_old, x_origen_old = y_origen, x_origen
+                        pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
+                        y_repres = y_repres - pos_y_media_old + pos_y_media
+                        x_repres = x_repres - pos_x_media_old + pos_x_media
+
+                        y_origen = y_origen - y_origen_old + pos_y_media
+                        y_dest = y_dest - pos_y_media_old + pos_y_media
+                        x_origen = x_origen - pos_x_media_old + pos_x_media
+                        x_dest = x_dest - pos_x_media_old + pos_x_media
+                continue
+
+            m = (y_dest - y_origen) / (x_dest - x_origen)
+            #if m > 0: # DCHA_ARRIBA o IZQ_ABAJO # DCHA_ABAJO o IZQ_ARRIBA
+            i = 1
+            while x_repres < max(x_origen, x_dest) and y_repres < max(y_origen, y_dest):
+                try:
+                    x_repres = int(x + i)
+                    y_repres = int(y + i * m)
+                    if matrix_dim[y_repres][x_repres] == 0:
+                        matrix_dim[y_repres][x_repres] = id
+                    i += 1
+                except Exception as _:
+                    matrix_dim = ampliar_matriz(matrix_dim)
+                    pos_y_media_old, pos_x_media_old = pos_y_media, pos_x_media
+                    y_origen_old, x_origen_old = y_origen, x_origen
+                    y_dest_old, x_dest_old = y_dest, x_dest
+                    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
+                    y_repres = y_repres - pos_y_media_old + pos_y_media
+                    x_repres = x_repres - pos_x_media_old + pos_x_media
+                    y_origen = y_origen - pos_y_media_old + pos_y_media
+                    y_dest = y_dest - pos_y_media_old + pos_y_media
+                    x_origen = x_origen - pos_x_media_old + pos_x_media
+                    x_dest = x_dest - pos_x_media_old + pos_x_media
+
+            #if m < 0: # DCHA_ABAJO o IZQ_ARRIBA
+
+
+            rel.has_been_plotted = True
+        else:
+            continue
+    print(palabra.texto)
+    imprimir_matriz(matrix_dim)
+
+
+
+    return matrix_dim
+
+
+def update_palabras_in_matrix(matrix_dim, palabra):
+    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
+    axis_y = palabra.pos_y + pos_y_media
+    axis_x = palabra.pos_x + pos_x_media
     # bucle que recorre palabra.dimension_y desde -palabra.dimension_y//2 hasta palabra.dimension_y//2
     for y in range(palabra.dimension_y):
         axis_y_loop = axis_y + y - palabra.dimension_y // 2
-        matrix_dim[axis_y_loop][axis_x:axis_x + palabra.dimension + palabra.cte_sum_x] = [palabra.id for x in
-                                                                                          range(palabra.dimension + 2)]
+        matrix_dim[axis_y_loop][axis_x:axis_x + palabra.dimension + palabra.cte_sum_x] = \
+            [palabra.id for x in range(palabra.dimension + 2)]
+
+    matrix_dim = update_relations_in_matrix_by_pal(matrix_dim, palabra)
+    return matrix_dim
+
 
 
 def represent_word(matrix_dim, palabra, relation, position_elems):
-    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
+
     axis_y, axis_x, matrix_dim = get_next_location(matrix_dim, palabra, relation)
     if axis_y is None or axis_x is None:
         print("No se ha podido representar la palabra: ", palabra.texto)
         return matrix_dim, None, relation, position_elems
-    palabra.pos_y = axis_y
-    palabra.pos_x = axis_x
+    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
+    palabra.pos_y = axis_y - pos_y_media
+    palabra.pos_x = axis_x - pos_x_media
     position_elems.update({
         palabra: (
             axis_x - pos_x_media,
@@ -276,18 +324,37 @@ def represent_word(matrix_dim, palabra, relation, position_elems):
         )})
 
     # reemplazar los 0s por IDs para range(value['dimension']+2)
-    update_palabras_in_matrix(matrix_dim, palabra, axis_y, axis_x)
+    matrix_dim = update_palabras_in_matrix(matrix_dim, palabra)
 
     imprimir_matriz(matrix_dim)
     palabra.has_been_plotted = True
 
     return matrix_dim, palabra, relation, position_elems
 
+
+def reordenar_relaciones_unir_graph_1er_grado(list_relaciones):
+    list_relaciones = list_relaciones.copy()
+    dict_relaciones_2o_grado_conflictivas = {}
+    list_pal_1er_grado = [a.pal_dest for a in list_relaciones]
+    for pal_2o_grado in list_pal_1er_grado:
+        for rel in Palabra.relaciones_dict_origen[pal_2o_grado]:
+            if rel.pal_dest in list_pal_1er_grado and pal_2o_grado not in dict_relaciones_2o_grado_conflictivas.keys():
+                dict_relaciones_2o_grado_conflictivas.update({pal_2o_grado: rel.pal_dest})
+    print(dict_relaciones_2o_grado_conflictivas)
+    list_relaciones_copy = list_relaciones.copy()
+    for pal1, pal2 in dict_relaciones_2o_grado_conflictivas.items():
+        for rel in list_relaciones_copy:
+            if rel.pal_dest == pal1 or rel.pal_dest == pal2:
+                list_relaciones.remove(rel)
+                list_relaciones.insert(0, rel)
+    return list_relaciones
+
+
 def get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaciones, relation=None):
     list_palabras_representadas = []
     print(f"Matrix: {palabra.texto}")
     aaaaaaaaaaa = palabra.texto
-    if palabra.texto == 'órganos y pulmones':
+    if palabra.texto == 'caudalosos':
         print("hola")
     #time.sleep(10)
     matrix_dim, palabra, relation, position_elems = represent_word(matrix_dim, palabra, relation, position_elems)
@@ -303,11 +370,13 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaci
             reverse=True)
         find_dir = DICT_DIR_BY_ORIGEN.get(palabra.direccion_origen)
         # FIXME: meter aqui un try-except por si supera 7 elementos.
-        if len(list_relaciones_pal) > len(find_dir) :
+        if len(list_relaciones_pal) > len(find_dir):
             list_direcciones_orden = find_dir[-1]
         else:
             list_direcciones_orden = find_dir[len(list_relaciones_pal) - 1]
         palabra.lista_direcciones_orden = list_direcciones_orden
+
+    list_relaciones_pal = reordenar_relaciones_unir_graph_1er_grado(list_relaciones_pal)
 
     num_dir_orden = -1
     num_relacion = -1
@@ -562,6 +631,8 @@ def draw_all_edges(ax, list_relaciones, position_elems):
             y_dest_draw = coord_pal_dest[1]
 
             if relation_draw.direccion_actual == None:
+                #TODO quitar:
+                #continue
                 relation_draw.direccion_actual = calcular_direccion_aprox(relation_draw, position_elems)
 
             if relation_draw.direccion_actual == DIR_DCHA:
