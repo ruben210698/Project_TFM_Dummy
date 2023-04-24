@@ -1,287 +1,188 @@
-from visualizacion.utils.matrix_functions import get_pos_media_matrix, is_empty_relation_in_matrix
+import math
+import random
+import time
+
+import networkx as nx
+import matplotlib.pyplot as plt
+from matplotlib.patches import FancyArrowPatch, RegularPolygon, Ellipse, Rectangle
+
+from utils.Grafo import Grafo
+from utils.Palabra import Palabra
+from utils.Relacion import Relacion
+
+from constants.figuras import *
+from constants.type_morfologico import *
+from constants.type_sintax import *
+from constants import type_sintax
+from constants import colores_figura, colores_figura_letra, colores
+from constants.figuras import *
+from constants import tam_figuras
+from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_list, unir_conjuncion_y, \
+    truncate_a_8_relaciones
+
 from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_ARRIBA, DIR_ABAJO, DIR_ARRIBA, \
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
-    FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO
-from visualizacion.utils.matrix_functions import ampliar_matriz, is_empty_pos_matrix, find_better_center_position, imprimir_matriz
+    FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO, \
+    DICT_PROX_DIR
+from visualizacion.utils.posicionesXY import get_next_location, get_dir_relativa
+from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_matrix, imprimir_matriz, \
+    reducir_tam_matriz, ampliar_matriz
+
+
+def get_rel_origen_and_dest_unidas(palabra):
+    list_relaciones_pal_origen = Palabra.relaciones_dict_origen.get(palabra, [])
+    for rel in list_relaciones_pal_origen:
+        rel.pal_tmp = rel.pal_dest
+        rel.pal_tmp_opuesta = rel.pal_origen
+    list_relaciones_pal_dest = Palabra.relaciones_dict_destino.get(palabra, [])
+    for rel in list_relaciones_pal_dest:
+        rel.pal_tmp = rel.pal_origen
+        rel.pal_tmp_opuesta = rel.pal_dest
+    list_relaciones_pal = list(set(list_relaciones_pal_origen + list_relaciones_pal_dest))
+    # ordenar por el numero de grado de aproximacion
+    list_relaciones_pal.sort(key=lambda x: x.pal_tmp.numero_grafos, reverse=True)
+    # eliminar todas las que no esten en relations_pending
+    list_relaciones_pal = [rel for rel in list_relaciones_pal if rel in palabra.relations_pending]
+    return list_relaciones_pal
 
 
 
-def update_list_dir_order(relation):
-    try:
-        print(f"-----Fallo en la direccion {relation.pal_origen.texto} :: {relation.pal_dest.texto}")
-    except:
-        pass
-    list_dir_origen_actual = relation.pal_origen.lista_direcciones_orden
-    dir_pal_origen = relation.pal_origen.direccion_origen
-    num_dir_pal_origen = len(list_dir_origen_actual)
-    find_dir = DICT_DIR_BY_ORIGEN.get(dir_pal_origen)
 
-    if num_dir_pal_origen > len(find_dir)-1:
-        new_list_direcciones_orden = find_dir[-1]
+
+# TODO una funcion de check if it is possible. para marcar estas relaciones
+def refresh_directions(palabra):
+    # TODO quitar de aqui todo lo que no se tenga que representar porque ya esta representado :)
+
+    palabras_relaciones_proximas = palabra.palabras_relaciones_proximas.copy()
+    # Esto crea las palabras temporales, es esencial
+    list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra).copy()
+    list_all_palabras = [elem.pal_tmp for elem in list_relaciones_pal]
+
+    for pal2 in list_all_palabras:
+        if pal2.has_been_plotted:
+            dir_actual = get_dir_relativa(palabra, pal2)
+            if palabra.dict_posiciones.get(dir_actual) is None:
+                palabra.dict_posiciones[dir_actual] = pal2
+            pal2.direccion_origen_tmp = dir_actual
+
+    ######################################################################################################
+    # si existe algun elemento de la 1a lista que esta en las otras, lo uno en elementos comunes para saber que deben ir juntos
+    elements_comunes = get_list_elements_comunes(palabras_relaciones_proximas)
+
+    find_dir_generic = DICT_DIR_BY_ORIGEN.get(palabra.direccion_origen_tmp, [])
+    if len(list_relaciones_pal) > len(find_dir_generic):
+        list_direcciones_orden = find_dir_generic[-1]
     else:
-        new_list_direcciones_orden = find_dir[num_dir_pal_origen]  # antes se le restaba 1
-
-    relation.pal_origen.lista_direcciones_orden = new_list_direcciones_orden
-    # relation.pal_origen.pos_actual_recorrer_dir_relaciones += 1  # de esta forma se salta el elemento actual
-    ## No esto no lo hagas porque sino sumas 2, que ahora he puesto el bucle como While
-
-    # No ha sido encontrado. Hay que buscar la siguiente posicion.
-    # En caso de que falle, tengo que pasar a la siguiente lista de direccion y buscar la siguiente posicion.
-    #  esto como se haria? pues se me ocurre:
-    # 1. aqui haces eso de pasar a la siguiente lista de direccion.
-    # 2. aumentas en 1 el numero de direccion de la palabra origen y luego en la funcion principal compruebas que
-    # es ese el que tocaba o no
-    # 3. Si no es el que tocaba, tienes que repetir esa relacion pero con esa nueva direccion que le vas a asignar
-    # tal vez haya que sacar esa parte a una nueva funcion para poder llamarle aunque el bucle no lo permita.
-    # Ya sabes, un while Dir_ok == False:  y dentro esa mierda :)
-
-
-
-RECTA_DISTANCIA_DE_INTENTO_X = 15
-
-def get_pos_dir_dcha(matrix_dim, palabra, relation):
-    if relation is None:
-        return None, None, matrix_dim
-    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
-    pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media
-    pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media + (relation.tam_text + relation.cte_sum_x)
-
-    for x_loop in range(pos_x, pos_x + RECTA_DISTANCIA_DE_INTENTO_X, 1):
-        is_empty, matrix_dim = is_empty_pos_matrix(
-                matrix_dim, pos_y, x_loop,
-                dim_y=palabra.dimension_y + palabra.cte_sum_y,
-                dim_x=palabra.dimension + palabra.cte_sum_x)
-        if is_empty:
-            is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
-            if is_empty:
-                return pos_y, x_loop, matrix_dim
-
-    update_list_dir_order(relation)
-
-    return None, None, matrix_dim
-
-
-
-RECTA_DISTANCIA_DE_INTENTO_Y = 15
-RECTA_MARGIN = 40
-ARRIBA_MARGIN_MIN = 3
-
-def get_pos_dir_arriba(matrix_dim, palabra, relation):
-    if relation is None:
-        return None, None, matrix_dim
-    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
-    pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media + (palabra.dimension_y + palabra.cte_sum_y)//2 + ARRIBA_MARGIN_MIN
-    pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media
-
-    for y_loop in range(pos_y, pos_y + RECTA_DISTANCIA_DE_INTENTO_Y, 1):
-        is_empty, matrix_dim = is_empty_pos_matrix(
-                matrix_dim, y_loop, pos_x,
-                dim_y=palabra.dimension_y + palabra.cte_sum_y,
-                dim_x=palabra.dimension + palabra.cte_sum_x,
-                margen_x=RECTA_MARGIN)
-        if is_empty:
-            is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, y_loop, pos_x, relation)
-            if is_empty:
-                return y_loop, pos_x, matrix_dim
-
-    update_list_dir_order(relation)
-
-    return None, None, matrix_dim
-
-
-def get_pos_dir_abajo(matrix_dim, palabra, relation):
-    if relation is None:
-        return None, None, matrix_dim
-    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
-    pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media - (palabra.dimension_y + palabra.cte_sum_y)//2 - ARRIBA_MARGIN_MIN
-    pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media
-
-    for y_loop in range(pos_y, pos_y - RECTA_DISTANCIA_DE_INTENTO_Y, -1):
-        is_empty, matrix_dim = is_empty_pos_matrix(
-                matrix_dim, y_loop, pos_x,
-                dim_y=palabra.dimension_y + palabra.cte_sum_y,
-                dim_x=palabra.dimension + palabra.cte_sum_x,
-                margen_x=RECTA_MARGIN)  # va a la dcha
-        if is_empty:
-            is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, y_loop, pos_x, relation)
-            if is_empty:
-                return y_loop, pos_x, matrix_dim
-
-    update_list_dir_order(relation)
-
-    return None, None, matrix_dim
-
-
-def get_pos_dir_izq(matrix_dim, palabra, relation):
-    if relation is None:
-        return None, None, matrix_dim
-    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
-
-    pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media
-    pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media - (palabra.dimension + palabra.cte_sum_x)//2 - \
-            (relation.tam_text + relation.cte_sum_x)
-
-    for x_loop in range(pos_x, pos_x - RECTA_DISTANCIA_DE_INTENTO_X, -1):
-        is_empty, matrix_dim = is_empty_pos_matrix(
-                matrix_dim, pos_y, x_loop,
-                dim_y=palabra.dimension_y + palabra.cte_sum_y,
-                dim_x=palabra.dimension + palabra.cte_sum_x)
-        if is_empty:
-            is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
-            if is_empty:
-                return pos_y, x_loop, matrix_dim
-
-    update_list_dir_order(relation)
-
-    return None, None, matrix_dim
-
-
-
-
-DIAGONAL_DISTANCIA_DE_INTENTO_Y = 4
-DIAGONAL_Y_1 = 4
-DIAGONAL_Y_2 = 8
-DIAGONAL_Y_3 = 12
-DIAGONAL_LIST_YS = [DIAGONAL_Y_1, DIAGONAL_Y_2, DIAGONAL_Y_3]
-DIAGONAL_DISTANCIA_DE_INTENTO_X = 5
-DIAGONAL_X_1 = 3
-DIAGONAL_X_2 = 8
-DIAGONAL_X_3 = 13
-DIAGONAL_LIST_XS = [DIAGONAL_X_1, DIAGONAL_X_2, DIAGONAL_X_3]
-DIAGONAL_MARGIN_X = 20
-
-
-def get_pos_dir_dcha_arriba(matrix_dim, palabra, relation):
-    if relation is None:
-        return None, None, matrix_dim
-
-    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
-    for i in range(0, len(DIAGONAL_LIST_YS)):
-        pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media + DIAGONAL_LIST_YS[i]
-        pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media + relation.pal_tmp_opuesta.dimension + relation.pal_tmp_opuesta.cte_sum_x +  DIAGONAL_LIST_XS[i]
-
-        for y_loop in range(pos_y, pos_y + DIAGONAL_DISTANCIA_DE_INTENTO_Y, 1):
-            for x_loop in range(pos_x, pos_x + DIAGONAL_DISTANCIA_DE_INTENTO_X, 1):
-                is_empty, matrix_dim = is_empty_pos_matrix(
-                        matrix_dim, y_loop, x_loop,
-                        dim_y=palabra.dimension_y + palabra.cte_sum_y,
-                        dim_x=palabra.dimension + palabra.cte_sum_x,
-                        margen_x=DIAGONAL_MARGIN_X)
-                if is_empty:
-                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
-                    if is_empty:
-                        return pos_y, x_loop, matrix_dim
-
-    update_list_dir_order(relation)
-    return None, None, matrix_dim
-
-
-def get_pos_dir_dcha_abajo(matrix_dim, palabra, relation):
-    if relation is None:
-        return None, None, matrix_dim
-
-    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
-    for i in range(0, len(DIAGONAL_LIST_YS)):
-        pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media - DIAGONAL_LIST_YS[i]
-        pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media + relation.pal_tmp_opuesta.dimension + relation.pal_tmp_opuesta.cte_sum_x + DIAGONAL_LIST_XS[i]
-
-
-        for y_loop in range(pos_y, pos_y - DIAGONAL_DISTANCIA_DE_INTENTO_Y, -1):
-            for x_loop in range(pos_x, pos_x + DIAGONAL_DISTANCIA_DE_INTENTO_X, 1):
-                is_empty, matrix_dim = is_empty_pos_matrix(
-                        matrix_dim, y_loop, x_loop,
-                        dim_y=palabra.dimension_y + palabra.cte_sum_y,
-                        dim_x=palabra.dimension + palabra.cte_sum_x,
-                        margen_x=DIAGONAL_MARGIN_X)
-                if is_empty:
-                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
-                    if is_empty:
-                        return pos_y, x_loop, matrix_dim
-
-    update_list_dir_order(relation)
-
-    return None, None, matrix_dim
-
-
-def get_pos_dir_izq_abajo(matrix_dim, palabra, relation):
-    if relation is None:
-        return None, None, matrix_dim
-
-    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
-    for i in range(0, len(DIAGONAL_LIST_YS)):
-        pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media - DIAGONAL_LIST_YS[i]
-        pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media - (relation.pal_tmp_opuesta.dimension + relation.pal_tmp_opuesta.cte_sum_x) - DIAGONAL_LIST_XS[i]
-
-        for y_loop in range(pos_y, pos_y - DIAGONAL_DISTANCIA_DE_INTENTO_Y, -1):
-            for x_loop in range(pos_x, pos_x - DIAGONAL_DISTANCIA_DE_INTENTO_X, -1):
-                is_empty, matrix_dim = is_empty_pos_matrix(
-                        matrix_dim, y_loop, x_loop,
-                        dim_y=palabra.dimension_y + palabra.cte_sum_y,
-                        dim_x=palabra.dimension + palabra.cte_sum_x,
-                        margen_x=-DIAGONAL_MARGIN_X)
-                if is_empty:
-                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
-                    if is_empty:
-                        return pos_y, x_loop, matrix_dim
-
-    update_list_dir_order(relation)
-    return None, None, matrix_dim
-
-
-def get_pos_dir_izq_arriba(matrix_dim, palabra, relation):
-    if relation is None:
-        return None, None, matrix_dim
-
-    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
-    for i in range(0, len(DIAGONAL_LIST_YS)):
-        pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media + DIAGONAL_LIST_YS[i]
-        pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media - (relation.pal_tmp_opuesta.dimension + relation.pal_tmp_opuesta.cte_sum_x) - DIAGONAL_LIST_XS[i]
-
-        for y_loop in range(pos_y, pos_y + DIAGONAL_DISTANCIA_DE_INTENTO_Y, 1):
-            for x_loop in range(pos_x, pos_x - DIAGONAL_DISTANCIA_DE_INTENTO_X, -1):
-                is_empty, matrix_dim = is_empty_pos_matrix(
-                        matrix_dim, y_loop, x_loop,
-                        dim_y=palabra.dimension_y + palabra.cte_sum_y,
-                        dim_x=palabra.dimension + palabra.cte_sum_x,
-                        margen_x=-DIAGONAL_MARGIN_X)
-                if is_empty:
-                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
-                    if is_empty:
-                        return pos_y, x_loop, matrix_dim
-
-    update_list_dir_order(relation)
-    return None, None, matrix_dim
-
-def get_next_location(matrix_dim, palabra, relation):
-    pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
-    dir_origen = palabra.direccion_origen
-    pos_y, pos_x = pos_y_media, pos_x_media
-
-    if dir_origen == CENTRO or relation is None:
-        pos_y, pos_x, matrix_dim = find_better_center_position(matrix_dim, palabra, pos_y_media, pos_x_media)
-
-    elif dir_origen == DIR_DCHA:
-        pos_y, pos_x, matrix_dim = get_pos_dir_dcha(matrix_dim, palabra, relation)
-
-    elif dir_origen == DIR_IZQ:
-        pos_y, pos_x, matrix_dim = get_pos_dir_izq(matrix_dim, palabra, relation)
-
-    elif dir_origen == DIR_ARRIBA:
-        pos_y, pos_x, matrix_dim = get_pos_dir_arriba(matrix_dim, palabra, relation)
-
-    elif dir_origen == DIR_ABAJO:
-        pos_y, pos_x, matrix_dim = get_pos_dir_abajo(matrix_dim, palabra, relation)
-
-    elif dir_origen == DIR_DCHA_ARRIBA:
-        pos_y, pos_x, matrix_dim = get_pos_dir_dcha_arriba(matrix_dim, palabra, relation)
-
-    elif dir_origen == DIR_DCHA_ABAJO:
-        pos_y, pos_x, matrix_dim = get_pos_dir_dcha_abajo(matrix_dim, palabra, relation)
-
-    elif dir_origen == DIR_IZQ_ARRIBA:
-        pos_y, pos_x, matrix_dim = get_pos_dir_izq_arriba(matrix_dim, palabra, relation)
-
-    elif dir_origen == DIR_IZQ_ABAJO:
-        pos_y, pos_x, matrix_dim = get_pos_dir_izq_abajo(matrix_dim, palabra, relation)
-
-    return pos_y, pos_x, matrix_dim
+        list_direcciones_orden = find_dir_generic[len(list_relaciones_pal) - 1]
+    palabra.lista_direcciones_orden = list_direcciones_orden
+    ######################################################################################################
+
+    list_direcciones_orden = list_direcciones_orden.copy()
+    for elem_comun in elements_comunes:
+        if all([elem.has_been_plotted for elem in elem_comun]):
+            continue
+        if len(elem_comun) < 2:
+            continue
+
+        if any([elem.has_been_plotted for elem in elem_comun]):
+            #TODO implementar esto, es decir, hay que buscar el elemento representado y construir los otros a partir de este
+            pass
+        dir_1 = list_direcciones_orden.pop(0)
+        find_dir_prox = DICT_PROX_DIR.get(dir_1, [])
+        list_dir_elem_prox = find_dir_prox[len(elem_comun) - 2]
+        # si todos los elementos en palabra.dict_posiciones son Nulos, True
+        if all([palabra.dict_posiciones.get(elem, None) is None for elem in list_dir_elem_prox]):
+            # rellena esos elementos con un elem de elem_comun
+            for elem in list_dir_elem_prox:
+                palabra.dict_posiciones[elem] = elem_comun.pop(0)
+                palabra.dict_posiciones[elem].direccion_origen_tmp = elem
+                # si la posicion existe en list_direcciones_orden, la elimina
+                if elem in list_direcciones_orden:
+                    list_direcciones_orden.remove(elem)
+
+
+    for list_pal_rel_prox in palabras_relaciones_proximas:
+        # quitar todas las palabras que has_been_plotted
+        list_pal_rel_prox = [elem for elem in list_pal_rel_prox if not elem.has_been_plotted]
+        elemes_com = []
+        # comprueba si dentro de esa lista existe alguna palabra en dict_posiciones
+        # obtengo una lista de todos los valores no nulos de dict_posiciones
+        # si alguno de los elementos de list_pal_rel_prox esta en dict_posiciones, True
+        pos_elems_comunes = [elem in [a for a in list(palabra.dict_posiciones.values()) if a is not None]
+                            for elem in list_pal_rel_prox]
+        if any(pos_elems_comunes):
+            # añado todas las posiciones que son True en elemn_comun
+            elemes_com = [list_pal_rel_prox[i] for i, x in enumerate(pos_elems_comunes) if x]
+
+        # Aqui obtengo la lista de direcciones siempre y cuando los elementos comunes estén ya guardaditos :)
+        # comprobando que están entre esas direcciones y que tiene la dimension suficiente como para meter mi elemento.
+        list_dir_elem_prox_final = []
+        for i in range(len(DICT_PROX_DIR) - len(list_pal_rel_prox) - 1):
+            # Esto lo que hace es ir buscando posiciones y, si no lo encuentra, a buscar con un grado de proximidad mayor
+            # y asi sucesivamente hasta encontrar lo que se busca
+            for elem_com in elemes_com:
+                # Los elem_com ya estan representados
+                find_dir_prox = DICT_PROX_DIR.get(elem_com.direccion_origen_tmp, [])
+                list_dir_elem_prox = find_dir_prox[i + len(list_pal_rel_prox) - 2].copy()
+                # si todos los elemes_com tienen direccion_origen dentro de la lista_dir_elem_prox, True
+                if all([elem.direccion_origen_tmp in list_dir_elem_prox for elem in elemes_com]):
+                    # Bien, los elementos comunes que quiero están representados.
+                    # ahora debo comprobar si las posiciones restantes estan a None:
+                    list_elems_dir = [elem for elem in list(palabra.dict_posiciones.keys()) if elem in list_dir_elem_prox]
+                    # dime el numero de Trues que hay
+                    num_trues = sum([palabra.dict_posiciones.get(key, None) is None for key in list_elems_dir])
+                    if num_trues >= len(list_pal_rel_prox) - len(elemes_com):
+                        # si esto es mayor, es que si cabe :)
+                        list_dir_elem_prox_final = list_dir_elem_prox.copy()
+                        # restar una lista a otra
+                        list_pal_rel_prox = [a for a in list_pal_rel_prox if a not in elemes_com]
+                        for pos in list_dir_elem_prox_final:
+                            if palabra.dict_posiciones.get(pos, None) is None and list_pal_rel_prox != []:
+                                palabra.dict_posiciones[pos] = list_pal_rel_prox.pop(0)
+                                palabra.dict_posiciones[pos].direccion_origen_tmp = pos
+
+                else:
+                    continue
+                if len(list_dir_elem_prox_final) > 0:
+                    break
+            if len(list_dir_elem_prox_final) > 0:
+                break
+    ###################################################################################################################
+
+    list_all_palabras = [elem.pal_tmp for elem in list_relaciones_pal]
+    list_palabras_pendientes = [elem for elem in list_all_palabras if elem not in list(palabra.dict_posiciones.values())]
+    list_palabras_pendientes = [elem for elem in list_palabras_pendientes if not elem.has_been_plotted]
+    list_direcciones_orden = palabra.lista_direcciones_orden.copy()
+    try:
+        ## pal_menor_import = min(list_palabras_pendientes, key=lambda x: x.importancia)
+
+        for dir in list_direcciones_orden:
+            if palabra.dict_posiciones.get(dir, None) is None and list_palabras_pendientes != []:
+                palabra.dict_posiciones[dir] = list_palabras_pendientes.pop(0)
+                palabra.dict_posiciones[dir].direccion_origen_tmp = dir
+
+    except Exception as _:
+        palabra.lista_direcciones_orden = find_dir_generic[-1]
+        list_direcciones_orden = palabra.lista_direcciones_orden.copy()
+        for dir in list_direcciones_orden:
+            if palabra.dict_posiciones.get(dir, None) is None and list_palabras_pendientes != []:
+                palabra.dict_posiciones[dir] = list_palabras_pendientes.pop(0)
+                palabra.dict_posiciones[dir].direccion_origen_tmp = dir
+
+    #list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra)
+    # obtener el elemento con menor importancia de list_relaciones_pal
+    print("Hola")
+
+
+def get_list_elements_comunes(palabras_relaciones_proximas):
+    elements_comunes = []
+    if len(palabras_relaciones_proximas) >= 2:
+        i = 1
+        for list_pals in palabras_relaciones_proximas:
+            for list_pals_2 in palabras_relaciones_proximas[i:]:
+                elem_comun = [elem in list_pals for elem in list_pals_2]
+                if any(elem_comun) and list_pals != list_pals_2:
+                    # añado todas las posiciones que son True en elemn_comun
+                    elements_comunes.append([list_pals_2[i] for i, x in enumerate(elem_comun) if x])
+                print(elements_comunes)
+    return elements_comunes

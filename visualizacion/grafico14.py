@@ -22,8 +22,10 @@ from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_lis
 
 from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_ARRIBA, DIR_ABAJO, DIR_ARRIBA, \
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
-    FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO
-from visualizacion.utils.direcciones import get_next_location
+    FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO, \
+    DICT_PROX_DIR
+from visualizacion.utils.direcciones import refresh_directions, get_rel_origen_and_dest_unidas
+from visualizacion.utils.posicionesXY import get_next_location
 from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_matrix, imprimir_matriz, \
     reducir_tam_matriz, ampliar_matriz
 
@@ -310,72 +312,46 @@ def update_palabras_in_matrix(matrix_dim, palabra):
     return matrix_dim
 
 
-def get_rel_origen_and_dest_unidas(palabra):
-    list_relaciones_pal_origen = Palabra.relaciones_dict_origen.get(palabra, [])
-    for rel in list_relaciones_pal_origen:
-        rel.pal_tmp = rel.pal_dest
-        rel.pal_tmp_opuesta = rel.pal_origen
-    list_relaciones_pal_dest = Palabra.relaciones_dict_destino.get(palabra, [])
-    for rel in list_relaciones_pal_dest:
-        rel.pal_tmp = rel.pal_origen
-        rel.pal_tmp_opuesta = rel.pal_dest
-    list_relaciones_pal = list(set(list_relaciones_pal_origen + list_relaciones_pal_dest))
-    # ordenar por el numero de grado de aproximacion
-    list_relaciones_pal.sort(key=lambda x: x.pal_tmp.numero_grafos, reverse=True)
-    # eliminar todas las que no esten en relations_pending
-    list_relaciones_pal = [rel for rel in list_relaciones_pal if rel in palabra.relations_pending]
-    return list_relaciones_pal
+
 
 
 def represent_list_relations(list_palabras_representadas, list_relaciones, matrix_dim, palabra, position_elems,
                              force_draw=False):
-    list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra)
+    refresh_directions(palabra)
 
-    list_direcciones_orden = []
-    if len(list_relaciones_pal) > 0:
-        list_relaciones_pal.sort(
-            key=lambda x: x.pal_tmp.grafos_aproximados[0] if len(x.pal_tmp.grafos_aproximados) > 0 else 0,
-            reverse=True)
-        find_dir = DICT_DIR_BY_ORIGEN.get(palabra.direccion_origen)
-        # FIXME: meter aqui un try-except por si supera 7 elementos.
-        if len(list_relaciones_pal) > len(find_dir):
-            list_direcciones_orden = find_dir[-1]
-        else:
-            list_direcciones_orden = find_dir[len(list_relaciones_pal) - 1]
-        palabra.lista_direcciones_orden = list_direcciones_orden
+    # TODOS los valores que no son null
+    list_dir_to_check = [a for a in list(palabra.dict_posiciones.keys()) if palabra.dict_posiciones.get(a) is not None]
 
-    # TODO esto que hace???????
-    list_relaciones_pal = DEPREC_reordenar_relaciones_unir_graph_1er_grado(list_relaciones_pal)
     if force_draw:
-        list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra)
-        list_rel_pending = list(list_relaciones_pal)
-        list_rel_pending = [rel for rel in list_rel_pending if not rel.pal_tmp.subgrafo_completado]
+        list_dir_pending = [dir1 for dir1 in list_dir_to_check if not palabra.dict_posiciones.get(dir1).subgrafo_completado]
     else:
-        list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra)
-        list_rel_pending = [a for a in list_relaciones_pal if a in palabra.relations_pending]
+        # Solo las pendientes
+        list_dir_pending = [dir1 for dir1 in list_dir_to_check if not palabra.dict_posiciones.get(dir1).has_been_plotted]
 
-    num_dir_orden = -1
-    num_relacion = -1
-    while list_rel_pending != []:
-        num_dir_orden += 1
-        num_relacion += 1
-        relation = list_rel_pending.pop(0)
-        palabra.pos_actual_recorrer_dir_relaciones = num_dir_orden
+    list_rel_pending = []
+    while list_dir_pending != []:
+        # Necesario para refrescar las palabras temporales
+        list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra).copy()
+        dir_actual = list_dir_pending.pop(0)
+        pal_to_draw = palabra.dict_posiciones.get(dir_actual)
+        # buscar la relacion cuya palabta_tmp sea pal_to_draw
+        relation = [elem for elem in list_relaciones_pal if elem.pal_tmp == pal_to_draw][0]
+
         if check_subgrafo_completado(palabra):
             continue
 
-        if relation.pal_tmp.has_been_plotted:
+        if pal_to_draw.has_been_plotted:
             # al coger un numero random evitamos que se formen bucles infinitos
             relation = list_relaciones_pal[random.randint(0, len(list_relaciones_pal) - 1)]
             list_palabras_representadas_new, position_elems_2, matrix_dim_2 = \
                 get_position_word_recursive(position_elems, matrix_dim, relation.pal_tmp, list_relaciones,
                                             relation=relation, force_draw=force_draw)
+            list_palabras_representadas += list_palabras_representadas_new
             if palabra.grafo.palabras_list_ordered_num_rel_pending == []:
                 break
         else:
-            dir_actual = list_direcciones_orden[num_dir_orden]
             relation.direccion_actual = dir_actual
-            relation.pal_tmp.direccion_origen = dir_actual
+            relation.pal_tmp.direccion_origen_tmp = dir_actual
 
             print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
             if palabra.texto == 'majestuosas y extensas':
@@ -395,6 +371,7 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
             matrix_dim = matrix_dim_2
 
         list_palabras_representadas += list_palabras_representadas_new
+    # TODO: que todas las list_rel_pending se añadan pero sin criterio alguno con las felchas. con el max find_dir
     return list_palabras_representadas, matrix_dim, position_elems
 
 
@@ -523,7 +500,6 @@ def get_position_dict(list_palabras, list_relaciones):
     matrix_dim, pos_y_media, pos_x_media = generate_matrix(list_palabras)
 
     position_elems = {}
-    dict_rel_direction = {}
 
     #list_palabras_ordenadas = list(importance_dict.keys())
     list_palabras_ordenadas = list_palabras.copy()
@@ -649,7 +625,7 @@ def text_tranformations(list_palabras, list_relaciones):
     for palabra in list_palabras:
         palabra.refresh_palabras_relacionadas_2o_grado()
     for palabra in list_palabras:
-        palabra.refresh_relaciones_proximas_1er_grado()
+        palabra.refresh_relaciones_proximas_2o_grado()
     # TODO una funcion que a la primera palabra, las relaciones de esa palabra y las palabras de las relaciones las
     # ponga de color rojo, al siguiente nivel, azul, ect. Pero con el orden que da el grafo con relaciones de 1er grado
     #

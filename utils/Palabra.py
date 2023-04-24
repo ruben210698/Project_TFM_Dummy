@@ -66,8 +66,7 @@ class Palabra:
         self.grafo = None
         self.numero_grafos = -1
         self.grafos_aproximados = []
-        self.direccion_origen = CENTRO
-        self.pos_actual_recorrer_dir_relaciones = 0
+        self.direccion_origen_tmp = CENTRO
         self.lista_direcciones_orden = []
         self.list_palabras_relacionadas_1er_grado = []
         self.list_palabras_relacionadas_2o_grado = []
@@ -79,14 +78,14 @@ class Palabra:
         self.relations_origen_and_dest = []
         self.palabras_relaciones_proximas = []
         self.dict_posiciones = {
-            DIR_ARRIBA: None,
-            DIR_DCHA_ARRIBA: None,
             DIR_DCHA: None,
+            DIR_DCHA_ARRIBA: None,
             DIR_DCHA_ABAJO: None,
-            DIR_ABAJO: None,
-            DIR_IZQ_ABAJO: None,
             DIR_IZQ: None,
-            DIR_IZQ_ARRIBA: None
+            DIR_IZQ_ARRIBA: None,
+            DIR_IZQ_ABAJO: None,
+            DIR_ARRIBA: None,
+            DIR_ABAJO: None
         }
 
         Palabra.palabras_dict[self.txt_lema + "-" + str(self.position_doc)] = self
@@ -183,7 +182,8 @@ class Palabra:
         except Exception as _:
             pass
 
-    def refresh_relaciones_proximas_1er_grado(self):
+
+    def refresh_relaciones_proximas_2o_grado(self):
         list_pal_to_check = [a for a in self.list_palabras_relacionadas_1er_grado if a != self]
 
         pal_to_check_2 = []
