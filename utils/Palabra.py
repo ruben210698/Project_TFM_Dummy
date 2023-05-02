@@ -196,7 +196,6 @@ class Palabra:
             for pal2 in list_to_check:
                 if pal2 in list_pal_to_check and pal2 not in pal_to_check_2:
                     pal_to_check_2.append(pal2)
-        print(pal_to_check_2)
         # que cree listas diferentes para los elementos que estan relacionados entre si:
 
         pal_to_check_2_copy = pal_to_check_2.copy()
@@ -254,7 +253,6 @@ class Palabra:
                             new_palabras_relaciones_proximas.remove(elem2)
                 i += 1
             self.palabras_relaciones_proximas = new_palabras_relaciones_proximas
-        print(self.palabras_relaciones_proximas)
 
 
     def refresh_palabras_relacionadas_2o_grado(self):

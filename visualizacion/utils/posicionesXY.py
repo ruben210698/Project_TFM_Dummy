@@ -3,7 +3,18 @@ from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
     FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO
 from visualizacion.utils.matrix_functions import ampliar_matriz, is_empty_pos_matrix, find_better_center_position, imprimir_matriz
+import logging
+from utils.logger import FORMAT_1
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.CRITICAL) #######################################################
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter
+formatter = logging.Formatter(FORMAT_1)
 
+# add formatter to ch
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 
 def get_dir_relativa(palabra_origen, palabra_dest):
@@ -33,7 +44,7 @@ def get_dir_relativa(palabra_origen, palabra_dest):
 
 def update_list_dir_order(relation):
     try:
-        print(f"-----Fallo en la direccion {relation.pal_origen.texto} :: {relation.pal_dest.texto}")
+        logger.info(f"-----Fallo en la direccion {relation.pal_origen.texto} :: {relation.pal_dest.texto}")
     except:
         pass
     list_dir_origen_actual = relation.pal_origen.lista_direcciones_orden

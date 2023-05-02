@@ -17,6 +17,7 @@ from constants import type_sintax
 from constants import colores_figura, colores_figura_letra, colores
 from constants.figuras import *
 from constants import tam_figuras
+
 from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_list, unir_conjuncion_y, \
     truncate_a_8_relaciones
 
@@ -27,6 +28,20 @@ from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_
 from visualizacion.utils.posicionesXY import get_next_location, get_dir_relativa
 from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_matrix, imprimir_matriz, \
     reducir_tam_matriz, ampliar_matriz
+
+import logging
+from utils.logger import FORMAT_1
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.CRITICAL) #######################################################
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter
+formatter = logging.Formatter(FORMAT_1)
+
+# add formatter to ch
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
 
 
 def get_rel_origen_and_dest_unidas(palabra):
@@ -65,6 +80,12 @@ def refresh_directions(palabra):
                 palabra.dict_posiciones[dir_actual] = pal2
             pal2.direccion_origen_tmp = dir_actual
 
+
+
+
+
+    # TODO: que busque la palabra con menor importancia y la ponga a la izq, si la izq esta vacia
+    ## pal_menor_import = min(list_palabras_pendientes, key=lambda x: x.importancia)
     ######################################################################################################
     # si existe algun elemento de la 1a lista que esta en las otras, lo uno en elementos comunes para saber que deben ir juntos
     elements_comunes = get_list_elements_comunes(palabras_relaciones_proximas)
@@ -171,7 +192,7 @@ def refresh_directions(palabra):
 
     #list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra)
     # obtener el elemento con menor importancia de list_relaciones_pal
-    print("Hola")
+    logger.info("Hola")
 
 
 def get_list_elements_comunes(palabras_relaciones_proximas):
@@ -184,5 +205,5 @@ def get_list_elements_comunes(palabras_relaciones_proximas):
                 if any(elem_comun) and list_pals != list_pals_2:
                     # añado todas las posiciones que son True en elemn_comun
                     elements_comunes.append([list_pals_2[i] for i, x in enumerate(elem_comun) if x])
-                print(elements_comunes)
+                logger.info(elements_comunes)
     return elements_comunes

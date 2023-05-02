@@ -1,5 +1,17 @@
 
+from utils.logger import FORMAT_1
+import logging
+from utils.logger import FORMAT_1
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.CRITICAL) #######################################################
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter
+formatter = logging.Formatter(FORMAT_1)
 
+# add formatter to ch
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 PRINT_MATRIX = False
 
 DIM_Y_MATRIX = 50
@@ -18,7 +30,7 @@ def generate_matrix(list_palabras):
     matrix_dim = [[] for i in range(DIM_Y_MATRIX)]
     for y in range(dim_y_matrix):
         matrix_dim[y] += [0 for x in range(dim_x_matrix)]
-    # print(matrix_dim)
+    # logger.info(matrix_dim)
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
     return matrix_dim, pos_y_media, pos_x_media
 
@@ -29,28 +41,28 @@ def imprimir_matriz(matriz, apply_num_inicial_col=True):
             return
         matriz = matriz.copy()
         matriz = reducir_tam_matriz(matriz)
-        print("-----------------------------------------------------------------------")
+        logger.info("-----------------------------------------------------------------------")
         i, j = 0, 0
-        print(f"    ", end="")
+        logger.info(f"    ", end="")
         for elemento in matriz[0]:
-            print(f"{i:<4}", end="")
+            logger.info(f"{i:<4}", end="")
             i += 1
-        print()
+        logger.info()
 
         for fila in matriz:
-            print(f"{j:<4}", end="")
+            logger.info(f"{j:<4}", end="")
             num_col = 0
             for elemento in fila:
                 if elemento == 0:
-                    print(f"{elemento:<4}", end="")
+                    logger.info(f"{elemento:<4}", end="")
                 else:
-                    print(f"{elemento:<4}", end="")
+                    logger.info(f"{elemento:<4}", end="")
                 num_col += 1
             j += 1
-            print()
-        print("-----------------------------------------------------------------------")
+            logger.info()
+        logger.info("-----------------------------------------------------------------------")
     except Exception as e:
-        print(e)
+        logger.info(e)
         pass
 
 
@@ -94,7 +106,7 @@ def ampliar_matriz(matrix_dim):
     AMPLIAR_Y = 50
     MARGEN_Y = 50
     MARGEN_X = 100
-    print("################## Ampliando matriz")
+    logger.info("################## Ampliando matriz")
     # comprueba los bordes de la matriz y en caso de existir alguno con un valor != 0
 
     # amplia la matriz en 250 en x y en y
@@ -164,16 +176,16 @@ def ampliar_matriz(matrix_dim):
 
     # Se suman en ambos lados lo mismo y asi la posicion media sigue siendo el centro :)
     if sumar_arriba or sumar_abajo:
-        print("############# Sumando arriba")
+        logger.info("############# Sumando arriba")
         matrix_dim = [[0 for x in range(dim_x_matrix)] for y in range(AMPLIAR_Y)] + matrix_dim
     if sumar_abajo or sumar_arriba:
-        print("############# Sumando abajo")
+        logger.info("############# Sumando abajo")
         matrix_dim = matrix_dim + [[0 for x in range(dim_x_matrix)] for y in range(AMPLIAR_Y)]
     if sumar_dcha or sumar_izq:
-        print("############# Sumando dcha")
+        logger.info("############# Sumando dcha")
         matrix_dim = [x + [0 for x in range(AMPLIAR_X)] for x in matrix_dim]
     if sumar_izq or sumar_dcha:
-        print("############# Sumando izq")
+        logger.info("############# Sumando izq")
         matrix_dim = [[0 for x in range(AMPLIAR_X)] + x for x in matrix_dim]
     return matrix_dim
 
@@ -244,7 +256,9 @@ def is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x=0, ampliar=
     except:
         if ampliar:
             matrix = ampliar_matriz(matrix)
-            return is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x)
+            # Si se amplia la matriz, es que cabe seguro
+            # return is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x)
+            return True, matrix
         else:
             return True, matrix
 def find_better_center_position(matrix_dim, palabra, pos_y_media, pos_x_media):

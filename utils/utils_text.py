@@ -3,6 +3,20 @@ import re
 from utils.Palabra import Palabra
 from utils.Relacion import Relacion
 
+import logging
+from utils.logger import FORMAT_1
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.CRITICAL) #######################################################
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter
+formatter = logging.Formatter(FORMAT_1)
+
+# add formatter to ch
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
 # aqui vienen las funciones que permiten hacer modificaciones en el texto que se consideran comunes
 # Las excepciones que se han visto que se deben aplicar al texto.
 
@@ -10,8 +24,8 @@ from utils.Relacion import Relacion
 def truncate_a_8_relaciones(list_palabras):
     #TODO que borre las relaciones con el grafo mas pequeño
     for pal in list_palabras:
-        print(pal.numero_grafos)
-        print(pal.texto)
+        logger.info(pal.numero_grafos)
+        logger.info(pal.texto)
         if pal.numero_grafos > 8:
             raise Exception("Hay mas de 8 relaciones")
 
@@ -19,7 +33,7 @@ def truncate_a_8_relaciones(list_palabras):
 
 
 def unir_2_relaciones(rel1, rel2, remove_rel2=True):
-    print("Uniendo relaciones: " + rel1.texto + " y " + rel2.texto)
+    logger.info("Uniendo relaciones: " + rel1.texto + " y " + rel2.texto)
     if rel1.position_doc <= rel2.position_doc:
         rel1.texto = rel1.texto + " " + rel2.texto
     else:
@@ -40,8 +54,8 @@ def unir_list_all_relaciones(list_relaciones, list_modified = []):
         for rel2 in list_relaciones:
             if rel2 not in list_modified and \
                 rel != rel2 and rel.pal_origen == rel2.pal_origen and rel.pal_dest == rel2.pal_dest:
-                print(rel2.position_doc)
-                print(rel.position_doc)
+                logger.info(rel2.position_doc)
+                logger.info(rel.position_doc)
                 unir_2_relaciones(rel, rel2)
                 list_relaciones_new.remove(rel2)
                 list_modified.append(rel)
@@ -51,8 +65,8 @@ def unir_list_all_relaciones(list_relaciones, list_modified = []):
 
 
 def get_relation_entre_pal(pal1, pal2):
-    print("Buscando relación entre1 " + pal1.texto)
-    print("Buscando relación entre2 " + pal2.texto)
+    logger.info("Buscando relación entre1 " + pal1.texto)
+    logger.info("Buscando relación entre2 " + pal2.texto)
     # Devuelve la relación entre 2 palabras
     for rel in Palabra.relaciones_dict_destino[pal2]:
         if rel.pal_origen == pal1:
@@ -63,9 +77,9 @@ def get_relation_entre_pal(pal1, pal2):
 
 def unir_palabras_sin_relacion(pal1, pal2, list_relaciones, list_palabras, texto_entre_palabras =""):
     # TODO que si hay alguna relacion de la palabra2, que las una.
-    print(f"Uniendo palabras {pal1.texto} --- {pal2.texto}")
+    logger.info(f"Uniendo palabras {pal1.texto} --- {pal2.texto}")
     if pal2.texto == 'expulsión' and pal1.texto == 'judíos':
-        print("hola")
+        logger.info("hola")
 
     list_rel_pal2_palx = Palabra.relaciones_dict_origen.get(pal2, [])
     if list_rel_pal2_palx:
@@ -227,9 +241,9 @@ def unir_conjuncion_y(list_palabras, list_relaciones):
     for basic_rel_y in list_relaciones_copy:
         try:
             if basic_rel_y.texto == 'y' or basic_rel_y.texto == 'e' or basic_rel_y.texto == ',':
-                print(f"Palabra origen relY: {basic_rel_y.pal_origen.texto}")
+                logger.info(f"Palabra origen relY: {basic_rel_y.pal_origen.texto}")
                 if basic_rel_y.pal_origen.texto == 'Carlos':
-                    print("hola")
+                    logger.info("hola")
 
                 relaciones_dict_dest_copy = Palabra.relaciones_dict_destino[basic_rel_y.pal_dest].copy()
                 # TODO: descomentar para jutar "arquitectura y arte"
@@ -266,7 +280,7 @@ def unir_conjuncion_y(list_palabras, list_relaciones):
                                 list_rel_y_eliminar.append(basic_rel_y)
                             dict_palabras_juntar.update({rel2.pal_dest: basic_rel_y.pal_dest})
         except Exception as e:
-            print(f"Error al unir palabras con conjunsion y: {e}")
+            logger.info(f"Error al unir palabras con conjunsion y: {e}")
 
     for rel_y in list_rel_y_eliminar:
         rel_y.delete_relation()
@@ -277,7 +291,7 @@ def unir_conjuncion_y(list_palabras, list_relaciones):
             list_relaciones, list_palabras = \
                 unir_palabras_sin_relacion(pal1, pal2, list_relaciones, list_palabras, texto_entre_palabras ="y")
         except Exception as e:
-            print(f"Error al unir palabras: {e}")
+            logger.info(f"Error al unir palabras: {e}")
 
     return list_palabras, list_relaciones
 

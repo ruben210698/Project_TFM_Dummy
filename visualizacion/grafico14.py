@@ -17,6 +17,7 @@ from constants import type_sintax
 from constants import colores_figura, colores_figura_letra, colores
 from constants.figuras import *
 from constants import tam_figuras
+
 from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_list, unir_conjuncion_y, \
     truncate_a_8_relaciones
 
@@ -28,6 +29,26 @@ from visualizacion.utils.direcciones import refresh_directions, get_rel_origen_a
 from visualizacion.utils.posicionesXY import get_next_location
 from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_matrix, imprimir_matriz, \
     reducir_tam_matriz, ampliar_matriz
+
+import logging
+from utils.logger import FORMAT_1, create_logger
+create_logger()
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter
+formatter = logging.Formatter(FORMAT_1)
+
+# add formatter to ch
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+
+
+
+
+
 
 LINEAS_SEP_FILA = 5
 
@@ -50,6 +71,8 @@ dict_color_figura_letra = {
     if nombre_variable.startswith("TYPE_SINTAX_")
 }
 dict_color_figura_letra.update({None: colores.default, "": colores.default})
+
+
 
 
 """
@@ -199,7 +222,7 @@ def update_relations_in_matrix_by_pal(matrix_dim, palabra):
     list_rel = Palabra.relaciones_dict_origen.get(palabra) + Palabra.relaciones_dict_destino.get(palabra)
     for rel in list_rel:
         id = rel.id
-        print(palabra.texto)
+        logger.info(palabra.texto)
         imprimir_matriz(matrix_dim)
         if not rel.has_been_plotted:
             pal_origen = rel.pal_origen
@@ -290,7 +313,7 @@ def update_relations_in_matrix_by_pal(matrix_dim, palabra):
             rel.has_been_plotted = True
         else:
             continue
-    print(palabra.texto)
+    logger.info(palabra.texto)
     imprimir_matriz(matrix_dim)
 
 
@@ -355,14 +378,14 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
 
             print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
             if palabra.texto == 'majestuosas y extensas':
-                print("hola")
+                logger.info("hola")
 
             list_palabras_representadas_new, position_elems_2, matrix_dim_2 = \
                 get_position_word_recursive(position_elems, matrix_dim, relation.pal_tmp, list_relaciones,
                                             relation=relation, force_draw=force_draw)
 
         if list_palabras_representadas_new is None or position_elems is None or matrix_dim is None:
-            print("No se ha podido representar el grafo")
+            logger.info("No se ha podido representar el grafo")
             list_direcciones_orden = palabra.lista_direcciones_orden
             list_palabras_representadas_new = []
             list_rel_pending.insert(0, relation)
@@ -379,7 +402,7 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
 def represent_word(matrix_dim, palabra, relation, position_elems):
     axis_y, axis_x, matrix_dim = get_next_location(matrix_dim, palabra, relation)
     if axis_y is None or axis_x is None:
-        print("No se ha podido representar la palabra: ", palabra.texto)
+        logger.info(f"No se ha podido representar la palabra: {palabra.texto}")
         return matrix_dim, None, relation, position_elems
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
     palabra.pos_y = axis_y - pos_y_media
@@ -440,10 +463,10 @@ def check_subgrafo_completado(palabra):
 def get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaciones, relation=None,
                                 force_draw=False):
     list_palabras_representadas = []
-    print(f"Matrix: {palabra.texto}")
+    logger.info(f"Matrix: {palabra.texto}")
     aaaaaaaaaaa = palabra.texto
     if palabra.texto == 'caudalosos':
-        print("hola")
+        logger.info("hola")
 
     draw_relations = not palabra.has_been_plotted_relations
     if not palabra.has_been_plotted and palabra.grafo.palabras_list_ordered_num_rel_pending != [] and \
@@ -524,7 +547,7 @@ def get_position_dict(list_palabras, list_relaciones):
                 list_palabras_ordenadas.sort(key=lambda x: x.numero_grafos, reverse=True)
 
         except Exception as _:
-            print("hola")
+            logger.info("hola")
 
         print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
 
@@ -642,6 +665,7 @@ def generate_graph(texto, list_palabras, list_relaciones):
         G.add_edge(relation.pal_origen, relation.pal_dest)
 
     # Crear posiciones de nodos
+    logger.info("Creando posiciones de nodos")
     position_elems, matrix_dim = get_position_dict(list_palabras, list_relaciones)
 
     print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=True)
@@ -710,9 +734,9 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
     plt.show()
 
 def calcular_direccion_aprox(relation_draw, position_elems):
-    print("-- Calcular Dir Aprox: ", relation_draw.texto)
-    print("Calcular Dir Aprox origen: ", relation_draw.pal_origen)
-    print("Calcular Dir Aprox dest: ", relation_draw.pal_dest)
+    logger.info(f"-- Calcular Dir Aprox: %s", relation_draw.texto)
+    logger.info(f"Calcular Dir Aprox origen: %s", relation_draw.pal_origen)
+    logger.info(f"Calcular Dir Aprox dest: %s", relation_draw.pal_dest)
     pal_origen = relation_draw.pal_origen
     pal_dest = relation_draw.pal_dest
     coord_pal_origen = position_elems[pal_origen]
@@ -792,8 +816,8 @@ def draw_all_edges(ax, list_relaciones, position_elems):
                 y_dest_draw = coord_pal_dest[1] + pal_dest.tam_eje_y_figura
             else:
                 # TODO: que si no tiene direccion_actual, la calcule :)
-                print("Error: dirección no contemplada", relation_draw.texto)
-                print("###########")
+                logger.info("Error: dirección no contemplada", relation_draw.texto)
+                logger.info("###########")
 
             draw_edge(
                 ax,
@@ -804,13 +828,13 @@ def draw_all_edges(ax, list_relaciones, position_elems):
                 label_offset=(0, 0.4)
             )
         except Exception as e:
-            print("Error al dibujar la relación", e)
+            logger.info("Error al dibujar la relación", e)
 
 
 def draw_all_nodes(ax, position_elems):
     for pal, (x, y) in position_elems.items():
         node_text = pal.texto
-        print(pal.texto)
+        logger.info(pal.texto)
         if pal.lugar_sintactico.lower() in (TYPE_SINTAX_ROOT):
             pal.figura = FIGURA_ELIPSE
             pal.tam_eje_y_figura = tam_figuras.ELIPSE[1]
