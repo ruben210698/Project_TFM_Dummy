@@ -1,4 +1,6 @@
 
+from utils.Palabra import Palabra
+
 from utils.logger import FORMAT_1
 import logging
 from utils.logger import FORMAT_1
@@ -12,7 +14,11 @@ formatter = logging.Formatter(FORMAT_1)
 # add formatter to ch
 ch.setFormatter(formatter)
 logger.addHandler(ch)
-PRINT_MATRIX = False
+if (logger.hasHandlers()):
+    logger.handlers.clear()
+##############################################################################################################
+##############################################################################################################
+PRINT_MATRIX = True
 
 DIM_Y_MATRIX = 50
 DIM_X_MATRIX = 200
@@ -36,33 +42,74 @@ def generate_matrix(list_palabras):
 
 
 def imprimir_matriz(matriz, apply_num_inicial_col=True):
+
+
     try:
         if not PRINT_MATRIX:
             return
+        pos_y_media, pos_x_media = get_pos_media_matrix(matriz)
         matriz = matriz.copy()
         matriz = reducir_tam_matriz(matriz)
-        logger.info("-----------------------------------------------------------------------")
-        i, j = 0, 0
-        logger.info(f"    ", end="")
+        ################################################################################################################
+        ################################################################################################################
+        ################################################################################################################
+        # Imprimir numeros
+        # De esta forma saco la posicion de la primera palabra que encuentre y voy imprimiendo todas las posiciones
+        # del resto
+        id_tmp = -1
+        fila = 0
+        col = 0
+        while fila < len(matriz):
+            while col < len(matriz[0]):
+                if matriz[fila][col] != 0:
+                    id_tmp = matriz[fila][col]
+                    break
+                col += 1
+            if id_tmp != -1:
+                break
+            fila += 1
+        if id_tmp == -1:
+            return
+
+        pos_x = Palabra.palabras_dict_id.get(id_tmp).pos_x
+        pos_y = Palabra.palabras_dict_id.get(id_tmp).pos_y
+
+        print("-----------------------------------------------------------------------")
+        # Primero imprimo los numeros de la matriz de las columnas y luego los numeros de posiciones reales
+        i = pos_x - col + pos_x_media
+        print(f"          ", end="")
         for elemento in matriz[0]:
-            logger.info(f"{i:<4}", end="")
+            print(f"{i:<4}", end="")
             i += 1
-        logger.info()
+        print()
+
+        i = pos_x - col
+        print(f"          ", end="")
+        for elemento in matriz[0]:
+            print(f"{i:<4}", end="")
+            i += 1
+        print()
+        ##############################
+
+        j = pos_y - fila
+        j_bis = pos_y - fila + pos_y_media
 
         for fila in matriz:
-            logger.info(f"{j:<4}", end="")
+            print(f"{j_bis:<6}", end="")
+            print(f"{j:<4}", end="")
             num_col = 0
             for elemento in fila:
                 if elemento == 0:
-                    logger.info(f"{elemento:<4}", end="")
+                    print(f"{elemento:<4}", end="")
                 else:
-                    logger.info(f"{elemento:<4}", end="")
+                    print(f"{elemento:<4}", end="")
                 num_col += 1
             j += 1
-            logger.info()
-        logger.info("-----------------------------------------------------------------------")
+            j_bis += 1
+            print()
+        print("-----------------------------------------------------------------------")
     except Exception as e:
-        logger.info(e)
+        print(e)
         pass
 
 
@@ -193,45 +240,150 @@ def ampliar_matriz(matrix_dim):
 MARGIN_RELATION_ARRIBA = 2
 MARGIN_RELATION_DCHA = 2
 MARGIN_RELATION_DCHA_ARRIBA = 6
-def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion):
-    if relacion.has_been_plotted:
+
+def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False):
+    if not in_draw and relacion.has_been_plotted:
        return True, matrix
+    pos_y_media, pos_x_media = get_pos_media_matrix(matrix)
+    if in_draw:
+        pal_origen = relacion.pal_origen
+        pal_dest = relacion.pal_dest
+        x_origen = pal_origen.pos_x
+        y_origen = pal_origen.pos_y
+        x_dest = pal_dest.pos_x
+        y_dest = pal_dest.pos_y
+    else:
+        pal_origen = relacion.pal_origen
+        pal_dest = relacion.pal_dest
+        x_origen = pal_origen.pos_x
+        y_origen = pal_origen.pos_y
+        y_dest = y_dest - pos_x_media
+        x_dest = x_dest - pos_y_media
+
+    if x_origen is None or x_dest is None or y_origen is None or y_dest is None:
+        return True, matrix
+
+    x_origen = x_origen + pos_x_media
+    y_origen = y_origen + pos_y_media
+    x_dest = x_dest + pos_x_media
+    y_dest = y_dest + pos_y_media
+
+    try:
+        if (x_dest - x_origen) == 0:  # ARRIBA O ABAJO
+            pos_y = min(y_origen, y_dest) + int((abs(y_origen) + abs(y_dest)) / 2)
+            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA,
+                                                   MARGIN_RELATION_ARRIBA, ampliar=False)
+            return is_empty, matrix
+
+        if (y_dest - y_origen) == 0:  # DCHA O IZQ
+            pos_x = min(x_origen, x_dest) + int((abs(x_origen) + abs(x_dest)) / 2)
+            is_empty, matrix = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA,
+                                                   ampliar=False)
+            return is_empty, matrix
+
+        # DCHA_ARRIBA
+        if x_origen < x_dest and y_origen < y_dest:
+            pos_y = y_origen + int((abs(y_origen) + abs(y_dest)) / 2)
+            pos_x = x_origen + int((abs(x_origen) + abs(x_dest)) / 2)
+            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
+            return is_empty, matrix
+
+        # IZQ_ARRIBA
+        if x_origen > x_dest and y_origen < y_dest:
+            pos_y = y_origen + int((abs(y_origen) + abs(y_dest)) / 2)
+            pos_x = x_dest + int((abs(x_origen) + abs(x_dest)) / 2)
+            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
+            return is_empty, matrix
+
+        # IZQ_ABAJO
+        if x_origen > x_dest and y_origen > y_dest:
+            pos_y = y_dest + int((abs(y_origen) + abs(y_dest)) / 2)
+            pos_x = x_dest + int((abs(x_origen) + abs(x_dest)) / 2)
+            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
+            return is_empty, matrix
+
+        # DCHA_ABAJO
+        if x_origen < x_dest and y_origen > y_dest:
+            pos_y = y_dest + int((abs(y_origen) + abs(y_dest)) / 2)
+            pos_x = x_origen + int((abs(x_origen) + abs(x_dest)) / 2)
+            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
+            return is_empty, matrix
+
+
+    except:
+        pass
+
+    if in_draw:
+        return False, matrix
+    else:
+        return True, matrix
+
+
+
+def _is_elipse_relation(matrix, relacion):
+    pos_y_media, pos_x_media = get_pos_media_matrix(matrix)
     pal_origen = relacion.pal_origen
     pal_dest = relacion.pal_dest
     x_origen = pal_origen.pos_x
     y_origen = pal_origen.pos_y
+    x_dest = pal_dest.pos_x
+    y_dest = pal_dest.pos_y
+
     if x_origen is None or x_dest is None or y_origen is None or y_dest is None:
-        return True, matrix
+        return True
 
     try:
-        y = min(y_origen, y_dest)
-        x = min(x_origen, x_dest)
-        x_repres = x
-        y_repres = y
-
         if (x_dest - x_origen) == 0:  # ARRIBA O ABAJO
-            pos_y = max(y_origen, y_dest) - y_repres
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA, MARGIN_RELATION_ARRIBA, ampliar=False)
-            return is_empty, matrix
+            pos_y = min(y_origen, y_dest) + int((abs(y_origen) + abs(y_dest))/2)
+            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA,
+                                                   MARGIN_RELATION_ARRIBA, ampliar=False)
+            return is_empty
 
-        if (y_dest - y_origen) == 0: # DCHA O IZQ
-            pos_x = max(x_origen, x_dest) - x_repres
-            is_empty, matrix = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA, ampliar=False)
-            return is_empty, matrix
+        if (y_dest - y_origen) == 0:  # DCHA O IZQ
+            pos_x = min(x_origen, x_dest) + int((abs(x_origen) + abs(x_dest)) / 2)
+            is_empty, matrix = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA,
+                                                   ampliar=False)
+            return is_empty
 
-        # DCHA_ARRIBA o IZQ_ABAJO # DCHA_ABAJO o IZQ_ARRIBA
-        if x_repres < max(x_origen, x_dest) and y_repres < max(y_origen, y_dest):
-            pos_y = max(y_origen, y_dest) - y_repres
-            pos_x = max(x_origen, x_dest) - x_repres
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA, MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
-            return is_empty, matrix
+        # DCHA_ARRIBA
+        if x_origen < x_dest and y_origen < y_dest:
+            pos_y = y_origen + int((abs(y_origen) + abs(y_dest)) / 2)
+            pos_x = x_origen + int((abs(x_origen) + abs(x_dest)) / 2)
+            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
+            return is_empty
 
-        return True, matrix
+        # IZQ_ARRIBA
+        if x_origen > x_dest and y_origen < y_dest:
+            pos_y = y_origen + int((abs(y_origen) + abs(y_dest)) / 2)
+            pos_x = x_dest + int((abs(x_origen) + abs(x_dest)) / 2)
+            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
+            return is_empty
+
+        # IZQ_ABAJO
+        if x_origen > x_dest and y_origen > y_dest:
+            pos_y = y_dest + int((abs(y_origen) + abs(y_dest)) / 2)
+            pos_x = x_dest + int((abs(x_origen) + abs(x_dest)) / 2)
+            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
+            return is_empty
+
+        # DCHA_ABAJO
+        if x_origen < x_dest and y_origen > y_dest:
+            pos_y = y_dest + int((abs(y_origen) + abs(y_dest)) / 2)
+            pos_x = x_origen + int((abs(x_origen) + abs(x_dest)) / 2)
+            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
+            return is_empty
+
+        return False
     except:
-        return True, matrix
-
-
-
+        return False
 
 
 
@@ -260,7 +412,7 @@ def is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x=0, ampliar=
             # return is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x)
             return True, matrix
         else:
-            return True, matrix
+            return False, matrix
 def find_better_center_position(matrix_dim, palabra, pos_y_media, pos_x_media):
     # TODO esta va a ser simple. Si el 0,0 esta ocupado, pones el -500, 0. Luego el -1000,0. Y asi sucesivamente,
     # haces una funcion de apliar matriz y ale. Y luego, reduces la matrix y las posiciones y ya está.

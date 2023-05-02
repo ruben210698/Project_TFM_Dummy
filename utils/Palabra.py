@@ -28,6 +28,7 @@ y palabras que se repitan y queramos que se relacionen, se guardarán con el id 
 class Palabra:
     id_actual = 9
     palabras_dict = {}
+    palabras_dict_id = {}
     relaciones_dict_origen = {}
     relaciones_dict_destino = {}
 
@@ -91,6 +92,7 @@ class Palabra:
         Palabra.palabras_dict[self.txt_lema + "-" + str(self.position_doc)] = self
         Palabra.relaciones_dict_origen[self] = []
         Palabra.relaciones_dict_destino[self] = []
+        Palabra.palabras_dict_id[self.id] = self
 
     # get palabra by lema si existe
     @classmethod
