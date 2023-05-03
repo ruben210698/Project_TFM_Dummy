@@ -800,11 +800,9 @@ def print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, fina
 def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
     position_elems = position_elems.copy()
 
-    imprimir_matriz(matrix_dim, apply_num_inicial_col=False)
+    imprimir_matriz(matrix_dim)
     matrix_dim_reduced = matrix_dim.copy()
     matrix_dim_reduced = reducir_tam_matriz(matrix_dim_reduced)
-
-    imprimir_matriz(matrix_dim_reduced, apply_num_inicial_col=False)
 
     max_axis_y = max([x[1] for x in position_elems.values()]) + 3
     min_axis_y = min([x[1] for x in position_elems.values()]) - 3
@@ -923,22 +921,27 @@ def draw_all_edges(ax, list_relaciones, position_elems, matrix_dim):
                 logger.info("Error: dirección no contemplada", relation_draw.texto)
                 logger.info("###########")
 
-            curve = False
-            if txt_rel == "en su":
-                print("hola")
-            imprimir_matriz(matrix_dim)
-            is_empty_position, _ = is_empty_relation_in_matrix(matrix_dim, None, None, relation_draw, in_draw=True)
-            if not is_empty_position:
-                curve = True
+            relation_draw.x_origen_draw = x_origen_draw
+            relation_draw.y_origen_draw = y_origen_draw
+            relation_draw.x_dest_draw = x_dest_draw
+            relation_draw.y_dest_draw = y_dest_draw
 
-            if txt_rel == "hasta":
-                is_empty_position, _ = is_empty_relation_in_matrix(matrix_dim, None, None, relation_draw, in_draw=True)
-                print("hola")
+            curve = False
+            # TODO activar
+            #if txt_rel == "en su":
+            #    print("hola")
+            #is_empty_position, _ = is_empty_relation_in_matrix(matrix_dim, None, None, relation_draw, in_draw=True)
+            #if not is_empty_position:
+            #    curve = True
+##
+            #if txt_rel == "hasta":
+            #    is_empty_position, _ = is_empty_relation_in_matrix(matrix_dim, None, None, relation_draw, in_draw=True)
+            #    print("hola")
 
             draw_edge(
                 ax,
-                (int(x_origen_draw), int(y_origen_draw)),
-                (int(x_dest_draw), int(y_dest_draw)),
+                (x_origen_draw, y_origen_draw),
+                (x_dest_draw, y_dest_draw),
                 color=color,
                 label=relation_draw.texto,
                 label_offset=(0, 0.4),

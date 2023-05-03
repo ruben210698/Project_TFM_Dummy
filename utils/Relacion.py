@@ -33,6 +33,11 @@ class Relacion:
         self.direccion_actual = None
         self.has_been_plotted = False
 
+        self.x_origen_draw = None
+        self.y_origen_draw = None
+        self.x_dest_draw = None
+        self.y_dest_draw = None
+
         Relacion.relaciones_dict[self.texto] = self # TODO añadir la posicion del documento
         Relacion.relaciones_dict_id[self.id] = self
         Palabra.relaciones_dict_origen[self.pal_origen].append(self)

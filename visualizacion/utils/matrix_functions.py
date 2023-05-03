@@ -41,7 +41,7 @@ def generate_matrix(list_palabras):
     return matrix_dim, pos_y_media, pos_x_media
 
 
-def imprimir_matriz(matriz, apply_num_inicial_col=True):
+def imprimir_matriz(matriz):
 
 
     try:
@@ -95,10 +95,10 @@ def imprimir_matriz(matriz, apply_num_inicial_col=True):
         print()
         ##############################
 
-        j = pos_y - fila
-        j_bis = pos_y - fila + pos_y_media
+        j = pos_y - fila + len(matriz) -1
+        j_bis = pos_y - fila + pos_y_media + len(matriz) -1
 
-        for fila in matriz:
+        for fila in matriz[::-1]:
             print(f"{j_bis:<5}", end="")
             print(f"{j:<4}", end="")
             print(f"{'|':<1}", end="")
@@ -109,8 +109,8 @@ def imprimir_matriz(matriz, apply_num_inicial_col=True):
                 else:
                     print(f"{elemento:<4}", end="")
                 num_col += 1
-            j += 1
-            j_bis += 1
+            j -= 1
+            j_bis -= 1
             print()
         print("-----------------------------------------------------------------------")
     except Exception as e:
@@ -242,9 +242,18 @@ def ampliar_matriz(matrix_dim):
     return matrix_dim
 
 
-MARGIN_RELATION_ARRIBA = 2
-MARGIN_RELATION_DCHA = 2
-MARGIN_RELATION_DCHA_ARRIBA = 6
+MARGIN_RELATION_ARRIBA = 3
+MARGIN_RELATION_DCHA = 3
+MARGIN_RELATION_DCHA_ARRIBA = 3
+
+
+def get_id_ocupando_relacion_matrix(matrix, y, x):
+    pos_y_media, pos_x_media = get_pos_media_matrix(matrix)
+    x = x + pos_x_media
+    y = y + pos_y_media
+
+
+
 
 def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False):
     if not in_draw and relacion.has_been_plotted:
@@ -253,10 +262,17 @@ def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False)
     if in_draw:
         pal_origen = relacion.pal_origen
         pal_dest = relacion.pal_dest
-        x_origen = pal_origen.pos_x
-        y_origen = pal_origen.pos_y
-        x_dest = pal_dest.pos_x
-        y_dest = pal_dest.pos_y
+        x_origen = relacion.x_origen_draw
+        y_origen = relacion.y_origen_draw
+        x_dest = relacion.x_dest_draw
+        y_dest = relacion.y_dest_draw
+
+        if x_origen is None or x_dest is None or y_origen is None or y_dest is None:
+            x_origen = pal_origen.pos_x
+            y_origen = pal_origen.pos_y
+            x_dest = pal_dest.pos_x
+            y_dest = pal_dest.pos_y
+
     else:
         pal_origen = relacion.pal_origen
         pal_dest = relacion.pal_dest
@@ -264,38 +280,40 @@ def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False)
         y_origen = pal_origen.pos_y
         y_dest = y_dest - pos_y_media
         x_dest = x_dest - pos_x_media
+    id_orig = relacion.pal_origen.id
+    id_dest = relacion.pal_dest.id
 
     if x_origen is None or x_dest is None or y_origen is None or y_dest is None:
         return True, matrix
 
-    x_origen = x_origen + pos_x_media
-    y_origen = y_origen + pos_y_media
-    x_dest = x_dest + pos_x_media
-    y_dest = y_dest + pos_y_media
-
+    x_origen = int(x_origen + pos_x_media)
+    y_origen = int(y_origen + pos_y_media)
+    x_dest = int(x_dest + pos_x_media)
+    y_dest = int(y_dest + pos_y_media)
+    ids_to_skip = [id_orig, id_dest, relacion.id]
     try:
         if (x_dest - x_origen) == 0 and y_origen < y_dest:  # ARRIBA
             pos_y = y_origen + int(abs((y_dest-y_origen) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA,
-                                                   MARGIN_RELATION_ARRIBA, ampliar=False)
+                                                   MARGIN_RELATION_ARRIBA, ampliar=False, ids_to_skip=ids_to_skip)
             return is_empty, matrix
 
         if (x_dest - x_origen) == 0 and y_origen > y_dest:  # ABAJO
             pos_y = y_dest + int(abs((y_origen - y_dest) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA,
-                                                   MARGIN_RELATION_ARRIBA, ampliar=False)
+                                                   MARGIN_RELATION_ARRIBA, ampliar=False, ids_to_skip=ids_to_skip)
             return is_empty, matrix
 
         if (y_dest - y_origen) == 0 and x_origen < x_dest:  # DCHA
             pos_x = x_origen + int(abs((x_dest-x_origen) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA,
-                                                   ampliar=False)
+                                                   ampliar=False, ids_to_skip=ids_to_skip)
             return is_empty, matrix
 
         if (y_dest - y_origen) == 0 and x_origen < x_dest:  # IZQ
             pos_x = x_dest + int(abs((x_origen - x_dest) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA,
-                                                   ampliar=False)
+                                                   ampliar=False, ids_to_skip=ids_to_skip)
             return is_empty, matrix
 
         # DCHA_ARRIBA
@@ -303,7 +321,7 @@ def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False)
             pos_y = y_origen + int(abs((y_dest-y_origen) / 2))
             pos_x = x_origen + int(abs((x_dest-x_origen) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
-                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
+                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False, ids_to_skip=ids_to_skip)
             return is_empty, matrix
 
         # IZQ_ARRIBA
@@ -311,7 +329,7 @@ def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False)
             pos_y = y_origen + int(abs((y_dest - y_origen) / 2))
             pos_x = x_dest + int(abs((x_origen - x_dest) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
-                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
+                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False, ids_to_skip=ids_to_skip)
             return is_empty, matrix
 
         # IZQ_ABAJO
@@ -319,7 +337,7 @@ def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False)
             pos_y = y_dest + int(abs((y_origen - y_dest) / 2))
             pos_x = x_dest + int(abs((x_origen - x_dest) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
-                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
+                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False, ids_to_skip=ids_to_skip)
             return is_empty, matrix
 
         # DCHA_ABAJO
@@ -327,7 +345,7 @@ def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False)
             pos_y = y_dest + int(abs((y_origen - y_dest) / 2))
             pos_x = x_origen + int(abs((x_dest - x_origen) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
-                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
+                                                   MARGIN_RELATION_DCHA_ARRIBA, ampliar=False, ids_to_skip=ids_to_skip)
             return is_empty, matrix
 
 
@@ -405,7 +423,8 @@ def _is_elipse_relation(matrix, relacion):
 
 
 
-def is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x=0, ampliar=True):
+def is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x=0, ampliar=True, ids_to_skip= []):
+    ids_to_skip.append(0)
     # Acuerdate que es la posicion centrada, es decir, da igual si es yendo a la izq o derecha o arriba o abajo
     try:
         dim_x_bis = dim_x
@@ -419,7 +438,7 @@ def is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x=0, ampliar=
             axis_x = axis_x_loop - dim_x // 2
             for axis_y_loop in range(pos_y, pos_y + dim_y):
                 axis_y = axis_y_loop - dim_y // 2
-                if matrix[axis_y][axis_x] != 0:
+                if matrix[axis_y][axis_x] not in ids_to_skip:
                     return False, matrix
         return True, matrix
     except:
