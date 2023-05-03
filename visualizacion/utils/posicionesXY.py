@@ -15,6 +15,8 @@ formatter = logging.Formatter(FORMAT_1)
 # add formatter to ch
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+if (logger.hasHandlers()):
+    logger.handlers.clear()
 
 
 def get_dir_relativa(palabra_origen, palabra_dest):
@@ -194,7 +196,7 @@ def get_pos_dir_dcha_arriba(matrix_dim, palabra, relation):
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
     for i in range(0, len(DIAGONAL_LIST_YS)):
         pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media + DIAGONAL_LIST_YS[i]
-        pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media + relation.pal_tmp_opuesta.dimension + relation.pal_tmp_opuesta.cte_sum_x +  DIAGONAL_LIST_XS[i]
+        pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media + relation.pal_tmp_opuesta.dimension + relation.pal_tmp_opuesta.cte_sum_x + DIAGONAL_LIST_XS[i]
 
         for y_loop in range(pos_y, pos_y + DIAGONAL_DISTANCIA_DE_INTENTO_Y, 1):
             for x_loop in range(pos_x, pos_x + DIAGONAL_DISTANCIA_DE_INTENTO_X, 1):
@@ -204,7 +206,7 @@ def get_pos_dir_dcha_arriba(matrix_dim, palabra, relation):
                         dim_x=palabra.dimension + palabra.cte_sum_x,
                         margen_x=DIAGONAL_MARGIN_X)
                 if is_empty:
-                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
+                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, y_loop, x_loop, relation)
                     if is_empty:
                         return pos_y, x_loop, matrix_dim
 
@@ -230,7 +232,7 @@ def get_pos_dir_dcha_abajo(matrix_dim, palabra, relation):
                         dim_x=palabra.dimension + palabra.cte_sum_x,
                         margen_x=DIAGONAL_MARGIN_X)
                 if is_empty:
-                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
+                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, y_loop, x_loop, relation)
                     if is_empty:
                         return pos_y, x_loop, matrix_dim
 
@@ -256,7 +258,7 @@ def get_pos_dir_izq_abajo(matrix_dim, palabra, relation):
                         dim_x=palabra.dimension + palabra.cte_sum_x,
                         margen_x=-DIAGONAL_MARGIN_X)
                 if is_empty:
-                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
+                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, y_loop, x_loop, relation)
                     if is_empty:
                         return pos_y, x_loop, matrix_dim
 
@@ -281,7 +283,7 @@ def get_pos_dir_izq_arriba(matrix_dim, palabra, relation):
                         dim_x=palabra.dimension + palabra.cte_sum_x,
                         margen_x=-DIAGONAL_MARGIN_X)
                 if is_empty:
-                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
+                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, y_loop, x_loop, relation)
                     if is_empty:
                         return pos_y, x_loop, matrix_dim
 

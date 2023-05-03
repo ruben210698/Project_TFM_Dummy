@@ -15,7 +15,7 @@ def create_logger():
     console_handler.setLevel(logging.INFO)
 
     formatter = logging.Formatter(
-        '%(message)-50s  --> (((%(asctime)s-%(name)s-%(levelname)s-(%(filename)s-%(funcName)s:::%(lineno)d)))))'
+        '%(message)-70s  --> (((%(asctime)s-%(name)s-%(levelname)s-(%(filename)s-%(funcName)s:::%(lineno)d)))))'
     )
     console_handler.setFormatter(formatter)
 
@@ -31,9 +31,9 @@ def create_logger():
 ########################################################################################################################
 ########################################################################################################################
 
-FORMAT_1 = '%(message)-50s  --> (((%(asctime)s-%(name)s-%(levelname)s-(%(filename)s-%(funcName)s:::%(lineno)d)))))'
+FORMAT_1 = '%(message)-70s  --> (((%(asctime)s-%(name)s-%(levelname)s-(%(filename)s-%(funcName)s:::%(lineno)d)))))'
 def get_format():
     formatter = logging.Formatter(
-        '%(message)-50s  --> (((%(asctime)s-%(name)s-%(levelname)s-(%(filename)s-%(funcName)s:::%(lineno)d)))))'
+        '%(message)-70s  --> (((%(asctime)s-%(name)s-%(levelname)s-(%(filename)s-%(funcName)s:::%(lineno)d)))))'
     )
     return formatter

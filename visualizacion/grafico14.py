@@ -28,7 +28,7 @@ from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_
 from visualizacion.utils.direcciones import refresh_directions, get_rel_origen_and_dest_unidas
 from visualizacion.utils.posicionesXY import get_next_location
 from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_matrix, imprimir_matriz, \
-    reducir_tam_matriz, ampliar_matriz
+    reducir_tam_matriz, ampliar_matriz, is_empty_relation_in_matrix
 
 import logging
 from utils.logger import FORMAT_1, create_logger
@@ -44,6 +44,8 @@ formatter = logging.Formatter(FORMAT_1)
 # add formatter to ch
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+if (logger.hasHandlers()):
+    logger.handlers.clear()
 
 
 
@@ -52,7 +54,7 @@ logger.addHandler(ch)
 
 LINEAS_SEP_FILA = 5
 
-PRINT_GRAPH = False
+PRINT_GRAPH = True
 
 MODE_DEBUG = "DEBUG"
 MODE_NORMAL = "NORMAL"
@@ -107,19 +109,6 @@ Futuro Avanzado:
 #  Que se añada el numero de relaciones de cada palabra y de esa forma se pueda calcular la importancia de cada palabra
 #  y la posicion en la que colocarla y en la que colocar las demás.
 #  - Añadir 1s cuando la relación vaya a pasar por ahi en la matriz.
-
-
-# Función para dibujar aristas con flechas
-def draw_edge(ax, u, v, width=1.0, color='k', label='', label_offset=(0, 0), bold=False):
-    arrow = FancyArrowPatch(u, v, arrowstyle='->', mutation_scale=20, linewidth=width, color=color)
-    ax.add_patch(arrow)
-    if label:
-        x_label = (u[0] + v[0]) / 2 + label_offset[0]
-        y_label = (u[1] + v[1]) / 2 + label_offset[1]
-        if bold:
-            ax.text(x_label, y_label, label, fontsize=12, ha='center', va='center', zorder=3, weight='bold')
-        else:
-            ax.text(x_label, y_label, label, fontsize=12, ha='center', va='center', zorder=3)
 
 
 def get_importance_dict(list_palabras):
@@ -218,6 +207,12 @@ def reducir_posiciones_finales_eje_x(posiciones_finales):
 
 
 def update_relations_in_matrix_by_pal(matrix_dim, palabra):
+    # FIXME eliminada funcion de forma temporal
+    # Esto se hizo en su dia para que no se pisasen palabras con relaciones, pero se ha bisto que es mejor el método
+    # de generar primero las relaciones entrelazadas, luego ponerlas en el gráfico y, en caso de que aun haya relaciones
+    # que se pisen, que se haga una elipse y ya.
+    return matrix_dim
+
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
     list_rel = Palabra.relaciones_dict_origen.get(palabra) + Palabra.relaciones_dict_destino.get(palabra)
     for rel in list_rel:
@@ -313,10 +308,7 @@ def update_relations_in_matrix_by_pal(matrix_dim, palabra):
             rel.has_been_plotted = True
         else:
             continue
-    logger.info(palabra.texto)
     imprimir_matriz(matrix_dim)
-
-
 
     return matrix_dim
 
@@ -341,6 +333,7 @@ def update_palabras_in_matrix(matrix_dim, palabra):
 def represent_list_relations(list_palabras_representadas, list_relaciones, matrix_dim, palabra, position_elems,
                              force_draw=False):
     refresh_directions(palabra)
+    palabra.refresh_subgrafo_completado()
 
     # TODOS los valores que no son null
     list_dir_to_check = [a for a in list(palabra.dict_posiciones.keys()) if palabra.dict_posiciones.get(a) is not None]
@@ -360,7 +353,8 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
         # buscar la relacion cuya palabta_tmp sea pal_to_draw
         relation = [elem for elem in list_relaciones_pal if elem.pal_tmp == pal_to_draw][0]
 
-        if check_subgrafo_completado(palabra):
+
+        if palabra.is_subgrafo_completado():
             continue
 
         if pal_to_draw.has_been_plotted:
@@ -369,6 +363,7 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
             list_palabras_representadas_new, position_elems_2, matrix_dim_2 = \
                 get_position_word_recursive(position_elems, matrix_dim, relation.pal_tmp, list_relaciones,
                                             relation=relation, force_draw=force_draw)
+            logger.info(f"++++++++++++ Return")
             list_palabras_representadas += list_palabras_representadas_new
             if palabra.grafo.palabras_list_ordered_num_rel_pending == []:
                 break
@@ -379,10 +374,13 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
             print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
             if palabra.texto == 'majestuosas y extensas':
                 logger.info("hola")
-
+            ####################################################
+            # 3a función (relations) - 2a entrada Word recursive
+            logger.info(f"++++++++++++ PalTmp: {relation.pal_tmp.texto} - Rel: {relation.texto}")
             list_palabras_representadas_new, position_elems_2, matrix_dim_2 = \
                 get_position_word_recursive(position_elems, matrix_dim, relation.pal_tmp, list_relaciones,
                                             relation=relation, force_draw=force_draw)
+            logger.info(f"++++++++++++ Return")
 
         if list_palabras_representadas_new is None or position_elems is None or matrix_dim is None:
             logger.info("No se ha podido representar el grafo")
@@ -400,6 +398,9 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
 
 
 def represent_word(matrix_dim, palabra, relation, position_elems):
+    logger.info(f"################################ represent_word:::: {palabra.texto}")
+    if palabra.texto == 'océanos y ríos':
+        print("hola")
     axis_y, axis_x, matrix_dim = get_next_location(matrix_dim, palabra, relation)
     if axis_y is None or axis_x is None:
         logger.info(f"No se ha podido representar la palabra: {palabra.texto}")
@@ -407,10 +408,13 @@ def represent_word(matrix_dim, palabra, relation, position_elems):
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
     palabra.pos_y = axis_y - pos_y_media
     palabra.pos_x = axis_x - pos_x_media
+    txt_palabra = palabra.texto
+    pos_y = palabra.pos_y
+    pos_x = palabra.pos_x
     position_elems.update({
         palabra: (
-            axis_x - pos_x_media,
-            axis_y - pos_y_media
+            palabra.pos_x,
+            palabra.pos_y
         )})
 
     # reemplazar los 0s por IDs para range(value['dimension']+2)
@@ -418,7 +422,7 @@ def represent_word(matrix_dim, palabra, relation, position_elems):
 
     imprimir_matriz(matrix_dim)
     palabra.has_been_plotted = True
-    check_subgrafo_completado(palabra)
+    palabra.refresh_subgrafo_completado()
 
     return matrix_dim, palabra, relation, position_elems
 
@@ -449,23 +453,13 @@ def DEPREC_reordenar_relaciones_unir_graph_1er_grado(list_relaciones):
                 list_relaciones.insert(0, rel)
     return list_relaciones
 
-def check_subgrafo_completado(palabra):
-    list_palabras_dest = [pal.pal_dest for pal in Palabra.relaciones_dict_origen.get(palabra, [])]
-    if list_palabras_dest == [] and palabra.has_been_plotted:
-        palabra.subgrafo_completado = True
-        return True
-    for pal_dest in list_palabras_dest:
-        if not pal_dest.subgrafo_completado:
-            return False
-    return True
-
 
 def get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaciones, relation=None,
                                 force_draw=False):
     list_palabras_representadas = []
-    logger.info(f"Matrix: {palabra.texto}")
+
     aaaaaaaaaaa = palabra.texto
-    if palabra.texto == 'caudalosos':
+    if palabra.texto == 'es':
         logger.info("hola")
 
     draw_relations = not palabra.has_been_plotted_relations
@@ -482,15 +476,21 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaci
     # time.sleep(10)
     ################################################################################################
     if not palabra.has_been_plotted:
+        # 2a función - 1a entrada Word
+        logger.info(f"++++++ {palabra.texto}")
         matrix_dim, palabra, relation, position_elems = \
             represent_word(matrix_dim, palabra, relation, position_elems)
+        logger.info(f"++++++ Return")
         if palabra is None:
             return None, None, None
     ################################################################################################
     if force_draw or draw_relations:
+        # 2a función - 2a entrada Relaciones
+        logger.info(f"++++++ {palabra.texto}")
         list_palabras_representadas, matrix_dim, position_elems = \
             represent_list_relations(list_palabras_representadas, list_relaciones, matrix_dim, palabra, position_elems,
                                      force_draw)
+        logger.info(f"++++++ Return")
     ################################################################################################
     if palabra not in list_palabras_representadas:
         list_palabras_representadas.append(palabra)
@@ -530,14 +530,22 @@ def get_position_dict(list_palabras, list_relaciones):
     while len(list_palabras_ordenadas) != 0:
         palabra = list_palabras_ordenadas.pop(0)
 
+        # 1a función - 1a entrada
+        logger.info(f"+ No Force Draw")
+        logger.info(f"+ {palabra.texto}")
         list_palabras_representadas, position_elems, matrix_dim = \
             get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaciones, force_draw = False)
-
+        logger.info(f"+ Return")
         try:
             while palabra is not None and \
                     (not palabra.grafo.is_all_drawn() or palabra.grafo.palabras_list_ordered_num_rel_pending == []):
+                # 1a función - 2a entrada
+                logger.info(f"+ Si Force Draw")
+                logger.info(f"+ {palabra.texto}")
+                palabra.refresh_subgrafo_completado()
                 list_palabras_representadas, position_elems, matrix_dim = \
                     get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaciones, force_draw=True)
+                logger.info(f"+ Return")
                 list_palabras_ordenadas.sort(key=lambda x: x.numero_grafos, reverse=True)
                 palabra = get_next_word_to_repres(palabra)
 
@@ -649,6 +657,9 @@ def text_tranformations(list_palabras, list_relaciones):
         palabra.refresh_palabras_relacionadas_2o_grado()
     for palabra in list_palabras:
         palabra.refresh_relaciones_proximas_2o_grado()
+    # el refresh grafo solo lo hace para el 1er grado, pero es suficiente de momento ya que no tenemos todavia la palabra raiz.
+    for palabra in list_palabras:
+        palabra.refresh_subgrafo_completado()
     # TODO una funcion que a la primera palabra, las relaciones de esa palabra y las palabras de las relaciones las
     # ponga de color rojo, al siguiente nivel, azul, ect. Pero con el orden que da el grafo con relaciones de 1er grado
     #
@@ -665,7 +676,6 @@ def generate_graph(texto, list_palabras, list_relaciones):
         G.add_edge(relation.pal_origen, relation.pal_dest)
 
     # Crear posiciones de nodos
-    logger.info("Creando posiciones de nodos")
     position_elems, matrix_dim = get_position_dict(list_palabras, list_relaciones)
 
     print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=True)
@@ -689,6 +699,99 @@ def generate_graph(texto, list_palabras, list_relaciones):
 #######################################################################################################################
 #######################################################################################################################
 #######################################################################################################################
+
+
+# Función para dibujar aristas con flechas
+def draw_edge(ax, u, v, width=1.0, color='k', label='', label_offset=(0, 0), bold=False, curve = True):
+
+    # En caso de que el parametro curve sea True, se dibujará la flecha pero con un poco de curvatura
+    # es decir, que la felcha en vez de ir del punto A al B en linea recta, traza una pequeá parábola
+    x_label = 0
+    y_label = 0
+    if curve:
+        annotation = ax.annotate('', xy=u, xytext=v,
+                    arrowprops=dict(facecolor=color, edgecolor=color, shrink=0.05, connectionstyle="arc3,rad=-0.4", zorder=-1),
+                    xycoords='data', textcoords='data')
+
+        if label:
+            # El punto medio de la curva no se puede obtener directamente a partir de esta información. Sin embargo, puedes intentar calcular el punto medio de la línea recta que une los puntos u y v y luego ajustar la posición en función del valor de rad en connectionstyle
+
+
+
+
+
+
+            # No se puede obtener el punto de pendiente mazima ya que no se tiene la ecuación de la curva
+            # connectionstyle="arc3,rad=-0.4"
+            # esto es
+            # El valor "arc3" indica que se debe utilizar una conexión en forma de arco cúbico para conectar los puntos.
+            # Un arco cúbico es un tipo de curva de Bézier cúbica
+
+            # Entiendo. El parámetro rad en la función annotate controla la curvatura de la conexión entre los puntos de inicio y fin de la curva. Un valor negativo de rad producirá una curva cóncava, mientras que un valor positivo producirá una curva convexa.
+            #
+            # Dado que estás utilizando un valor de rad de -0.4, la curva que estás dibujando es cóncava. Para ajustar el punto medio de la línea para que se ajuste a esta curva cóncava, puedes intentar mover el punto medio hacia el interior de la curva. La cantidad exacta que debes mover el punto medio dependerá de la forma específica de la curva y del valor del parámetro rad que estés utilizando.
+            #
+            # Aquí tienes un ejemplo de cómo puedes ajustar el punto medio para que se ajuste a una curva cóncava en Python:
+
+            # quiero sacar el punto de mayor pendiente de la curva annotation
+            # bbox = annotation.get_window_extent().transformed(ax.transData.inverted())
+            # import numpy as np
+            # bbox = annotation.get_window_extent().transformed(ax.transData.inverted())
+            # x = np.array([1, 2, 3])
+            # y = np.array([1, 2, 3])
+            # x_min = bbox.x0
+            # y_min = bbox.y0
+            # slopes = np.gradient(y)
+            # max_slope_index = np.argmax(slopes)
+#
+            # max_slope_x = x[max_slope_index]
+            # max_slope_y = y[max_slope_index]
+#
+            # # Esto lo hago sacando 10 puntos de la curva calculada anteriormente, cojo esos 10 vertives y cojo el punto medio
+            # from shapely.geometry import LineString
+            # patch = annotation.arrow_patch
+            # vertices = patch.get_verts()
+            # indices = [int(i) for i in range(0, len(vertices), len(vertices) // 10)]
+            # points = vertices[indices]
+            # line = LineString(vertices)
+            # midpoint = line.interpolate(0.5, normalized=True)
+            midpoint = ((u[0] + v[0]) / 2, (u[1] + v[1]) / 2)
+            adjusted_midpoint = (midpoint[0], midpoint[1] - 0.1)
+            x_label = adjusted_midpoint[0]
+            y_label = adjusted_midpoint[1]
+            #print(u, v, midpoint)
+            #print("ok")
+
+        # tengo la anotacion con esto: connectionstyle="arc3,rad=-0.4"
+        # y con punto inicio y fin esto: xy=(2, 2), xytext=(1.5, 2.5)
+        # quiero calcular el punto medio de la flecha curva para escribir encima el texto
+        # para ello, calculo el punto medio de la recta que une los dos puntos
+        # y luego le sumo un vector perpendicular a la recta
+        
+
+
+
+        ### import matplotlib.patches as patches
+        ### arc = patches.Arc((0, 0), 10, 5, angle=0, theta1=0, theta2=90)
+        ### ax.add_patch(arc)
+        ### arrow = patches.FancyArrowPatch((0, 0), (5, 5), arrowstyle='->', mutation_scale=20)
+        ### con = patches.ConnectionPatch(xyA=u, xyB=v, coordsA='data', coordsB='data', arrowstyle=arrow)
+        ### ax.add_patch(con)
+        ### # esta dando un error de que {TypeError}'FancyArrowPatch' object is not callable
+
+    else:
+        arrow = FancyArrowPatch(u, v, arrowstyle='->', mutation_scale=20, linewidth=width, color=color)
+        ax.add_patch(arrow)
+
+        if label:
+            x_label = (u[0] + v[0]) / 2 + label_offset[0]
+            y_label = (u[1] + v[1]) / 2 + label_offset[1]
+
+    if label:
+        if bold:
+            ax.text(x_label, y_label, label, fontsize=12, ha='center', va='center', zorder=3, weight='bold')
+        else:
+            ax.text(x_label, y_label, label, fontsize=12, ha='center', va='center', zorder=3)
 
 def print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=False):
     if PRINT_GRAPH or final:
@@ -719,7 +822,7 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
     draw_all_nodes(ax, position_elems)
 
     # Dibujar aristas
-    draw_all_edges(ax, list_relaciones, position_elems)
+    draw_all_edges(ax, list_relaciones, position_elems, matrix_dim)
 
     # draw_edge(ax, position_elems_deprec["ruben"], position_elems_deprec["pescado"], color=light_blue, label='come', label_offset=(0, 0.1))
     # draw_edge(ax, position_elems_deprec["pescado"], position_elems_deprec["restaurante"], color=light_blue, label='en', label_offset=(0, 0.1))
@@ -765,9 +868,10 @@ def calcular_direccion_aprox(relation_draw, position_elems):
         return None
 
 
-def draw_all_edges(ax, list_relaciones, position_elems):
+def draw_all_edges(ax, list_relaciones, position_elems, matrix_dim):
     for relation_draw in list_relaciones:
         txt_rel = relation_draw.texto
+
         color = dict_color_figura.get(relation_draw.lugar_sintactico, dict_color_figura[None])
         x_origen_draw = 0
         x_dest_draw = 0
@@ -819,16 +923,29 @@ def draw_all_edges(ax, list_relaciones, position_elems):
                 logger.info("Error: dirección no contemplada", relation_draw.texto)
                 logger.info("###########")
 
+            curve = False
+            if txt_rel == "en su":
+                print("hola")
+            imprimir_matriz(matrix_dim)
+            is_empty_position, _ = is_empty_relation_in_matrix(matrix_dim, None, None, relation_draw, in_draw=True)
+            if not is_empty_position:
+                curve = True
+
+            if txt_rel == "hasta":
+                is_empty_position, _ = is_empty_relation_in_matrix(matrix_dim, None, None, relation_draw, in_draw=True)
+                print("hola")
+
             draw_edge(
                 ax,
-                (x_origen_draw, y_origen_draw),
-                (x_dest_draw, y_dest_draw),
+                (int(x_origen_draw), int(y_origen_draw)),
+                (int(x_dest_draw), int(y_dest_draw)),
                 color=color,
                 label=relation_draw.texto,
-                label_offset=(0, 0.4)
+                label_offset=(0, 0.4),
+                curve = curve
             )
         except Exception as e:
-            logger.info("Error al dibujar la relación", e)
+            logger.debug("Error al dibujar la relación " + str(e))
 
 
 def draw_all_nodes(ax, position_elems):

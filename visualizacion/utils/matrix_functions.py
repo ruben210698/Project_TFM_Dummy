@@ -89,14 +89,19 @@ def imprimir_matriz(matriz, apply_num_inicial_col=True):
             print(f"{i:<4}", end="")
             i += 1
         print()
+        print(f"          ", end="")
+        for _ in matriz[0]:
+            print(f"{'____'}", end="")
+        print()
         ##############################
 
         j = pos_y - fila
         j_bis = pos_y - fila + pos_y_media
 
         for fila in matriz:
-            print(f"{j_bis:<6}", end="")
+            print(f"{j_bis:<5}", end="")
             print(f"{j:<4}", end="")
+            print(f"{'|':<1}", end="")
             num_col = 0
             for elemento in fila:
                 if elemento == 0:
@@ -257,8 +262,8 @@ def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False)
         pal_dest = relacion.pal_dest
         x_origen = pal_origen.pos_x
         y_origen = pal_origen.pos_y
-        y_dest = y_dest - pos_x_media
-        x_dest = x_dest - pos_y_media
+        y_dest = y_dest - pos_y_media
+        x_dest = x_dest - pos_x_media
 
     if x_origen is None or x_dest is None or y_origen is None or y_dest is None:
         return True, matrix
@@ -269,46 +274,58 @@ def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False)
     y_dest = y_dest + pos_y_media
 
     try:
-        if (x_dest - x_origen) == 0:  # ARRIBA O ABAJO
-            pos_y = min(y_origen, y_dest) + int((abs(y_origen) + abs(y_dest)) / 2)
+        if (x_dest - x_origen) == 0 and y_origen < y_dest:  # ARRIBA
+            pos_y = y_origen + int(abs((y_dest-y_origen) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA,
                                                    MARGIN_RELATION_ARRIBA, ampliar=False)
             return is_empty, matrix
 
-        if (y_dest - y_origen) == 0:  # DCHA O IZQ
-            pos_x = min(x_origen, x_dest) + int((abs(x_origen) + abs(x_dest)) / 2)
+        if (x_dest - x_origen) == 0 and y_origen > y_dest:  # ABAJO
+            pos_y = y_dest + int(abs((y_origen - y_dest) / 2))
+            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA,
+                                                   MARGIN_RELATION_ARRIBA, ampliar=False)
+            return is_empty, matrix
+
+        if (y_dest - y_origen) == 0 and x_origen < x_dest:  # DCHA
+            pos_x = x_origen + int(abs((x_dest-x_origen) / 2))
+            is_empty, matrix = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA,
+                                                   ampliar=False)
+            return is_empty, matrix
+
+        if (y_dest - y_origen) == 0 and x_origen < x_dest:  # IZQ
+            pos_x = x_dest + int(abs((x_origen - x_dest) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA,
                                                    ampliar=False)
             return is_empty, matrix
 
         # DCHA_ARRIBA
-        if x_origen < x_dest and y_origen < y_dest:
-            pos_y = y_origen + int((abs(y_origen) + abs(y_dest)) / 2)
-            pos_x = x_origen + int((abs(x_origen) + abs(x_dest)) / 2)
+        if x_origen < x_dest:
+            pos_y = y_origen + int(abs((y_dest-y_origen) / 2))
+            pos_x = x_origen + int(abs((x_dest-x_origen) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
                                                    MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
             return is_empty, matrix
 
         # IZQ_ARRIBA
         if x_origen > x_dest and y_origen < y_dest:
-            pos_y = y_origen + int((abs(y_origen) + abs(y_dest)) / 2)
-            pos_x = x_dest + int((abs(x_origen) + abs(x_dest)) / 2)
+            pos_y = y_origen + int(abs((y_dest - y_origen) / 2))
+            pos_x = x_dest + int(abs((x_origen - x_dest) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
                                                    MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
             return is_empty, matrix
 
         # IZQ_ABAJO
         if x_origen > x_dest and y_origen > y_dest:
-            pos_y = y_dest + int((abs(y_origen) + abs(y_dest)) / 2)
-            pos_x = x_dest + int((abs(x_origen) + abs(x_dest)) / 2)
+            pos_y = y_dest + int(abs((y_origen - y_dest) / 2))
+            pos_x = x_dest + int(abs((x_origen - x_dest) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
                                                    MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
             return is_empty, matrix
 
         # DCHA_ABAJO
         if x_origen < x_dest and y_origen > y_dest:
-            pos_y = y_dest + int((abs(y_origen) + abs(y_dest)) / 2)
-            pos_x = x_origen + int((abs(x_origen) + abs(x_dest)) / 2)
+            pos_y = y_dest + int(abs((y_origen - y_dest) / 2))
+            pos_x = x_origen + int(abs((x_dest - x_origen) / 2))
             is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
                                                    MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
             return is_empty, matrix

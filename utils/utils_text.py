@@ -16,6 +16,8 @@ formatter = logging.Formatter(FORMAT_1)
 # add formatter to ch
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+if (logger.hasHandlers()):
+    logger.handlers.clear()
 
 # aqui vienen las funciones que permiten hacer modificaciones en el texto que se consideran comunes
 # Las excepciones que se han visto que se deben aplicar al texto.

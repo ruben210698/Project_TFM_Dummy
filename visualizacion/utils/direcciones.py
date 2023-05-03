@@ -41,6 +41,8 @@ formatter = logging.Formatter(FORMAT_1)
 # add formatter to ch
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+if (logger.hasHandlers()):
+    logger.handlers.clear()
 
 
 

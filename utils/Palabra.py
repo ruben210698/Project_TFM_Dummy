@@ -73,8 +73,10 @@ class Palabra:
         self.list_palabras_relacionadas_2o_grado = []
         self.list_palabras_relacionadas_dest_1er_grado = []
         self.list_palabras_relacionadas_dest_2o_grado = []
+        self.list_all_pal_subgrafo = []
 
         self.subgrafo_completado = False
+        self.pal_raiz = None  # es la palabra de la que ha venido la relacion que ha formado este subgrafo.
         self.relations_pending = []
         self.relations_origen_and_dest = []
         self.palabras_relaciones_proximas = []
@@ -159,11 +161,14 @@ class Palabra:
                     rel.delete_relation()
 
     def append_enumeracion(self, new_texto):
+        # FIXME de momento esto esta parado
         if not self.is_enumeracion:
             self.list_texto_enumeracion.append(self.texto)
         self.list_texto_enumeracion.append(new_texto)
         self.is_enumeracion = True
-        self.dimension_y = len(self.list_texto_enumeracion) * 3 + 2
+        # FIXME
+        #self.dimension_y = len(self.list_texto_enumeracion) * 3 + 2
+        self.dimension_y = 1
 
     @staticmethod
     def _get_dim_relation_tree(relation):
@@ -256,6 +261,11 @@ class Palabra:
                 i += 1
             self.palabras_relaciones_proximas = new_palabras_relaciones_proximas
 
+        self.list_palabras_relacionadas_1er_grado = list(set(self.list_palabras_relacionadas_1er_grado))
+        self.list_palabras_relacionadas_2o_grado = list(set(self.list_palabras_relacionadas_2o_grado))
+        self.list_palabras_relacionadas_dest_1er_grado = list(set(self.list_palabras_relacionadas_dest_1er_grado))
+        self.list_palabras_relacionadas_dest_2o_grado = list(set(self.list_palabras_relacionadas_dest_2o_grado))
+
 
     def refresh_palabras_relacionadas_2o_grado(self):
         try:
@@ -294,6 +304,10 @@ class Palabra:
                 self.list_palabras_relacionadas_dest_1er_grado.remove(self)
         except Exception as _:
             pass
+        self.list_palabras_relacionadas_1er_grado = list(set(self.list_palabras_relacionadas_1er_grado))
+        self.list_palabras_relacionadas_2o_grado = list(set(self.list_palabras_relacionadas_2o_grado))
+        self.list_palabras_relacionadas_dest_1er_grado = list(set(self.list_palabras_relacionadas_dest_1er_grado))
+        self.list_palabras_relacionadas_dest_2o_grado = list(set(self.list_palabras_relacionadas_dest_2o_grado))
 
 
     def refresh_pal_relations(self):
@@ -315,6 +329,76 @@ class Palabra:
         except Exception as _:
             self.relations_origen_and_dest = []
             self.relations_pending = []
+
+
+
+    def refresh_list_all_pal_subgrafo(self):
+        #self.list_all_pal_subgrafo = []
+        list_palabras_dest = [pal.pal_dest for pal in Palabra.relaciones_dict_origen.get(self, [])]
+        list_palabras_origen = [pal.pal_origen for pal in Palabra.relaciones_dict_destino.get(self, [])]
+        list_all_pal_subgrafo = list_palabras_dest + list_palabras_origen
+        # quitar la palabra self
+        list_all_pal_subgrafo = [pal for pal in list(set(list_all_pal_subgrafo)) if pal != self]
+        if self.pal_raiz is not None:
+            list_all_pal_subgrafo = [pal for pal in list(set(list_all_pal_subgrafo)) if pal != self.pal_raiz]
+        # un bucle en el que recorra todas las palabras y saque sus list_all_pal_subgrafo pero de forma recursiva
+        for pal in list_all_pal_subgrafo:
+            list_all_pal_subgrafo += pal.list_all_pal_subgrafo
+
+
+    # Funcion recursiva que devuelve el subgrafo completo de una palabra
+    def get_subgrafo_completo(self, pal_origen=None):
+        # lo hace por medio de la lista list_palabras_relacionadas_1er_grado pero entrando en cada una de ellas
+        # y sacando su lista de list_palabras_relacionadas_1er_grado
+        # si la palabra ya esta en la lista no la añade
+
+        # if self.list_palabras_relacionadas_dest_1er_grado == []:
+        #     self.list_all_pal_subgrafo = []
+        #     self.subgrafo_completado = True
+        #     return []
+
+
+        list_total_palabras = []
+        list_palabras_relacionadas_1er_grado_copy = self.list_palabras_relacionadas_1er_grado.copy()
+        if pal_origen is not None and pal_origen in list_palabras_relacionadas_1er_grado_copy:
+            list_palabras_relacionadas_1er_grado_copy.remove(pal_origen)
+        if self.pal_raiz is not None and self.pal_raiz in list_palabras_relacionadas_1er_grado_copy:
+            list_palabras_relacionadas_1er_grado_copy.remove(self.pal_raiz)
+        if self in list_palabras_relacionadas_1er_grado_copy:
+            list_palabras_relacionadas_1er_grado_copy.remove(self)
+
+
+        if list_palabras_relacionadas_1er_grado_copy == []:
+            self.list_all_pal_subgrafo = []
+            return []
+
+        for pal in list_palabras_relacionadas_1er_grado_copy:
+            self.list_all_pal_subgrafo.append(pal)
+            list_total_palabras += [pal]
+            list_total_palabras += pal.list_palabras_relacionadas_1er_grado
+
+        if self.pal_raiz is not None and self.pal_raiz in list_total_palabras:
+            list_total_palabras.remove(self.pal_raiz)
+        if self in list_total_palabras:
+            list_total_palabras.remove(self)
+        if pal_origen is not None and pal_origen in list_total_palabras:
+            list_total_palabras.remove(pal_origen)
+
+        self.list_all_pal_subgrafo = list_total_palabras
+        return list_total_palabras
+
+    def refresh_subgrafo_completado(self):
+        self.is_subgrafo_completado()
+
+    def is_subgrafo_completado(self):
+        list_all_pal_subgrafo = self.get_subgrafo_completo()
+
+        for pal in list_all_pal_subgrafo:
+            if not pal.has_been_plotted:
+                self.subgrafo_completado = False
+                return False
+        self.subgrafo_completado = True
+        return True
 
 
     def to_create_Palabra_str(self):
