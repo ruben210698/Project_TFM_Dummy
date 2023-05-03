@@ -1,6 +1,7 @@
 import math
 import random
 import time
+import os
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -54,7 +55,7 @@ if (logger.hasHandlers()):
 
 LINEAS_SEP_FILA = 5
 
-PRINT_GRAPH = True
+PRINT_GRAPH = eval(os.getenv('PRINT_MATRIX', 'True'))
 
 MODE_DEBUG = "DEBUG"
 MODE_NORMAL = "NORMAL"
@@ -459,7 +460,7 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaci
     list_palabras_representadas = []
 
     aaaaaaaaaaa = palabra.texto
-    if palabra.texto == 'es':
+    if palabra.texto == 'naturaleza':
         logger.info("hola")
 
     draw_relations = not palabra.has_been_plotted_relations

@@ -265,7 +265,8 @@ class Palabra:
         self.list_palabras_relacionadas_2o_grado = list(set(self.list_palabras_relacionadas_2o_grado))
         self.list_palabras_relacionadas_dest_1er_grado = list(set(self.list_palabras_relacionadas_dest_1er_grado))
         self.list_palabras_relacionadas_dest_2o_grado = list(set(self.list_palabras_relacionadas_dest_2o_grado))
-
+        self.list_all_pal_subgrafo += self.list_palabras_relacionadas_1er_grado
+        self.list_all_pal_subgrafo = [pal for pal in list(set(self.list_all_pal_subgrafo)) if pal != self.pal_raiz]
 
     def refresh_palabras_relacionadas_2o_grado(self):
         try:
@@ -308,6 +309,8 @@ class Palabra:
         self.list_palabras_relacionadas_2o_grado = list(set(self.list_palabras_relacionadas_2o_grado))
         self.list_palabras_relacionadas_dest_1er_grado = list(set(self.list_palabras_relacionadas_dest_1er_grado))
         self.list_palabras_relacionadas_dest_2o_grado = list(set(self.list_palabras_relacionadas_dest_2o_grado))
+        self.list_all_pal_subgrafo += self.list_palabras_relacionadas_1er_grado
+        self.list_all_pal_subgrafo = [pal for pal in list(set(self.list_all_pal_subgrafo)) if pal != self.pal_raiz]
 
 
     def refresh_pal_relations(self):
@@ -356,7 +359,6 @@ class Palabra:
         #     self.list_all_pal_subgrafo = []
         #     self.subgrafo_completado = True
         #     return []
-
 
         list_total_palabras = []
         list_palabras_relacionadas_1er_grado_copy = self.list_palabras_relacionadas_1er_grado.copy()

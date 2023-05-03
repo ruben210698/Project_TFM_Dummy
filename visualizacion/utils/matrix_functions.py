@@ -1,3 +1,4 @@
+import os
 
 from utils.Palabra import Palabra
 
@@ -18,7 +19,9 @@ if (logger.hasHandlers()):
     logger.handlers.clear()
 ##############################################################################################################
 ##############################################################################################################
-PRINT_MATRIX = True
+# variables de entorno
+PRINT_MATRIX = eval(os.getenv('PRINT_MATRIX', 'True'))
+
 
 DIM_Y_MATRIX = 50
 DIM_X_MATRIX = 200
