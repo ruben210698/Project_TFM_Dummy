@@ -451,14 +451,15 @@ def test7():
 
 
 #list_palabras, list_relaciones = test5()
-list_palabras, list_relaciones = test2()
+#list_palabras, list_relaciones = test2()
+list_palabras, list_relaciones = test6()
 generate_graph(texto, list_palabras, list_relaciones)
 
-#test2()
+#test2() # 14
 #generate_graph(texto, list_palabras, list_relaciones)
-#test4()
-#test6()
-#test5()
+#test4() # 53
+#test6() # 15
+#test5() # 12
 
 #generate_graph(texto, list_palabras, list_relaciones)
 #from grafico12 import print_graph

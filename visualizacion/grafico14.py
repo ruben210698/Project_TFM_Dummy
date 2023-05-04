@@ -33,6 +33,8 @@ from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_
 
 import logging
 from utils.logger import FORMAT_1, create_logger
+
+PAL_DEBUG = 'habilidades'
 create_logger()
 
 logger = logging.getLogger(__name__)
@@ -55,7 +57,7 @@ if (logger.hasHandlers()):
 
 LINEAS_SEP_FILA = 5
 
-PRINT_GRAPH = eval(os.getenv('PRINT_MATRIX', 'True'))
+PRINT_GRAPH = eval(os.getenv('PRINT_GRAPH', 'True'))
 
 MODE_DEBUG = "DEBUG"
 MODE_NORMAL = "NORMAL"
@@ -333,7 +335,7 @@ def update_palabras_in_matrix(matrix_dim, palabra):
 
 def represent_list_relations(list_palabras_representadas, list_relaciones, matrix_dim, palabra, position_elems,
                              force_draw=False):
-    if palabra.texto == 'arquitectura y arte':
+    if palabra.texto == PAL_DEBUG:
         print("Hola")
     refresh_directions(palabra)
     palabra.refresh_subgrafo_completado()
@@ -352,7 +354,6 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
 
     list_rel_pending = []
     while list_dir_pending != []:
-        print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
         # Necesario para refrescar las palabras temporales
         list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra).copy()
         dir_actual = list_dir_pending.pop(0)
@@ -378,7 +379,7 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
             relation.direccion_actual = dir_actual
             relation.pal_tmp.direccion_origen_tmp = dir_actual
 
-            if palabra.texto == 'arquitectura y arte':
+            if palabra.texto == PAL_DEBUG:
                 print("hola")
             ####################################################
             # 3a función (relations) - 2a entrada Word recursive
@@ -405,7 +406,7 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
 
 def represent_word(matrix_dim, palabra, relation, position_elems):
     logger.info(f"################################ represent_word:::: {palabra.texto}")
-    if palabra.texto == 'Madrid y Córdoba':
+    if palabra.texto == PAL_DEBUG:
         print("hola")
     axis_y, axis_x, matrix_dim = get_next_location(matrix_dim, palabra, relation)
     if axis_y is None or axis_x is None:
@@ -474,7 +475,7 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaci
 
     aaaaaaaaaaa = palabra.texto
     logger.info(f"get_position_word_recursive: {palabra.texto}")
-    if palabra.texto == 'arquitectura y arte':
+    if palabra.texto == PAL_DEBUG:
         print("hola")
 
     draw_relations = not palabra.has_been_plotted_relations
@@ -495,6 +496,7 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaci
         logger.info(f"++++++ {palabra.texto}")
         matrix_dim, palabra, relation, position_elems = \
             represent_word(matrix_dim, palabra, relation, position_elems)
+        print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
         logger.info(f"++++++ Return")
         if palabra is None:
             return None, None, None
@@ -564,15 +566,12 @@ def get_position_dict(list_palabras, list_relaciones):
                 list_palabras_ordenadas.sort(key=lambda x: x.numero_grafos, reverse=True)
                 palabra = get_next_word_to_repres(palabra)
 
-                print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
                 # quitar de list_palabras_ordenadas las palabras que ya han sido representadas
                 list_palabras_ordenadas = [pal for pal in list_palabras_ordenadas if pal not in list_palabras_representadas]
                 list_palabras_ordenadas.sort(key=lambda x: x.numero_grafos, reverse=True)
 
         except Exception as _:
             logger.info("hola")
-
-        print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
 
     position_elems = reducir_posiciones_finales_eje_y(position_elems)
     position_elems = reducir_posiciones_finales_eje_x(position_elems)
@@ -994,7 +993,7 @@ def draw_all_nodes(ax, position_elems):
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
                     color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
         #
-        elif pal.lugar_sintactico.lower() in (TYPE_SINTAX_FLAT):
+        elif pal.lugar_sintactico.lower() in (): #(TYPE_SINTAX_FLAT):
             pal.figura = FIGURA_HEXAGONO
             pal.tam_eje_y_figura = tam_figuras.HEXAGONO[1] * len(node_text)
             pal.multiplicador_borde_figura = tam_figuras.HEXAGONO[0] * len(node_text)

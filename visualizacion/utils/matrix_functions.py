@@ -459,10 +459,11 @@ def find_better_center_position(matrix_dim, palabra, pos_y_media, pos_x_media):
     # haces una funcion de apliar matriz y ale. Y luego, reduces la matrix y las posiciones y ya está.
 
     pos_x = pos_x_media
+    pos_y = pos_y_media
     # Lo que hace es recorrer de 200 en 200 los elementos.
-    for pos_y in range(pos_y_media, 0, -20):
+    for pos_y in range(pos_y_media, -4000, -20):
         is_empty, matrix_dim = is_empty_pos_matrix(matrix_dim, pos_y, pos_x, dim_y=5, dim_x=10)
         if is_empty:
             return pos_y, pos_x, matrix_dim
 
-    return pos_y_media, pos_x, matrix_dim
+    return pos_y_media, pos_x_media, matrix_dim
