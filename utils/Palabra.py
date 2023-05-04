@@ -400,6 +400,9 @@ class Palabra:
             if not pal.has_been_plotted:
                 self.subgrafo_completado = False
                 return False
+        if not self.has_been_plotted:
+            self.subgrafo_completado = False
+            return False
         self.subgrafo_completado = True
         return True
 

@@ -30,6 +30,7 @@ from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_
     reducir_tam_matriz, ampliar_matriz
 
 import logging
+import os
 from utils.logger import FORMAT_1
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.CRITICAL) #######################################################
@@ -43,6 +44,8 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 if (logger.hasHandlers()):
     logger.handlers.clear()
+
+PAL_DEBUG = os.getenv('PAL_DEBUG', '')
 
 
 
@@ -233,7 +236,7 @@ def encajar_en_dict_direcciones_sin_elem_comunes(palabra, list_relaciones_pal, l
 def refresh_directions(palabra):
     # TODO quitar de aqui todo lo que no se tenga que representar porque ya esta representado :)
     txt = palabra.texto
-    if txt == 'arquitectura y arte':
+    if txt == PAL_DEBUG:
         print('debug')
     palabras_relaciones_proximas = palabra.palabras_relaciones_proximas.copy()
     # Esto crea las palabras temporales, es esencial

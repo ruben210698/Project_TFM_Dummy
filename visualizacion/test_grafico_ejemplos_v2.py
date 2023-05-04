@@ -452,8 +452,34 @@ def test7():
 
 #list_palabras, list_relaciones = test5()
 #list_palabras, list_relaciones = test2()
-list_palabras, list_relaciones = test6()
+list_palabras, list_relaciones = test5()
 generate_graph(texto, list_palabras, list_relaciones)
+
+
+ACTIVA_WEB = False
+
+if ACTIVA_WEB:
+    ############# Web:
+    from flask import Flask, send_file
+    app = Flask(__name__)
+    import requests
+    from PIL import Image
+    import io
+    #######################
+
+    @app.route("/")
+    def display_graph():
+        fig = generate_graph(texto, list_palabras, list_relaciones)
+        fig.savefig('graph.png', bbox_inches='tight')
+        return send_file('graph.png', mimetype='image/png')
+
+    if __name__ == "__main__":
+        app.run(debug=True)
+
+
+
+
+
 
 #test2() # 14
 #generate_graph(texto, list_palabras, list_relaciones)

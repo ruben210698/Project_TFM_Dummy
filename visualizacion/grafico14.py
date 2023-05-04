@@ -34,7 +34,8 @@ from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_
 import logging
 from utils.logger import FORMAT_1, create_logger
 
-PAL_DEBUG = 'habilidades'
+PAL_DEBUG = 'América y anexión'
+PAL_DEBUG = os.getenv('PAL_DEBUG', '')
 create_logger()
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ if (logger.hasHandlers()):
 
 LINEAS_SEP_FILA = 5
 
+PRINT_IMG = eval(os.getenv('PRINT_IMG', 'True'))
 PRINT_GRAPH = eval(os.getenv('PRINT_GRAPH', 'True'))
 
 MODE_DEBUG = "DEBUG"
@@ -346,7 +348,8 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
     if force_draw:
         list_dir_pending = [
             dir1 for dir1 in list_dir_to_check
-            if not palabra.dict_posiciones.get(dir1).subgrafo_completado and
+            if (not palabra.dict_posiciones.get(dir1).subgrafo_completado or
+               not palabra.dict_posiciones.get(dir1).has_been_plotted) and
                not palabra.dict_posiciones.get(dir1) == palabra.pal_raiz]
     else:
         # Solo las pendientes
@@ -573,6 +576,9 @@ def get_position_dict(list_palabras, list_relaciones):
         except Exception as _:
             logger.info("hola")
 
+        if PRINT_GRAPH:
+            print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim, final=True)
+
     position_elems = reducir_posiciones_finales_eje_y(position_elems)
     position_elems = reducir_posiciones_finales_eje_x(position_elems)
 
@@ -694,7 +700,7 @@ def generate_graph(texto, list_palabras, list_relaciones):
     # Crear posiciones de nodos
     position_elems, matrix_dim = get_position_dict(list_palabras, list_relaciones)
 
-    print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=True)
+    return print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=True)
 
 #######################################################################################################################
 #######################################################################################################################
@@ -810,8 +816,8 @@ def draw_edge(ax, u, v, width=1.0, color='k', label='', label_offset=(0, 0), bol
             ax.text(x_label, y_label, label, fontsize=12, ha='center', va='center', zorder=3)
 
 def print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=False):
-    if PRINT_GRAPH or final:
-        _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
+    if PRINT_IMG or final:
+        return _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
 
 def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
     position_elems = position_elems.copy()
@@ -849,6 +855,7 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
     ax.axis('on')
 
     plt.show()
+    return fig
 
 def calcular_direccion_aprox(relation_draw, position_elems):
     logger.info(f"-- Calcular Dir Aprox: %s", relation_draw.texto)
@@ -1039,3 +1046,5 @@ def draw_all_nodes(ax, position_elems):
             # ellipse = Ellipse((x, y), width=ellipse_width, height=ellipse_height, color=dict_color_figura[None], zorder=2)
             # ax.add_patch(ellipse)
             # ax.text(x, y, node, fontsize=12, ha='center', va='center', zorder=3, color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
+
+
