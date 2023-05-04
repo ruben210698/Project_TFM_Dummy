@@ -24,7 +24,7 @@ from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_lis
 from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_ARRIBA, DIR_ABAJO, DIR_ARRIBA, \
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
     FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO, \
-    DICT_PROX_DIR
+    DICT_PROX_DIR, OPOSIT_DIR
 from visualizacion.utils.posicionesXY import get_next_location, get_dir_relativa
 from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_matrix, imprimir_matriz, \
     reducir_tam_matriz, ampliar_matriz
@@ -64,26 +64,90 @@ def get_rel_origen_and_dest_unidas(palabra):
 
 
 
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+
+def is_possible_in_dict(palabra, list_pos_to_plot, palabras_ptes_representar):
+    num_pal_ptes_representar = len(palabras_ptes_representar)
+    for pos in list_pos_to_plot:
+        if palabra.dict_posiciones.get(pos) is None:
+            num_pal_ptes_representar -= 1
+
+    return num_pal_ptes_representar <= 0
+
+
+def encajar_en_dict_direcciones(palabra, list_relaciones_pal, list_all_palabras, elements_comunes):
+    if elements_comunes == []:
+        return encajar_en_dict_direcciones_sin_elem_comunes(palabra, list_relaciones_pal, list_all_palabras)
+
+
+def encajar_en_dict_direcciones_sin_elem_comunes(palabra, list_relaciones_pal, list_all_palabras):
+    txt = palabra.texto
+    list_palabras_pendientes = [a for a in list_all_palabras if a not in palabra.dict_posiciones.values()]
+
+    is_possible = list_palabras_pendientes == []  # si son == [], es que ya estan todas representadas
+    number_to_search = len(list_palabras_pendientes) - 1
+    list_direcciones_orden = []
+    find_dir_generic = DICT_DIR_BY_ORIGEN.get(palabra.direccion_origen_final, [])
+    while not is_possible:
+        if len(list_relaciones_pal) > len(find_dir_generic):
+            # FIXME: en este caso lo ideal seria tener un diccionario secundario que aceptase otras 12 relaciones
+            #  este diccionario seria solo con las de dcha_arriba, dcha_abajo, izq_arriba, izq_abajo (trasversales)
+            #  (3 por cada direccion) y de esta forma caben todas en el grafo. Pero eso a futuro.
+            list_direcciones_orden = find_dir_generic[-1]
+            is_possible = True
+        else:
+            list_direcciones_orden = find_dir_generic[number_to_search]
+            is_possible = is_possible_in_dict(palabra, list_direcciones_orden, list_palabras_pendientes)
+        number_to_search += 1
+
+    # y en orden estricto de numero de relaciones, se rellena
+    # ordenar la list_palabras_pendientes por el numero de grafos que tiene
+    list_palabras_pendientes.sort(key=lambda x: x.numero_grafos, reverse=True)
+
+    palabra.deprec_lista_direcciones_orden = list_direcciones_orden
+    try:
+        # obtener el elemento con menor importancia de list_relaciones_pal para ponerlo a la izq, si se puede
+        ## pal_menor_import = min(list_palabras_pendientes, key=lambda x: x.importancia)
+
+        for dir in list_direcciones_orden:
+            if palabra.dict_posiciones.get(dir, None) is None and list_palabras_pendientes != []:
+                palabra.dict_posiciones[dir] = list_palabras_pendientes.pop(0)
+                palabra.dict_posiciones[dir].direccion_origen_tmp = dir
+
+    except Exception as _:
+        palabra.deprec_lista_direcciones_orden = find_dir_generic[-1]
+        list_direcciones_orden = palabra.deprec_lista_direcciones_orden.copy()
+        for dir in list_direcciones_orden:
+            if palabra.dict_posiciones.get(dir, None) is None and list_palabras_pendientes != []:
+                palabra.dict_posiciones[dir] = list_palabras_pendientes.pop(0)
+                palabra.dict_posiciones[dir].direccion_origen_tmp = dir
+
+    return True
+
+
 
 
 # TODO una funcion de check if it is possible. para marcar estas relaciones
 def refresh_directions(palabra):
     # TODO quitar de aqui todo lo que no se tenga que representar porque ya esta representado :)
-
+    txt = palabra.texto
+    if txt == 'arquitectura y arte':
+        print('debug')
     palabras_relaciones_proximas = palabra.palabras_relaciones_proximas.copy()
     # Esto crea las palabras temporales, es esencial
     list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra).copy()
     list_all_palabras = [elem.pal_tmp for elem in list_relaciones_pal]
-
+    # Guardar en el diccionario las palabras que ya existen y que estan representadas en el grafo.
     for pal2 in list_all_palabras:
         if pal2.has_been_plotted:
             dir_actual = get_dir_relativa(palabra, pal2)
             if palabra.dict_posiciones.get(dir_actual) is None:
                 palabra.dict_posiciones[dir_actual] = pal2
-            pal2.direccion_origen_tmp = dir_actual
-
-
-
+            #pal2.direccion_origen_tmp = dir_actual
 
 
     # TODO: que busque la palabra con menor importancia y la ponga a la izq, si la izq esta vacia
@@ -92,13 +156,27 @@ def refresh_directions(palabra):
     # si existe algun elemento de la 1a lista que esta en las otras, lo uno en elementos comunes para saber que deben ir juntos
     elements_comunes = get_list_elements_comunes(palabras_relaciones_proximas)
 
+
+
+
+
+
+
+
+
+
+
+
     find_dir_generic = DICT_DIR_BY_ORIGEN.get(palabra.direccion_origen_tmp, [])
     if len(list_relaciones_pal) > len(find_dir_generic):
         list_direcciones_orden = find_dir_generic[-1]
     else:
         list_direcciones_orden = find_dir_generic[len(list_relaciones_pal) - 1]
-    palabra.lista_direcciones_orden = list_direcciones_orden
+    palabra.deprec_lista_direcciones_orden = list_direcciones_orden
     ######################################################################################################
+
+
+
 
     list_direcciones_orden = list_direcciones_orden.copy()
     for elem_comun in elements_comunes:
@@ -172,28 +250,8 @@ def refresh_directions(palabra):
                 break
     ###################################################################################################################
 
-    list_all_palabras = [elem.pal_tmp for elem in list_relaciones_pal]
-    list_palabras_pendientes = [elem for elem in list_all_palabras if elem not in list(palabra.dict_posiciones.values())]
-    list_palabras_pendientes = [elem for elem in list_palabras_pendientes if not elem.has_been_plotted]
-    list_direcciones_orden = palabra.lista_direcciones_orden.copy()
-    try:
-        ## pal_menor_import = min(list_palabras_pendientes, key=lambda x: x.importancia)
+    encajar_en_dict_direcciones(palabra, list_relaciones_pal, list_all_palabras, elements_comunes)
 
-        for dir in list_direcciones_orden:
-            if palabra.dict_posiciones.get(dir, None) is None and list_palabras_pendientes != []:
-                palabra.dict_posiciones[dir] = list_palabras_pendientes.pop(0)
-                palabra.dict_posiciones[dir].direccion_origen_tmp = dir
-
-    except Exception as _:
-        palabra.lista_direcciones_orden = find_dir_generic[-1]
-        list_direcciones_orden = palabra.lista_direcciones_orden.copy()
-        for dir in list_direcciones_orden:
-            if palabra.dict_posiciones.get(dir, None) is None and list_palabras_pendientes != []:
-                palabra.dict_posiciones[dir] = list_palabras_pendientes.pop(0)
-                palabra.dict_posiciones[dir].direccion_origen_tmp = dir
-
-    #list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra)
-    # obtener el elemento con menor importancia de list_relaciones_pal
     logger.info("Hola")
 
 

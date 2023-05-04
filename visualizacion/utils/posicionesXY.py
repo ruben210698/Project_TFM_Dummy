@@ -20,14 +20,14 @@ if (logger.hasHandlers()):
 
 
 def get_dir_relativa(palabra_origen, palabra_dest):
-    if palabra_origen.pos_y < palabra_dest.pos_y:
+    if palabra_origen.pos_y > palabra_dest.pos_y:
         if palabra_origen.pos_x < palabra_dest.pos_x:
             return DIR_DCHA_ABAJO
         elif palabra_origen.pos_x > palabra_dest.pos_x:
             return DIR_IZQ_ABAJO
         else:
             return DIR_ABAJO
-    elif palabra_origen.pos_y > palabra_dest.pos_y:
+    elif palabra_origen.pos_y < palabra_dest.pos_y:
         if palabra_origen.pos_x < palabra_dest.pos_x:
             return DIR_DCHA_ARRIBA
         elif palabra_origen.pos_x > palabra_dest.pos_x:
@@ -49,7 +49,7 @@ def update_list_dir_order(relation):
         logger.info(f"-----Fallo en la direccion {relation.pal_origen.texto} :: {relation.pal_dest.texto}")
     except:
         pass
-    list_dir_origen_actual = relation.pal_origen.lista_direcciones_orden
+    list_dir_origen_actual = relation.pal_origen.deprec_lista_direcciones_orden
     dir_pal_origen = relation.pal_origen.direccion_origen_tmp
     num_dir_pal_origen = len(list_dir_origen_actual)
     find_dir = DICT_DIR_BY_ORIGEN.get(dir_pal_origen)
@@ -59,7 +59,7 @@ def update_list_dir_order(relation):
     else:
         new_list_direcciones_orden = find_dir[num_dir_pal_origen]  # antes se le restaba 1
 
-    relation.pal_origen.lista_direcciones_orden = new_list_direcciones_orden
+    relation.pal_origen.deprec_lista_direcciones_orden = new_list_direcciones_orden
     # relation.pal_origen.pos_actual_recorrer_dir_relaciones += 1  # de esta forma se salta el elemento actual
     ## No esto no lo hagas porque sino sumas 2, que ahora he puesto el bucle como While
 
@@ -82,7 +82,7 @@ def get_pos_dir_dcha(matrix_dim, palabra, relation):
         return None, None, matrix_dim
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix_dim)
     pos_y = relation.pal_tmp_opuesta.pos_y + pos_y_media
-    pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media + (relation.tam_text + relation.cte_sum_x)
+    pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media + int((relation.pal_tmp_opuesta.dimension + relation.pal_tmp_opuesta.cte_sum_x) / 2) + (relation.tam_text + relation.cte_sum_x)
 
     for x_loop in range(pos_x, pos_x + RECTA_DISTANCIA_DE_INTENTO_X, 1):
         is_empty, matrix_dim = is_empty_pos_matrix(

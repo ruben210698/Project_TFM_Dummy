@@ -4,11 +4,10 @@ from utils.Relacion import Relacion
 
 from grafico14 import generate_graph
 
-list_palabras = []
-list_relaciones = []
 texto = ""
 def test1():
-
+    list_palabras = []
+    list_relaciones= []
     list_palabras.append(Palabra('Austrias', 'PROPN', 'nsubj', 10, 1004, 0, False, 'Austrias', 4))
     list_palabras.append(Palabra('España', 'PROPN', 'obj', 11, 1024, 0, False, 'España', 24))
     list_palabras.append(Palabra('siglo', 'NOUN', 'obl', 12, 1037, 0, False, 'siglo', 37))
@@ -23,8 +22,11 @@ def test1():
     list_relaciones.append(Relacion('también', Palabra.palabras_dict.get('responsable-48') , Palabra.palabras_dict.get('Inquisición-75'), position_doc=61 , lugar_sintactico='nmod', importancia = 2123, id=-15))
     list_relaciones.append(Relacion('de', Palabra.palabras_dict.get('responsable-48') , Palabra.palabras_dict.get('Inquisición-75'), position_doc=69 , lugar_sintactico='nmod', importancia = 2123, id=-22))
     list_relaciones.append(Relacion('la', Palabra.palabras_dict.get('responsable-48') , Palabra.palabras_dict.get('Inquisición-75'), position_doc=72 , lugar_sintactico='nmod', importancia = 2123, id=-23))
+    return list_palabras, list_relaciones
 
 def test2():
+    list_palabras = []
+    list_relaciones= []
     list_palabras.append(Palabra('Austrias', 'PROPN', 'nsubj', 10, 1004, 0, False, 'Austrias', 4))
     list_palabras.append(Palabra('España', 'PROPN', 'obj', 11, 1024, 0, False, 'España', 24))
     list_palabras.append(Palabra('siglo', 'NOUN', 'obl', 12, 1037, 0, False, 'siglo', 37))
@@ -57,8 +59,11 @@ def test2():
     list_relaciones.append(Relacion('y', Palabra.palabras_dict.get('Madrid-150') , Palabra.palabras_dict.get('Córdoba-159'), position_doc=157 , lugar_sintactico='conj', importancia = 2309, id=-25))
     list_relaciones.append(Relacion('de', Palabra.palabras_dict.get('responsable-55') , Palabra.palabras_dict.get('Inquisición-82'), position_doc=76 , lugar_sintactico='nmod', importancia = 2137, id=-36))
     list_relaciones.append(Relacion('la', Palabra.palabras_dict.get('responsable-55') , Palabra.palabras_dict.get('Inquisición-82'), position_doc=79 , lugar_sintactico='nmod', importancia = 2137, id=-37))
+    return list_palabras, list_relaciones
 
 def test3():
+    list_palabras = []
+    list_relaciones= []
     list_palabras.append(Palabra('Austrias', 'PROPN', 'nsubj', 10, 1004, 0, False, 'Austrias', 4))
     list_palabras.append(Palabra('España', 'PROPN', 'obj', 11, 1024, 0, False, 'España', 24))
     list_palabras.append(Palabra('siglo', 'NOUN', 'obl', 12, 1037, 0, False, 'siglo', 37))
@@ -102,8 +107,10 @@ def test3():
     list_relaciones.append(Relacion('especialmente', Palabra.palabras_dict.get('Madrid-212') , Palabra.palabras_dict.get('Granada-220'), position_doc=195 , lugar_sintactico='conj', importancia = 2432, id=-34))
     list_relaciones.append(Relacion('especialmente', Palabra.palabras_dict.get('Madrid-212') , Palabra.palabras_dict.get('Córdoba-230'), position_doc=195 , lugar_sintactico='conj', importancia = 2442, id=-35))
     list_relaciones.append(Relacion('y', Palabra.palabras_dict.get('Madrid-212') , Palabra.palabras_dict.get('Córdoba-230'), position_doc=228 , lugar_sintactico='conj', importancia = 2442, id=-36))
-
+    return list_palabras, list_relaciones
 def test4():
+    list_palabras = []
+    list_relaciones= []
     list_palabras.append(Palabra('dinastía', 'NOUN', 'nsubj', 10, 1003, 0, False, 'dinastía', 3))
     list_palabras.append(Palabra('Austrias', 'PROPN', 'nmod', 11, 1019, 0, False, 'Austrias', 19))
     list_palabras.append(Palabra('España', 'PROPN', 'obj', 12, 1036, 0, False, 'España', 36))
@@ -265,39 +272,43 @@ def test4():
     list_relaciones.append(Relacion('de', Palabra.palabras_dict.get('ciudad-684') , Palabra.palabras_dict.get('Córdoba-716'), position_doc=703 , lugar_sintactico='conj', importancia = 3400, id=-115))
     list_relaciones.append(Relacion('y', Palabra.palabras_dict.get('Granada-706') , Palabra.palabras_dict.get('Córdoba-716'), position_doc=714 , lugar_sintactico='conj', importancia = 3422, id=-116))
     list_relaciones.append(Relacion('su', Palabra.palabras_dict.get('arquitectura-630') , Palabra.palabras_dict.get('arte-645'), position_doc=627 , lugar_sintactico='conj', importancia = 3275, id=-216))
-
+    return list_palabras, list_relaciones
 def test5():
-        list_palabras.append(Palabra('naturaleza', 'NOUN', 'nsubj', 10, 1003, 0, False, 'naturaleza', 3))
-        list_palabras.append(Palabra('es', 'AUX', 'cop', 11, 1014, 0, False, 'ser', 14))
-        list_palabras.append(Palabra('impresionante', 'ADJ', 'ROOT', 12, 1017, 0, False, 'impresionante', 17))
-        list_palabras.append(Palabra('variedad', 'NOUN', 'nmod', 13, 1037, 0, False, 'variedad', 37))
-        list_palabras.append(Palabra('paisajes', 'NOUN', 'nmod', 14, 1049, 0, False, 'paisaje', 49))
-        list_palabras.append(Palabra('montañas', 'NOUN', 'nmod', 15, 1065, 0, False, 'montaña', 65))
-        list_palabras.append(Palabra('majestuosas', 'ADJ', 'amod', 16, 1074, 0, False, 'majestuoso', 74))
-        list_palabras.append(Palabra('extensas', 'NOUN', 'conj', 17, 1088, 0, False, 'extensa', 88))
-        list_palabras.append(Palabra('llanuras', 'ADJ', 'amod', 18, 1097, 0, False, 'llanura', 97))
-        list_palabras.append(Palabra('océanos', 'NOUN', 'nmod', 19, 1112, 0, False, 'océano', 112))
-        list_palabras.append(Palabra('ríos', 'NOUN', 'conj', 20, 1122, 0, False, 'río', 122))
-        list_palabras.append(Palabra('caudalosos', 'ADJ', 'amod', 21, 1127, 0, False, 'caudaloso', 127))
-        list_relaciones.append(Relacion('la', Palabra.palabras_dict.get('naturaleza-3') , Palabra.palabras_dict.get('impresionante-17'), position_doc=0 , lugar_sintactico='ROOT', importancia = 2020, id=-10))
-        list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('impresionante-17') , Palabra.palabras_dict.get('variedad-37'), position_doc=31 , lugar_sintactico='nmod', importancia = 2054, id=-11))
-        list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('impresionante-17') , Palabra.palabras_dict.get('paisaje-49'), position_doc=31 , lugar_sintactico='nmod', importancia = 2066, id=-12))
-        list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('impresionante-17') , Palabra.palabras_dict.get('montaña-65'), position_doc=31 , lugar_sintactico='nmod', importancia = 2082, id=-13))
-        list_relaciones.append(Relacion('su', Palabra.palabras_dict.get('impresionante-17') , Palabra.palabras_dict.get('variedad-37'), position_doc=34 , lugar_sintactico='nmod', importancia = 2054, id=-14))
-        list_relaciones.append(Relacion('su', Palabra.palabras_dict.get('impresionante-17') , Palabra.palabras_dict.get('paisaje-49'), position_doc=34 , lugar_sintactico='nmod', importancia = 2066, id=-15))
-        list_relaciones.append(Relacion('su', Palabra.palabras_dict.get('impresionante-17') , Palabra.palabras_dict.get('montaña-65'), position_doc=34 , lugar_sintactico='nmod', importancia = 2082, id=-16))
-        list_relaciones.append(Relacion('de', Palabra.palabras_dict.get('variedad-37') , Palabra.palabras_dict.get('paisaje-49'), position_doc=46 , lugar_sintactico='nmod', importancia = 2086, id=-17))
-        list_relaciones.append(Relacion('desde', Palabra.palabras_dict.get('variedad-37') , Palabra.palabras_dict.get('montaña-65'), position_doc=59 , lugar_sintactico='nmod', importancia = 2102, id=-18))
-        list_relaciones.append(Relacion('desde', Palabra.palabras_dict.get('variedad-37') , Palabra.palabras_dict.get('majestuoso-74'), position_doc=59 , lugar_sintactico='amod', importancia = 2111, id=-19))
-        list_relaciones.append(Relacion('desde', Palabra.palabras_dict.get('variedad-37') , Palabra.palabras_dict.get('llanura-97'), position_doc=59 , lugar_sintactico='amod', importancia = 2134, id=-20))
-        list_relaciones.append(Relacion('desde', Palabra.palabras_dict.get('variedad-37') , Palabra.palabras_dict.get('océano-112'), position_doc=59 , lugar_sintactico='nmod', importancia = 2149, id=-21))
-        list_relaciones.append(Relacion('desde', Palabra.palabras_dict.get('variedad-37') , Palabra.palabras_dict.get('caudaloso-127'), position_doc=59 , lugar_sintactico='amod', importancia = 2164, id=-22))
-        list_relaciones.append(Relacion('y', Palabra.palabras_dict.get('majestuoso-74') , Palabra.palabras_dict.get('extensa-88'), position_doc=86 , lugar_sintactico='conj', importancia = 2162, id=-23))
-        list_relaciones.append(Relacion('hasta', Palabra.palabras_dict.get('montaña-65') , Palabra.palabras_dict.get('océano-112'), position_doc=106 , lugar_sintactico='nmod', importancia = 2177, id=-24))
-        list_relaciones.append(Relacion('hasta', Palabra.palabras_dict.get('montaña-65') , Palabra.palabras_dict.get('río-122'), position_doc=106 , lugar_sintactico='conj', importancia = 2187, id=-25))
-        list_relaciones.append(Relacion('y', Palabra.palabras_dict.get('océano-112') , Palabra.palabras_dict.get('río-122'), position_doc=120 , lugar_sintactico='conj', importancia = 2234, id=-26))
-
+    list_palabras = []
+    list_relaciones= []
+    list_palabras.append(Palabra('naturaleza', 'NOUN', 'nsubj', 10, 1003, 0, False, 'naturaleza', 3))
+    list_palabras.append(Palabra('es', 'AUX', 'cop', 11, 1014, 0, False, 'ser', 14))
+    list_palabras.append(Palabra('impresionante', 'ADJ', 'ROOT', 12, 1017, 0, False, 'impresionante', 17))
+    list_palabras.append(Palabra('variedad', 'NOUN', 'nmod', 13, 1037, 0, False, 'variedad', 37))
+    list_palabras.append(Palabra('paisajes', 'NOUN', 'nmod', 14, 1049, 0, False, 'paisaje', 49))
+    list_palabras.append(Palabra('montañas', 'NOUN', 'nmod', 15, 1065, 0, False, 'montaña', 65))
+    list_palabras.append(Palabra('majestuosas', 'ADJ', 'amod', 16, 1074, 0, False, 'majestuoso', 74))
+    list_palabras.append(Palabra('extensas', 'NOUN', 'conj', 17, 1088, 0, False, 'extensa', 88))
+    list_palabras.append(Palabra('llanuras', 'ADJ', 'amod', 18, 1097, 0, False, 'llanura', 97))
+    list_palabras.append(Palabra('océanos', 'NOUN', 'nmod', 19, 1112, 0, False, 'océano', 112))
+    list_palabras.append(Palabra('ríos', 'NOUN', 'conj', 20, 1122, 0, False, 'río', 122))
+    list_palabras.append(Palabra('caudalosos', 'ADJ', 'amod', 21, 1127, 0, False, 'caudaloso', 127))
+    list_relaciones.append(Relacion('la', Palabra.palabras_dict.get('naturaleza-3') , Palabra.palabras_dict.get('impresionante-17'), position_doc=0 , lugar_sintactico='ROOT', importancia = 2020, id=-10))
+    list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('impresionante-17') , Palabra.palabras_dict.get('variedad-37'), position_doc=31 , lugar_sintactico='nmod', importancia = 2054, id=-11))
+    list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('impresionante-17') , Palabra.palabras_dict.get('paisaje-49'), position_doc=31 , lugar_sintactico='nmod', importancia = 2066, id=-12))
+    list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('impresionante-17') , Palabra.palabras_dict.get('montaña-65'), position_doc=31 , lugar_sintactico='nmod', importancia = 2082, id=-13))
+    list_relaciones.append(Relacion('su', Palabra.palabras_dict.get('impresionante-17') , Palabra.palabras_dict.get('variedad-37'), position_doc=34 , lugar_sintactico='nmod', importancia = 2054, id=-14))
+    list_relaciones.append(Relacion('su', Palabra.palabras_dict.get('impresionante-17') , Palabra.palabras_dict.get('paisaje-49'), position_doc=34 , lugar_sintactico='nmod', importancia = 2066, id=-15))
+    list_relaciones.append(Relacion('su', Palabra.palabras_dict.get('impresionante-17') , Palabra.palabras_dict.get('montaña-65'), position_doc=34 , lugar_sintactico='nmod', importancia = 2082, id=-16))
+    list_relaciones.append(Relacion('de', Palabra.palabras_dict.get('variedad-37') , Palabra.palabras_dict.get('paisaje-49'), position_doc=46 , lugar_sintactico='nmod', importancia = 2086, id=-17))
+    list_relaciones.append(Relacion('desde', Palabra.palabras_dict.get('variedad-37') , Palabra.palabras_dict.get('montaña-65'), position_doc=59 , lugar_sintactico='nmod', importancia = 2102, id=-18))
+    list_relaciones.append(Relacion('desde', Palabra.palabras_dict.get('variedad-37') , Palabra.palabras_dict.get('majestuoso-74'), position_doc=59 , lugar_sintactico='amod', importancia = 2111, id=-19))
+    list_relaciones.append(Relacion('desde', Palabra.palabras_dict.get('variedad-37') , Palabra.palabras_dict.get('llanura-97'), position_doc=59 , lugar_sintactico='amod', importancia = 2134, id=-20))
+    list_relaciones.append(Relacion('desde', Palabra.palabras_dict.get('variedad-37') , Palabra.palabras_dict.get('océano-112'), position_doc=59 , lugar_sintactico='nmod', importancia = 2149, id=-21))
+    list_relaciones.append(Relacion('desde', Palabra.palabras_dict.get('variedad-37') , Palabra.palabras_dict.get('caudaloso-127'), position_doc=59 , lugar_sintactico='amod', importancia = 2164, id=-22))
+    list_relaciones.append(Relacion('y', Palabra.palabras_dict.get('majestuoso-74') , Palabra.palabras_dict.get('extensa-88'), position_doc=86 , lugar_sintactico='conj', importancia = 2162, id=-23))
+    list_relaciones.append(Relacion('hasta', Palabra.palabras_dict.get('montaña-65') , Palabra.palabras_dict.get('océano-112'), position_doc=106 , lugar_sintactico='nmod', importancia = 2177, id=-24))
+    list_relaciones.append(Relacion('hasta', Palabra.palabras_dict.get('montaña-65') , Palabra.palabras_dict.get('río-122'), position_doc=106 , lugar_sintactico='conj', importancia = 2187, id=-25))
+    list_relaciones.append(Relacion('y', Palabra.palabras_dict.get('océano-112') , Palabra.palabras_dict.get('río-122'), position_doc=120 , lugar_sintactico='conj', importancia = 2234, id=-26))
+    return list_palabras, list_relaciones
 def test6():
+    list_palabras = []
+    list_relaciones= []
     list_palabras.append(Palabra('educación', 'NOUN', 'nsubj', 10, 1003, 0, False, 'educación', 3))
     list_palabras.append(Palabra('es', 'AUX', 'cop', 11, 1013, 0, False, 'ser', 13))
     list_palabras.append(Palabra('fundamental', 'ADJ', 'ROOT', 12, 1016, 0, False, 'fundamental', 16))
@@ -344,9 +355,11 @@ def test6():
     list_relaciones.append(Relacion('rodea', Palabra.palabras_dict.get('sociedad-216') , Palabra.palabras_dict.get('mundo-230'), position_doc=244 , lugar_sintactico='conj', importancia = 2446, id=-38))
     list_relaciones.append(Relacion('para', Palabra.palabras_dict.get('fundamental-16') , Palabra.palabras_dict.get('desarrollo-36'), position_doc=28 , lugar_sintactico='nmod', importancia = 2052, id=-40))
     list_relaciones.append(Relacion('que', Palabra.palabras_dict.get('sociedad-216') , Palabra.palabras_dict.get('mundo-230'), position_doc=236 , lugar_sintactico='conj', importancia = 2446, id=-67))
-
+    return list_palabras, list_relaciones
 
 def test7():
+    list_palabras= []
+    list_relaciones= []
     list_palabras.append(Palabra('cuerpo', 'NOUN', 'nsubj', 10, 1003, 0, False, 'cuerpo', 3))
     list_palabras.append(Palabra('humano', 'ADJ', 'amod', 11, 1010, 0, False, 'humano', 10))
     list_palabras.append(Palabra('es', 'AUX', 'cop', 12, 1017, 0, False, 'ser', 17))
@@ -433,14 +446,21 @@ def test7():
     list_relaciones.append(Relacion('mantenernos', Palabra.palabras_dict.get('sistema-102') , Palabra.palabras_dict.get('vital-235'), position_doc=299 , lugar_sintactico='amod', importancia = 2337, id=-71))
     list_relaciones.append(Relacion('mantenernos', Palabra.palabras_dict.get('sistema-102') , Palabra.palabras_dict.get('corazón-251'), position_doc=299 , lugar_sintactico='nmod', importancia = 2353, id=-72))
     list_relaciones.append(Relacion('mantenernos', Palabra.palabras_dict.get('sistema-102') , Palabra.palabras_dict.get('pulmón-265'), position_doc=299 , lugar_sintactico='conj', importancia = 2367, id=-73))
+    return list_palabras, list_relaciones
 
+
+
+#list_palabras, list_relaciones = test5()
+list_palabras, list_relaciones = test2()
+generate_graph(texto, list_palabras, list_relaciones)
 
 #test2()
+#generate_graph(texto, list_palabras, list_relaciones)
 #test4()
 #test6()
-test5()
+#test5()
 
-generate_graph(texto, list_palabras, list_relaciones)
+#generate_graph(texto, list_palabras, list_relaciones)
 #from grafico12 import print_graph
 #print_graph(texto, list_palabras, list_relaciones)
 

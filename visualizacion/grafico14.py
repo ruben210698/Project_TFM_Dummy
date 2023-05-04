@@ -25,7 +25,7 @@ from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_lis
 from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_ARRIBA, DIR_ABAJO, DIR_ARRIBA, \
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
     FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO, \
-    DICT_PROX_DIR
+    DICT_PROX_DIR, OPOSIT_DIR
 from visualizacion.utils.direcciones import refresh_directions, get_rel_origen_and_dest_unidas
 from visualizacion.utils.posicionesXY import get_next_location
 from visualizacion.utils.matrix_functions import generate_matrix, get_pos_media_matrix, imprimir_matriz, \
@@ -145,7 +145,7 @@ def loop_reducir_posiciones_finales_eje_y(posiciones_finales, cambiado):
 
 def reducir_posiciones_finales_eje_y(posiciones_finales):
     posiciones_finales = posiciones_finales.copy()
-    # TODO lo que hace esta funcion es
+    # Lo que hace esta funcion es
     # 1. ordena de menor a mayor todos los elementos y
     # 2. mira si entre 1 y otro de alguno hay más de 10 elementos (recurda que están ordenados de menor a mayor)
     # 3. si existe, cojo las posiciones finales iniciales y reduzco esa diferencia "excesiva" a todas las ys
@@ -187,7 +187,7 @@ def loop_reducir_posiciones_finales_eje_x(posiciones_finales, cambiado):
 
 def reducir_posiciones_finales_eje_x(posiciones_finales):
     posiciones_finales = posiciones_finales.copy()
-    # TODO lo que hace esta funcion es
+    # Lo que hace esta funcion es
     # 1. ordena de menor a mayor todos los elementos y
     # 2. mira si entre 1 y otro de alguno hay más de 10 elementos (recurda que están ordenados de menor a mayor)
     # 3. si existe, cojo las posiciones finales iniciales y reduzco esa diferencia "excesiva" a todas las ys
@@ -322,7 +322,7 @@ def update_palabras_in_matrix(matrix_dim, palabra):
     for y in range(palabra.dimension_y):
         axis_y_loop = axis_y + y - palabra.dimension_y // 2
         matrix_dim[axis_y_loop][axis_x:axis_x + palabra.dimension + palabra.cte_sum_x] = \
-            [palabra.id for x in range(palabra.dimension + 2)]
+            [palabra.id for x in range(palabra.dimension + palabra.cte_sum_x)]
 
     matrix_dim = update_relations_in_matrix_by_pal(matrix_dim, palabra)
     return matrix_dim
@@ -333,6 +333,8 @@ def update_palabras_in_matrix(matrix_dim, palabra):
 
 def represent_list_relations(list_palabras_representadas, list_relaciones, matrix_dim, palabra, position_elems,
                              force_draw=False):
+    if palabra.texto == 'arquitectura y arte':
+        print("Hola")
     refresh_directions(palabra)
     palabra.refresh_subgrafo_completado()
 
@@ -340,13 +342,17 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
     list_dir_to_check = [a for a in list(palabra.dict_posiciones.keys()) if palabra.dict_posiciones.get(a) is not None]
 
     if force_draw:
-        list_dir_pending = [dir1 for dir1 in list_dir_to_check if not palabra.dict_posiciones.get(dir1).subgrafo_completado]
+        list_dir_pending = [
+            dir1 for dir1 in list_dir_to_check
+            if not palabra.dict_posiciones.get(dir1).subgrafo_completado and
+               not palabra.dict_posiciones.get(dir1) == palabra.pal_raiz]
     else:
         # Solo las pendientes
         list_dir_pending = [dir1 for dir1 in list_dir_to_check if not palabra.dict_posiciones.get(dir1).has_been_plotted]
 
     list_rel_pending = []
     while list_dir_pending != []:
+        print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
         # Necesario para refrescar las palabras temporales
         list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra).copy()
         dir_actual = list_dir_pending.pop(0)
@@ -372,9 +378,8 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
             relation.direccion_actual = dir_actual
             relation.pal_tmp.direccion_origen_tmp = dir_actual
 
-            print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
-            if palabra.texto == 'majestuosas y extensas':
-                logger.info("hola")
+            if palabra.texto == 'arquitectura y arte':
+                print("hola")
             ####################################################
             # 3a función (relations) - 2a entrada Word recursive
             logger.info(f"++++++++++++ PalTmp: {relation.pal_tmp.texto} - Rel: {relation.texto}")
@@ -385,7 +390,7 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
 
         if list_palabras_representadas_new is None or position_elems is None or matrix_dim is None:
             logger.info("No se ha podido representar el grafo")
-            list_direcciones_orden = palabra.lista_direcciones_orden
+            list_direcciones_orden = palabra.deprec_lista_direcciones_orden
             list_palabras_representadas_new = []
             list_rel_pending.insert(0, relation)
         else:
@@ -400,7 +405,7 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
 
 def represent_word(matrix_dim, palabra, relation, position_elems):
     logger.info(f"################################ represent_word:::: {palabra.texto}")
-    if palabra.texto == 'océanos y ríos':
+    if palabra.texto == 'Madrid y Córdoba':
         print("hola")
     axis_y, axis_x, matrix_dim = get_next_location(matrix_dim, palabra, relation)
     if axis_y is None or axis_x is None:
@@ -424,6 +429,14 @@ def represent_word(matrix_dim, palabra, relation, position_elems):
     imprimir_matriz(matrix_dim)
     palabra.has_been_plotted = True
     palabra.refresh_subgrafo_completado()
+    if relation is not None and palabra.direccion_origen_tmp is not CENTRO:
+        # obtener de los valores de relation.pal_tmp_opuesta.dict_posiciones la key para el valor "palabra"
+        dir_tmp_origen = list(relation.pal_tmp_opuesta.dict_posiciones.keys())[list(relation.pal_tmp_opuesta.dict_posiciones.values()).index(palabra)]
+        palabra.direccion_origen_tmp = dir_tmp_origen
+        dir_procedencia = OPOSIT_DIR.get(palabra.direccion_origen_tmp)
+        palabra.dict_posiciones.update({dir_procedencia: relation.pal_tmp_opuesta})
+        palabra.direccion_origen_final = dir_tmp_origen
+        palabra.pal_raiz = relation.pal_tmp_opuesta
 
     return matrix_dim, palabra, relation, position_elems
 
@@ -460,8 +473,9 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaci
     list_palabras_representadas = []
 
     aaaaaaaaaaa = palabra.texto
-    if palabra.texto == 'naturaleza':
-        logger.info("hola")
+    logger.info(f"get_position_word_recursive: {palabra.texto}")
+    if palabra.texto == 'arquitectura y arte':
+        print("hola")
 
     draw_relations = not palabra.has_been_plotted_relations
     if not palabra.has_been_plotted and palabra.grafo.palabras_list_ordered_num_rel_pending != [] and \
@@ -593,11 +607,12 @@ def insertar_grafos_aproximados_palabras(list_palabras):
         list_palabras[i].refresh_grafos_aproximados()
 
 
-def remove_relations_without_words(list_relaciones):
+def remove_relations_without_words(list_relaciones, list_palabras):
     # Añadir nodos y aristas
     list_relaciones_to_remove = []
     for relation in list_relaciones:
-        if relation.pal_origen is None or relation.pal_dest is None:
+        if relation.pal_origen is None or relation.pal_dest is None or \
+                relation.pal_origen not in list_palabras or relation.pal_dest not in list_palabras:
             list_relaciones_to_remove.append(relation)
 
     for relation in list_relaciones_to_remove:
@@ -645,7 +660,7 @@ def text_tranformations(list_palabras, list_relaciones):
     list_relaciones = unir_list_all_relaciones(list_relaciones)
     list_palabras, list_relaciones = unir_siglos_annos_all_list(list_palabras, list_relaciones)
     list_relaciones = unir_list_all_relaciones(list_relaciones)
-    list_relaciones = remove_relations_without_words(list_relaciones)
+    list_relaciones = remove_relations_without_words(list_relaciones, list_palabras)
 
     # al final:
     insertar_grafos_aproximados_palabras(list_palabras)
@@ -669,6 +684,7 @@ def text_tranformations(list_palabras, list_relaciones):
 
 
 def generate_graph(texto, list_palabras, list_relaciones):
+    print(f"Numero de palabras: {len(list_palabras)}")
     list_palabras, list_relaciones = text_tranformations(list_palabras, list_relaciones)
 
     # Crear un grafo dirigido

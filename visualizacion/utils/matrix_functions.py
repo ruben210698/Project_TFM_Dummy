@@ -452,6 +452,8 @@ def is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x=0, ampliar=
             return True, matrix
         else:
             return False, matrix
+
+
 def find_better_center_position(matrix_dim, palabra, pos_y_media, pos_x_media):
     # TODO esta va a ser simple. Si el 0,0 esta ocupado, pones el -500, 0. Luego el -1000,0. Y asi sucesivamente,
     # haces una funcion de apliar matriz y ale. Y luego, reduces la matrix y las posiciones y ya está.

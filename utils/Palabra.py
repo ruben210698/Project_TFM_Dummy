@@ -49,7 +49,7 @@ class Palabra:
 
         self.dimension = self.get_dimension(texto)
         self.dimension_y = 1
-        self.cte_sum_x = 5
+        self.cte_sum_x = 2
         self.cte_sum_y = 2
 
         self.has_been_plotted = False
@@ -68,6 +68,7 @@ class Palabra:
         self.numero_grafos = -1
         self.grafos_aproximados = []
         self.direccion_origen_tmp = CENTRO
+        self.direccion_origen_final = CENTRO
         self.lista_direcciones_orden = []
         self.list_palabras_relacionadas_1er_grado = []
         self.list_palabras_relacionadas_2o_grado = []
