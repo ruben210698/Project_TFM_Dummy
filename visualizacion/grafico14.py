@@ -137,8 +137,10 @@ def loop_reducir_posiciones_finales_eje_y(posiciones_finales, cambiado):
     for palabra, posicion in posiciones_finales_loop.items():
         i += 1
         pos_y_actual = posicion[1]
-        if (pos_y_actual - ultima_y_leida) > 5:
-            dim_y_reducir += (pos_y_actual - ultima_y_leida - 5)
+        if (pos_y_actual - ultima_y_leida) > 15: # asi, si hay diferencia de 15, se quita antes la de 15
+            dim_y_reducir += (pos_y_actual - ultima_y_leida - 15)
+        elif (pos_y_actual - ultima_y_leida) > 10:
+            dim_y_reducir += (pos_y_actual - ultima_y_leida - 10)
         if dim_y_reducir > 0:
             nueva_pos_y = pos_y_actual - dim_y_reducir
             posiciones_finales.update({palabra: (posicion[0], nueva_pos_y)})
@@ -357,7 +359,9 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
 
     ####################### Ordenar elementos para que haga primero los conflictivos
     # ahora saco los elementos que tienen relaciones entre si y los coloco los primeros.
-    palabras_relaciones_proximas = palabra.palabras_relaciones_proximas.copy()
+    # es una lista de listas, unir todas ellas en una y quitar duplicados
+    palabras_relaciones_proximas = list(set([a for b in palabra.palabras_relaciones_proximas.copy() for a in b]))
+
     for pal_prox in palabras_relaciones_proximas:
         if list_dir_pending != [] and pal_prox in list(palabra.dict_posiciones.values()):
             dir_tmp_prox = list(palabra.dict_posiciones.keys())[list(palabra.dict_posiciones.values()).index(pal_prox)]

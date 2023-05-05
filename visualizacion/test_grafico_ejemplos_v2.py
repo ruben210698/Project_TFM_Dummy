@@ -490,7 +490,7 @@ def test8():
 
 #list_palabras, list_relaciones = test5()
 #list_palabras, list_relaciones = test2()
-list_palabras, list_relaciones = test4()
+list_palabras, list_relaciones = test5()
 generate_graph(texto, list_palabras, list_relaciones)
 
 

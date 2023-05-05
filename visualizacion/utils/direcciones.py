@@ -111,7 +111,7 @@ def encajar_en_dict_direcciones_con_elem_comunes(palabra, elements_comunes, list
 
     list_palabras_pendientes = [a for a in list_all_palabras if a not in palabra.dict_posiciones.values()]
 
-    is_possible = is_possible = list_palabras_pendientes == []  # si son == [], es que ya estan todas representadas
+    is_possible = list_palabras_pendientes == []  # si son == [], es que ya estan todas representadas
     number_to_search = len(list_relaciones_pal) - 1
     list_direcciones_orden = []
     find_dir_generic = DICT_DIR_BY_ORIGEN.get(palabra.direccion_origen_final, [])
