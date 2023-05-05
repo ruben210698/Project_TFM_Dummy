@@ -15,6 +15,7 @@ class Relacion:
 
     def __init__(self, texto, pal_origen, pal_dest, position_doc=9999, lugar_sintactico="", importancia = None, id=None,
                  tipo_morf = None):
+        self.delete = False
         self.texto = self.limpiar_texto(texto)
         self.pal_origen = pal_origen
         self.pal_dest = pal_dest
@@ -87,6 +88,7 @@ class Relacion:
         else:
             return "list_relaciones.append(Relacion('" + self.texto + "', " + f"Palabra.palabras_dict.get('{self.pal_origen.txt_lema}-{self.pal_origen.position_doc}') " + ", " +  f"Palabra.palabras_dict.get('{self.pal_dest.txt_lema}-{self.pal_dest.position_doc}')" + f", position_doc={self.position_doc} "+", lugar_sintactico='" + self.lugar_sintactico + f"', importancia = {self.importancia}" + ", id=" + str(self.id) + "))"
     def delete_relation(self):
+        self.delete = True
         try:
             if Palabra.relaciones_dict_origen.get(self.pal_origen) is not None:
                 Palabra.relaciones_dict_origen[self.pal_origen].remove(self)

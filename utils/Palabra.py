@@ -178,6 +178,14 @@ class Palabra:
         except Exception as _:
             return 0
 
+    @staticmethod
+    def refresh_relaciones_dict(list_relaciones):
+        for key in Palabra.relaciones_dict_origen.keys():
+            relaciones_dict_origen = Palabra.relaciones_dict_origen[key].copy()
+            for rel in relaciones_dict_origen:
+                if rel not in list_relaciones:
+                    rel.delete_relation()
+
     def refresh_grafos_aproximados(self):
         try:
             self.grafos_aproximados = []

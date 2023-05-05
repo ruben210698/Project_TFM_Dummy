@@ -695,6 +695,7 @@ def text_tranformations(list_palabras, list_relaciones):
     list_relaciones = remove_relations_without_words(list_relaciones, list_palabras)
 
     # al final:
+    Palabra.refresh_relaciones_dict(list_relaciones)
     insertar_grafos_aproximados_palabras(list_palabras)
     truncate_a_8_relaciones(list_palabras)
     insertar_grafos_aproximados_palabras(list_palabras)

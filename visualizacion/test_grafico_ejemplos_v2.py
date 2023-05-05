@@ -452,6 +452,7 @@ def test7():
 def test8():
     list_palabras= []
     list_relaciones= []
+    texto = "Mi perro es un golden retriever de tres años que adora jugar con su pelota en el parque y siempre me da la bienvenida moviendo la cola cuando llego a casa."
     list_palabras.append(Palabra('perro', 'PROPN', 'nsubj', 10, 1003, 0, False, 'perro', 3))
     list_palabras.append(Palabra('es', 'AUX', 'cop', 11, 1009, 0, False, 'ser', 9))
     list_palabras.append(Palabra('tres', 'NUM', 'nummod', 12, 1035, 0, False, 'tres', 35))
@@ -490,7 +491,7 @@ def test8():
 
 #list_palabras, list_relaciones = test5()
 #list_palabras, list_relaciones = test2()
-list_palabras, list_relaciones = test5()
+list_palabras, list_relaciones = test4()
 generate_graph(texto, list_palabras, list_relaciones)
 
 

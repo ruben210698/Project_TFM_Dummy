@@ -29,6 +29,7 @@ def truncate_a_8_relaciones(list_palabras):
         logger.info(pal.numero_grafos)
         logger.info(pal.texto)
         if pal.numero_grafos > 8:
+
             raise Exception("Hay mas de 8 relaciones")
 
     return list_palabras
