@@ -222,45 +222,46 @@ class Palabra:
                 self.palabras_relaciones_proximas.append(new_rel)
 
         # aqui tengo que quitar todos los duplicados y todas las que son de 2 pero hay otra lista mayor de 3 con lo mismo
-        if len(self.palabras_relaciones_proximas)>=2:
-            i = 1
-            new_palabras_relaciones_proximas = self.palabras_relaciones_proximas.copy()
-            for elem in self.palabras_relaciones_proximas:
-                for elem2 in self.palabras_relaciones_proximas[i:]:
-                    same_elem = False
-                    if len(elem) == len(elem2):
-                        # toda palabra dentro de elem esta en elem2
-                        # [True for pal1 in elem if pal1 in elem2 else False]
-                        same_elem = all([True if pal1 in elem2 else False for pal1 in elem])
-                        same_elem = same_elem and all([True if pal2 in elem else False for pal2 in elem2])
-                        if same_elem and elem2 in new_palabras_relaciones_proximas:
-                            new_palabras_relaciones_proximas.remove(elem2)
-                    if len(elem) > len(elem2):
-                        same_elem = all([True if pal2 in elem else False for pal2 in elem2])
-                        if same_elem and elem2 in new_palabras_relaciones_proximas:
-                            new_palabras_relaciones_proximas.remove(elem2)
-                i += 1
-            self.palabras_relaciones_proximas = new_palabras_relaciones_proximas
-        if len(self.palabras_relaciones_proximas) >= 2:
-            i = 1
-            new_palabras_relaciones_proximas = self.palabras_relaciones_proximas.copy()
-            #recorrer la lista al reves:
-            for elem in self.palabras_relaciones_proximas[::-1]:
-                list_reverse = self.palabras_relaciones_proximas[::-1]
-                for elem2 in list_reverse[i:]:
-                    same_elem = False
-                    if len(elem) == len(elem2):
-                        # toda palabra dentro de elem esta en elem2
-                        same_elem = all([True if pal1 in elem2 else False for pal1 in elem])
-                        same_elem = same_elem and all([True if pal2 in elem else False for pal2 in elem2])
-                        if same_elem and elem2 in new_palabras_relaciones_proximas:
-                            new_palabras_relaciones_proximas.remove(elem2)
-                    if len(elem) > len(elem2):
-                        same_elem = all([True if pal2 in elem else False for pal2 in elem2])
-                        if same_elem and elem2 in new_palabras_relaciones_proximas:
-                            new_palabras_relaciones_proximas.remove(elem2)
-                i += 1
-            self.palabras_relaciones_proximas = new_palabras_relaciones_proximas
+        # FIXME: quito esta parte, no quiero que se quiten los duplicados, asi lo haré mejor.
+        # if len(self.palabras_relaciones_proximas)>=2:
+        #     i = 1
+        #     new_palabras_relaciones_proximas = self.palabras_relaciones_proximas.copy()
+        #     for elem in self.palabras_relaciones_proximas:
+        #         for elem2 in self.palabras_relaciones_proximas[i:]:
+        #             same_elem = False
+        #             if len(elem) == len(elem2):
+        #                 # toda palabra dentro de elem esta en elem2
+        #                 # [True for pal1 in elem if pal1 in elem2 else False]
+        #                 same_elem = all([True if pal1 in elem2 else False for pal1 in elem])
+        #                 same_elem = same_elem and all([True if pal2 in elem else False for pal2 in elem2])
+        #                 if same_elem and elem2 in new_palabras_relaciones_proximas:
+        #                     new_palabras_relaciones_proximas.remove(elem2)
+        #             if len(elem) > len(elem2):
+        #                 same_elem = all([True if pal2 in elem else False for pal2 in elem2])
+        #                 if same_elem and elem2 in new_palabras_relaciones_proximas:
+        #                     new_palabras_relaciones_proximas.remove(elem2)
+        #         i += 1
+        #     self.palabras_relaciones_proximas = new_palabras_relaciones_proximas
+        # if len(self.palabras_relaciones_proximas) >= 2:
+        #     i = 1
+        #     new_palabras_relaciones_proximas = self.palabras_relaciones_proximas.copy()
+        #     #recorrer la lista al reves:
+        #     for elem in self.palabras_relaciones_proximas[::-1]:
+        #         list_reverse = self.palabras_relaciones_proximas[::-1]
+        #         for elem2 in list_reverse[i:]:
+        #             same_elem = False
+        #             if len(elem) == len(elem2):
+        #                 # toda palabra dentro de elem esta en elem2
+        #                 same_elem = all([True if pal1 in elem2 else False for pal1 in elem])
+        #                 same_elem = same_elem and all([True if pal2 in elem else False for pal2 in elem2])
+        #                 if same_elem and elem2 in new_palabras_relaciones_proximas:
+        #                     new_palabras_relaciones_proximas.remove(elem2)
+        #             if len(elem) > len(elem2):
+        #                 same_elem = all([True if pal2 in elem else False for pal2 in elem2])
+        #                 if same_elem and elem2 in new_palabras_relaciones_proximas:
+        #                     new_palabras_relaciones_proximas.remove(elem2)
+        #         i += 1
+        #     self.palabras_relaciones_proximas = new_palabras_relaciones_proximas
 
         self.list_palabras_relacionadas_1er_grado = list(set(self.list_palabras_relacionadas_1er_grado))
         self.list_palabras_relacionadas_2o_grado = list(set(self.list_palabras_relacionadas_2o_grado))

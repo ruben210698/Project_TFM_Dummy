@@ -449,6 +449,43 @@ def test7():
     return list_palabras, list_relaciones
 
 
+def test8():
+    list_palabras= []
+    list_relaciones= []
+    list_palabras.append(Palabra('perro', 'PROPN', 'nsubj', 10, 1003, 0, False, 'perro', 3))
+    list_palabras.append(Palabra('es', 'AUX', 'cop', 11, 1009, 0, False, 'ser', 9))
+    list_palabras.append(Palabra('tres', 'NUM', 'nummod', 12, 1035, 0, False, 'tres', 35))
+    list_palabras.append(Palabra('años', 'NOUN', 'obl', 13, 1040, 0, False, 'año', 40))
+    list_palabras.append(Palabra('pelota', 'NOUN', 'obl', 14, 1068, 0, False, 'pelota', 68))
+    list_palabras.append(Palabra('parque', 'NOUN', 'obl', 15, 1081, 0, False, 'parque', 81))
+    list_palabras.append(Palabra('bienvenida', 'NOUN', 'obj', 16, 1107, 0, False, 'bienvenida', 107))
+    list_palabras.append(Palabra('cola', 'NOUN', 'obj', 17, 1130, 0, False, 'cola', 130))
+    list_palabras.append(Palabra('llego', 'NOUN', 'advcl', 18, 1142, 0, False, 'llego', 142))
+    list_palabras.append(Palabra('casa', 'NOUN', 'obl', 19, 1150, 0, False, 'casa', 150))
+    list_relaciones.append(Relacion('golden', Palabra.palabras_dict.get('perro-3') , Palabra.palabras_dict.get('ser-9'), position_doc=15 , lugar_sintactico='cop', importancia = 2012, id=-10))
+    list_relaciones.append(Relacion('retriever', Palabra.palabras_dict.get('tres-35') , Palabra.palabras_dict.get('año-40'), position_doc=22 , lugar_sintactico='obl', importancia = 2075, id=-11))
+    list_relaciones.append(Relacion('de', Palabra.palabras_dict.get('tres-35') , Palabra.palabras_dict.get('año-40'), position_doc=32 , lugar_sintactico='obl', importancia = 2075, id=-12))
+    list_relaciones.append(Relacion('que', Palabra.palabras_dict.get('tres-35') , Palabra.palabras_dict.get('año-40'), position_doc=45 , lugar_sintactico='obl', importancia = 2075, id=-13))
+    list_relaciones.append(Relacion('adora', Palabra.palabras_dict.get('tres-35') , Palabra.palabras_dict.get('año-40'), position_doc=49 , lugar_sintactico='obl', importancia = 2075, id=-14))
+    list_relaciones.append(Relacion('jugar', Palabra.palabras_dict.get('pelota-68') , Palabra.palabras_dict.get('parque-81'), position_doc=55 , lugar_sintactico='obl', importancia = 2149, id=-15))
+    list_relaciones.append(Relacion('moviendo', Palabra.palabras_dict.get('cola-130') , Palabra.palabras_dict.get('llego-142'), position_doc=118 , lugar_sintactico='advcl', importancia = 2272, id=-16))
+    list_relaciones.append(Relacion('cuando', Palabra.palabras_dict.get('llego-142') , Palabra.palabras_dict.get('casa-150'), position_doc=135 , lugar_sintactico='obl', importancia = 2292, id=-17))
+    list_relaciones.append(Relacion('a', Palabra.palabras_dict.get('llego-142') , Palabra.palabras_dict.get('casa-150'), position_doc=148 , lugar_sintactico='obl', importancia = 2292, id=-18))
+    list_relaciones.append(Relacion('un', Palabra.palabras_dict.get('ser-9') , Palabra.palabras_dict.get('golden-15'), position_doc=12 , lugar_sintactico='ROOT', importancia = 2024, id=-23))
+    list_relaciones.append(Relacion('y', Palabra.palabras_dict.get('ser-9') , Palabra.palabras_dict.get('golden-15'), position_doc=88 , lugar_sintactico='ROOT', importancia = 2024, id=-35))
+    list_relaciones.append(Relacion('siempre', Palabra.palabras_dict.get('ser-9') , Palabra.palabras_dict.get('golden-15'), position_doc=90 , lugar_sintactico='ROOT', importancia = 2024, id=-38))
+    list_relaciones.append(Relacion('me', Palabra.palabras_dict.get('ser-9') , Palabra.palabras_dict.get('golden-15'), position_doc=98 , lugar_sintactico='ROOT', importancia = 2024, id=-41))
+    list_relaciones.append(Relacion('da', Palabra.palabras_dict.get('ser-9') , Palabra.palabras_dict.get('bienvenida-107'), position_doc=101 , lugar_sintactico='obj', importancia = 2116, id=-44))
+    return list_palabras, list_relaciones
+
+#test1() # 6
+#test2() # 14
+#generate_graph(texto, list_palabras, list_relaciones)
+#test4() # 53
+#test6() # 15
+#test5() # 12
+#test7() # 22
+
 
 #list_palabras, list_relaciones = test5()
 #list_palabras, list_relaciones = test2()

@@ -207,6 +207,8 @@ texto ="La naturaleza es impresionante en su variedad de paisajes, desde montañ
 texto = "El cuerpo humano es una maravilla de la biología, con sus sistemas complejos interconectados, como el sistema nervioso que coordina las funciones del cuerpo y el sistema cardiovascular que mantiene el flujo sanguíneo, así como órganos vitales como el corazón y los pulmones que trabajan juntos para mantenernos vivos."
 #texto = "La educación es fundamental para el desarrollo personal y social, ya que nos proporciona conocimientos y habilidades útiles para enfrentar desafíos cotidianos, así como para comprender y participar activamente en la sociedad y el mundo que nos rodea."
 
+
+texto = "Mi perro es un golden retriever de tres años que adora jugar con su pelota en el parque y siempre me da la bienvenida moviendo la cola cuando llego a casa."
 #spacy_load ="es_core_news_sm"
 #spacy_load = "es_core_news_md
 spacy_load = "es_core_news_lg"

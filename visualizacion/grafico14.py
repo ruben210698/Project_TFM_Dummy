@@ -657,7 +657,14 @@ def generate_graphs_recursive(palabra_origen, list_palabras_copy):
     return list_palabras_copy
 
 
-
+def update_ctes_dim_relaciones_por_num_relaciones(list_palabras):
+    for palabra in list_palabras:
+        num_rel_1er_grado = len(palabra.relations_origen_and_dest)
+        for relacion in palabra.relations_origen_and_dest:
+            cte_sum_y = int((num_rel_1er_grado)*0.5)
+            cte_sum_x = int((num_rel_1er_grado)*0.5)
+            relacion.cte_sum_y = cte_sum_y if relacion.cte_sum_y < cte_sum_y else relacion.cte_sum_y
+            relacion.cte_sum_x = cte_sum_x if relacion.cte_sum_x < cte_sum_x else relacion.cte_sum_x
 
 
 def text_tranformations(list_palabras, list_relaciones):
@@ -681,6 +688,9 @@ def text_tranformations(list_palabras, list_relaciones):
     # el refresh grafo solo lo hace para el 1er grado, pero es suficiente de momento ya que no tenemos todavia la palabra raiz.
     for palabra in list_palabras:
         palabra.refresh_subgrafo_completado()
+    update_ctes_dim_relaciones_por_num_relaciones(list_palabras)
+
+
     # TODO una funcion que a la primera palabra, las relaciones de esa palabra y las palabras de las relaciones las
     # ponga de color rojo, al siguiente nivel, azul, ect. Pero con el orden que da el grafo con relaciones de 1er grado
     #

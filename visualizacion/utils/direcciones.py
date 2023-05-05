@@ -255,14 +255,55 @@ def refresh_directions(palabra):
     ## pal_menor_import = min(list_palabras_pendientes, key=lambda x: x.importancia)
     ######################################################################################################
     # si existe algun elemento de la 1a lista que esta en las otras, lo uno en elementos comunes para saber que deben ir juntos
-    elements_comunes = get_list_elements_comunes(palabras_relaciones_proximas)
+    elements_comunes = deprec_get_list_elements_comunes(palabra, palabras_relaciones_proximas)
 
     encajar_en_dict_direcciones(palabra, list_relaciones_pal, list_all_palabras, elements_comunes)
 
     logger.info("Hola")
 
 
-def get_list_elements_comunes(palabras_relaciones_proximas):
+def deprec_get_list_elements_comunes(palabra, palabras_relaciones_proximas):
+    palabras_relaciones_proximas = palabras_relaciones_proximas.copy()
+    if len(palabras_relaciones_proximas) >= 2:
+        i = 1
+        new_palabras_relaciones_proximas = palabra.palabras_relaciones_proximas.copy()
+        for elem in palabra.palabras_relaciones_proximas:
+            for elem2 in palabra.palabras_relaciones_proximas[i:]:
+                same_elem = False
+                if len(elem) == len(elem2):
+                    # toda palabra dentro de elem esta en elem2
+                    # [True for pal1 in elem if pal1 in elem2 else False]
+                    same_elem = all([True if pal1 in elem2 else False for pal1 in elem])
+                    same_elem = same_elem and all([True if pal2 in elem else False for pal2 in elem2])
+                    if same_elem and elem2 in new_palabras_relaciones_proximas:
+                        new_palabras_relaciones_proximas.remove(elem2)
+                if len(elem) > len(elem2):
+                    same_elem = all([True if pal2 in elem else False for pal2 in elem2])
+                    if same_elem and elem2 in new_palabras_relaciones_proximas:
+                        new_palabras_relaciones_proximas.remove(elem2)
+            i += 1
+        palabras_relaciones_proximas = new_palabras_relaciones_proximas
+    if len(palabras_relaciones_proximas) >= 2:
+        i = 1
+        new_palabras_relaciones_proximas_copy = palabras_relaciones_proximas.copy()
+        #recorrer la lista al reves:
+        for elem in palabras_relaciones_proximas[::-1]:
+            list_reverse = palabras_relaciones_proximas[::-1]
+            for elem2 in list_reverse[i:]:
+                same_elem = False
+                if len(elem) == len(elem2):
+                    # toda palabra dentro de elem esta en elem2
+                    same_elem = all([True if pal1 in elem2 else False for pal1 in elem])
+                    same_elem = same_elem and all([True if pal2 in elem else False for pal2 in elem2])
+                    if same_elem and elem2 in new_palabras_relaciones_proximas_copy:
+                        new_palabras_relaciones_proximas_copy.remove(elem2)
+                if len(elem) > len(elem2):
+                    same_elem = all([True if pal2 in elem else False for pal2 in elem2])
+                    if same_elem and elem2 in new_palabras_relaciones_proximas_copy:
+                        new_palabras_relaciones_proximas_copy.remove(elem2)
+            i += 1
+        palabras_relaciones_proximas = new_palabras_relaciones_proximas_copy
+
     elements_comunes = []
     if len(palabras_relaciones_proximas) >= 2:
         i = 1
