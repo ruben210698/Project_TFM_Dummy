@@ -681,8 +681,8 @@ def update_ctes_dim_relaciones_por_num_relaciones(list_palabras):
     for palabra in list_palabras:
         num_rel_1er_grado = len(palabra.relations_origen_and_dest)
         for relacion in palabra.relations_origen_and_dest:
-            cte_sum_y = int((num_rel_1er_grado)*0.5)
-            cte_sum_x = int((num_rel_1er_grado)*0.5)
+            cte_sum_y = int((num_rel_1er_grado)*1)
+            cte_sum_x = int((num_rel_1er_grado)*1)
             relacion.cte_sum_y = cte_sum_y if relacion.cte_sum_y < cte_sum_y else relacion.cte_sum_y
             relacion.cte_sum_x = cte_sum_x if relacion.cte_sum_x < cte_sum_x else relacion.cte_sum_x
 
