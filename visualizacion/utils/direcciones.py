@@ -83,6 +83,21 @@ def is_possible_in_dict(palabra, list_pos_to_plot, palabras_ptes_representar):
 
 
 def encajar_en_dict_direcciones(palabra, list_relaciones_pal, list_all_palabras, elements_comunes):
+    # TODO meter que pille el elemento de la izquierda el primero :)
+
+    # TODO: que busque la palabra con menor importancia y la ponga a la izq, si la izq esta vacia
+    ## pal_menor_import = min(list_palabras_pendientes, key=lambda x: x.importancia)
+    # Pero ojo, solo si esta en la linea principal o en posiciones de izquierda, nada de que este a dcha_abajo y ponga
+    # la palabra a la izquierda
+    # Y claro, en caso de que la importancia sea menor que la de la propia palabra, si no, a la dcha
+    list_palabras_pendientes = [a for a in list_all_palabras if a not in palabra.dict_posiciones.values()]
+    if list_palabras_pendientes != []:
+        pal_menor_import = min(list_palabras_pendientes, key=lambda x: x.importancia)
+        if palabra.dict_posiciones.get(DIR_IZQ) is None and \
+                pal_menor_import.importancia < palabra.importancia and \
+                palabra.direccion_origen_final in (CENTRO, DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO):
+            palabra.dict_posiciones[DIR_IZQ] = pal_menor_import
+
     if elements_comunes != []:
         encajar_en_dict_direcciones_con_elem_comunes(palabra, elements_comunes, list_relaciones_pal, list_all_palabras)
 
@@ -119,21 +134,47 @@ def encajar_en_dict_direcciones_con_elem_comunes(palabra, elements_comunes, list
         if len(elem_comun) < 2:
             continue
 
-        if any([elem.has_been_plotted for elem in elem_comun]):
-            #TODO implementar esto, es decir, hay que buscar el elemento representado y construir los otros a partir de este
-            pass
-        dir_1 = list_direcciones_orden.pop(0)
-        find_dir_prox = DICT_PROX_DIR.get(dir_1, [])
-        list_dir_elem_prox = find_dir_prox[len(elem_comun) - 2]
+        pal_representadas = [elem for elem in elem_comun if elem in palabra.dict_posiciones.values()]
+        dir_representadas = []
+        for pal_9 in pal_representadas:
+            dir_representadas.append(
+                list(palabra.dict_posiciones.keys())[list(palabra.dict_posiciones.values()).index(pal_9)])
+
+        if dir_representadas != []:
+            # Esto es que alguno de los elementos ya esta representado o que está a la izq o que ya es un elemento comun de otra lista anterior.
+            if len(elem_comun) > len(find_dir_generic):
+                list_direcciones_orden = find_dir_generic[-1]
+            else:
+                is_found = False
+                find_dir_generic_2 = DICT_PROX_DIR.get(dir_representadas[0], []).copy()
+                while not is_found or find_dir_generic_2 == []:
+                    list_direcciones_orden = find_dir_generic_2.pop(0)
+                    # si todas las dir_representadas estan en list_direcciones_orden, is_found = True
+                    is_found = is_possible_in_dict(palabra, list_direcciones_orden, elem_comun)
+                    is_found = is_found and all([dir_rep in list_direcciones_orden for dir_rep in dir_representadas])
+                    number_to_search += 1
+        # Ahora ya tenemos una lista de direcciones con los elementos comunes juntos, los que ya estaban de antes y
+        # los nuevos.
+
+
+        #dir_1 = list_direcciones_orden.pop(0)
+        #find_dir_prox = DICT_PROX_DIR.get(dir_1, [])
+        #list_dir_elem_prox = find_dir_prox[len(elem_comun) - 2]
         # si todos los elementos en palabra.dict_posiciones son Nulos, True
-        if all([palabra.dict_posiciones.get(elem, None) is None for elem in list_dir_elem_prox]):
+        #if all([palabra.dict_posiciones.get(elem, None) is None for elem in list_dir_elem_prox]):
             # rellena esos elementos con un elem de elem_comun
-            for elem in list_dir_elem_prox:
-                palabra.dict_posiciones[elem] = elem_comun.pop(0)
-                palabra.dict_posiciones[elem].direccion_origen_tmp = elem
-                # si la posicion existe en list_direcciones_orden, la elimina
-                if elem in list_direcciones_orden:
-                    list_direcciones_orden.remove(elem)
+        elem_comun = elem_comun.copy()
+        list_direcciones_orden = list_direcciones_orden.copy()
+        while len(elem_comun) > 0:
+            dir = list_direcciones_orden.pop(0)
+            if palabra.dict_posiciones.get(dir, None) is None:
+                palabra.dict_posiciones[dir] = elem_comun.pop(0)
+                palabra.dict_posiciones[dir].direccion_origen_tmp = dir
+            else:
+                pal_repres = palabra.dict_posiciones.get(dir)
+                if pal_repres in elem_comun:
+                    elem_comun.remove(pal_repres)
+                pal_repres.direccion_origen_tmp = dir
 
 
     for list_pal_rel_prox in palabras_relaciones_proximas:
@@ -238,7 +279,7 @@ def refresh_directions(palabra):
     txt = palabra.texto
     if txt == PAL_DEBUG:
         print('debug')
-    palabras_relaciones_proximas = palabra.palabras_relaciones_proximas.copy()
+
     # Esto crea las palabras temporales, es esencial
     list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra).copy()
     list_all_palabras = [elem.pal_tmp for elem in list_relaciones_pal]
@@ -250,20 +291,16 @@ def refresh_directions(palabra):
                 palabra.dict_posiciones[dir_actual] = pal2
             #pal2.direccion_origen_tmp = dir_actual
 
-
-    # TODO: que busque la palabra con menor importancia y la ponga a la izq, si la izq esta vacia
-    ## pal_menor_import = min(list_palabras_pendientes, key=lambda x: x.importancia)
-    ######################################################################################################
-    # si existe algun elemento de la 1a lista que esta en las otras, lo uno en elementos comunes para saber que deben ir juntos
-    elements_comunes = deprec_get_list_elements_comunes(palabra, palabras_relaciones_proximas)
+    elements_comunes = get_list_elements_comunes(palabra)
 
     encajar_en_dict_direcciones(palabra, list_relaciones_pal, list_all_palabras, elements_comunes)
 
     logger.info("Hola")
 
 
-def deprec_get_list_elements_comunes(palabra, palabras_relaciones_proximas):
-    palabras_relaciones_proximas = palabras_relaciones_proximas.copy()
+def get_list_elements_comunes(palabra):
+    # si existe algun elemento de la 1a lista que esta en las otras, lo uno en elementos comunes para saber que deben ir juntos
+    palabras_relaciones_proximas = palabra.palabras_relaciones_proximas.copy()
     if len(palabras_relaciones_proximas) >= 2:
         i = 1
         new_palabras_relaciones_proximas = palabra.palabras_relaciones_proximas.copy()

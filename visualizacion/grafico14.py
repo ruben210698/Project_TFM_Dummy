@@ -355,6 +355,22 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
         # Solo las pendientes
         list_dir_pending = [dir1 for dir1 in list_dir_to_check if not palabra.dict_posiciones.get(dir1).has_been_plotted]
 
+    ####################### Ordenar elementos para que haga primero los conflictivos
+    # ahora saco los elementos que tienen relaciones entre si y los coloco los primeros.
+    palabras_relaciones_proximas = palabra.palabras_relaciones_proximas.copy()
+    for pal_prox in palabras_relaciones_proximas:
+        if list_dir_pending != [] and pal_prox in list(palabra.dict_posiciones.values()):
+            dir_tmp_prox = list(palabra.dict_posiciones.keys())[list(palabra.dict_posiciones.values()).index(pal_prox)]
+            if dir_tmp_prox in list_dir_pending:
+                list_dir_pending.remove(dir_tmp_prox)
+                list_dir_pending.insert(0, dir_tmp_prox)
+    # Y ponemos en primera posicion la palabra con menor importancia:
+    pal_izq = palabra.dict_posiciones.get(DIR_IZQ)
+    if pal_izq is not None and list_dir_pending != [] and DIR_IZQ in list_dir_pending:
+        list_dir_pending.remove(DIR_IZQ)
+        list_dir_pending.insert(0, DIR_IZQ)
+    #######################
+
     list_rel_pending = []
     while list_dir_pending != []:
         # Necesario para refrescar las palabras temporales

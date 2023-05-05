@@ -480,16 +480,17 @@ def test8():
 
 #test1() # 6
 #test2() # 14
-#generate_graph(texto, list_palabras, list_relaciones)
-#test4() # 53
-#test6() # 15
+#test3() # 16
+#test4() # 53++
 #test5() # 12
+#test6() # 15
 #test7() # 22
+#test8() # 10
 
 
 #list_palabras, list_relaciones = test5()
 #list_palabras, list_relaciones = test2()
-list_palabras, list_relaciones = test5()
+list_palabras, list_relaciones = test4()
 generate_graph(texto, list_palabras, list_relaciones)
 
 
