@@ -37,6 +37,7 @@ from utils.logger import FORMAT_1, create_logger
 
 PAL_DEBUG = 'América y anexión'
 PAL_DEBUG = os.getenv('PAL_DEBUG', '')
+ZOOM_ACTIVE = eval(os.getenv('ZOOM_ACTIVE', 'True'))
 create_logger()
 
 logger = logging.getLogger(__name__)
@@ -925,12 +926,14 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
     dif_y = abs(max_axis_y - min_axis_y)//2 - abs(max_axis_y - min_axis_y)//5
     dif_x = abs(max_axis_x - min_axis_x)//2 - abs(max_axis_x - min_axis_x)//5
 
-
     #fig, ax = plt.subplots(figsize=(24, 16))
     #fig, ax = plt.subplots()
-
-    list_palabras_zoom, list_relaciones_zoom = \
-        get_lists_zoom_palabras(list_palabras, list_relaciones, position_elems, matrix_dim)
+    if ZOOM_ACTIVE:
+        list_palabras_zoom, list_relaciones_zoom = \
+            get_lists_zoom_palabras(list_palabras, list_relaciones, position_elems, matrix_dim)
+    else:
+        list_palabras_zoom = [list_palabras]
+        list_relaciones_zoom = [list_relaciones]
 
     fig = None
     # borrar la carpeta img_save/ y crearla de nuevo
@@ -1083,7 +1086,7 @@ def draw_all_edges(ax, list_relaciones, position_elems, matrix_dim):
 def draw_all_nodes(ax, position_elems, list_palabras):
     for pal, (x, y) in position_elems.items():
         node_text = pal.texto
-        if pal not in list_palabras:
+        if ZOOM_ACTIVE and pal not in list_palabras:
             continue
         logger.info(pal.texto)
         if pal.lugar_sintactico.lower() in (TYPE_SINTAX_ROOT):

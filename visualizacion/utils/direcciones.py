@@ -111,6 +111,7 @@ def encajar_en_dict_direcciones_con_elem_comunes(palabra, elements_comunes, list
 
     list_palabras_pendientes = [a for a in list_all_palabras if a not in palabra.dict_posiciones.values()]
 
+
     is_possible = list_palabras_pendientes == []  # si son == [], es que ya estan todas representadas
     number_to_search = len(list_relaciones_pal) - 1
     list_direcciones_orden = []
@@ -141,6 +142,9 @@ def encajar_en_dict_direcciones_con_elem_comunes(palabra, elements_comunes, list
             dir_representadas.append(
                 list(palabra.dict_posiciones.keys())[list(palabra.dict_posiciones.values()).index(pal_9)])
 
+        if len(pal_representadas) == len(elem_comun):
+            continue
+
         if dir_representadas != []:
             # Esto es que alguno de los elementos ya esta representado o que está a la izq o que ya es un elemento comun de otra lista anterior.
             if len(elem_comun) > len(find_dir_generic):
@@ -159,6 +163,8 @@ def encajar_en_dict_direcciones_con_elem_comunes(palabra, elements_comunes, list
         elem_comun = elem_comun.copy()
         list_direcciones_orden = list_direcciones_orden.copy()
         while len(elem_comun) > 0:
+            if list_direcciones_orden == []:
+                break
             dir = list_direcciones_orden.pop(0)
             if palabra.dict_posiciones.get(dir, None) is None:
                 palabra.dict_posiciones[dir] = elem_comun.pop(0)
@@ -169,54 +175,50 @@ def encajar_en_dict_direcciones_con_elem_comunes(palabra, elements_comunes, list
                     elem_comun.remove(pal_repres)
                 pal_repres.direccion_origen_tmp = dir
 
-
+    palabras_relaciones_proximas.sort(key=lambda x: len(x), reverse=False)
     for list_pal_rel_prox in palabras_relaciones_proximas:
-        # quitar todas las palabras que has_been_plotted
-        list_pal_rel_prox = [elem for elem in list_pal_rel_prox if not elem.has_been_plotted]
-        elemes_com = []
-        # comprueba si dentro de esa lista existe alguna palabra en dict_posiciones
-        # obtengo una lista de todos los valores no nulos de dict_posiciones
-        # si alguno de los elementos de list_pal_rel_prox esta en dict_posiciones, True
-        pos_elems_comunes = [elem in [a for a in list(palabra.dict_posiciones.values()) if a is not None]
-                            for elem in list_pal_rel_prox]
-        if any(pos_elems_comunes):
-            # añado todas las posiciones que son True en elemn_comun
-            elemes_com = [list_pal_rel_prox[i] for i, x in enumerate(pos_elems_comunes) if x]
+        #######################################################################################################
+        #######################################################################################################
+        #######################################################################################################
+        pal_representadas = [elem for elem in list_pal_rel_prox if elem in palabra.dict_posiciones.values()]
+        dir_representadas = []
+        for pal_9 in pal_representadas:
+            dir_representadas.append(list(palabra.dict_posiciones.keys())[list(palabra.dict_posiciones.values()).index(pal_9)])
+        pal_ptes_representar = [elem for elem in list_pal_rel_prox if elem not in palabra.dict_posiciones.values()]
 
-        # Aqui obtengo la lista de direcciones siempre y cuando los elementos comunes estén ya guardaditos :)
-        # comprobando que están entre esas direcciones y que tiene la dimension suficiente como para meter mi elemento.
-        list_dir_elem_prox_final = []
-        for i in range(len(DICT_PROX_DIR) - len(list_pal_rel_prox) - 1):
-            # Esto lo que hace es ir buscando posiciones y, si no lo encuentra, a buscar con un grado de proximidad mayor
-            # y asi sucesivamente hasta encontrar lo que se busca
-            for elem_com in elemes_com:
-                # Los elem_com ya estan representados
-                find_dir_prox = DICT_PROX_DIR.get(elem_com.direccion_origen_tmp, [])
-                print("Aqui falla test7")
-                list_dir_elem_prox = find_dir_prox[i + len(list_pal_rel_prox) - 2].copy()
-                # si todos los elemes_com tienen direccion_origen dentro de la lista_dir_elem_prox, True
-                if all([elem.direccion_origen_tmp in list_dir_elem_prox for elem in elemes_com]):
-                    # Bien, los elementos comunes que quiero están representados.
-                    # ahora debo comprobar si las posiciones restantes estan a None:
-                    list_elems_dir = [elem for elem in list(palabra.dict_posiciones.keys()) if elem in list_dir_elem_prox]
-                    # dime el numero de Trues que hay
-                    num_trues = sum([palabra.dict_posiciones.get(key, None) is None for key in list_elems_dir])
-                    if num_trues >= len(list_pal_rel_prox) - len(elemes_com):
-                        # si esto es mayor, es que si cabe :)
-                        list_dir_elem_prox_final = list_dir_elem_prox.copy()
-                        # restar una lista a otra
-                        list_pal_rel_prox = [a for a in list_pal_rel_prox if a not in elemes_com]
-                        for pos in list_dir_elem_prox_final:
-                            if palabra.dict_posiciones.get(pos, None) is None and list_pal_rel_prox != []:
-                                palabra.dict_posiciones[pos] = list_pal_rel_prox.pop(0)
-                                palabra.dict_posiciones[pos].direccion_origen_tmp = pos
+        if pal_ptes_representar == []:
+            continue
+        if dir_representadas != []:
+            # Esto es que alguno de los elementos ya esta representado o que está a la izq o que ya es un elemento comun de otra lista anterior.
+            if len(list_pal_rel_prox) > len(find_dir_generic):
+                list_direcciones_orden = find_dir_generic[-1]
+            else:
+                is_found = False
+                find_dir_generic_2 = DICT_PROX_DIR.get(dir_representadas[0], []).copy()
+                while not is_found or find_dir_generic_2 == []:
+                    list_direcciones_orden = find_dir_generic_2.pop(0)
+                    # si todas las dir_representadas estan en list_direcciones_orden, is_found = True
+                    is_found = is_possible_in_dict(palabra, list_direcciones_orden, pal_ptes_representar)
+                    is_found = is_found and all([dir_rep in list_direcciones_orden for dir_rep in dir_representadas])
+                    number_to_search += 1
 
-                else:
-                    continue
-                if len(list_dir_elem_prox_final) > 0:
-                    break
-            if len(list_dir_elem_prox_final) > 0:
+        # Ahora ya tenemos una lista de direcciones con los elementos comunes juntos, los que ya estaban de antes y
+        # los nuevos.
+        pal_ptes_representar = pal_ptes_representar.copy()
+        list_direcciones_orden = list_direcciones_orden.copy()
+        while len(pal_ptes_representar) > 0:
+            if list_direcciones_orden == []:
                 break
+            dir = list_direcciones_orden.pop(0)
+            if palabra.dict_posiciones.get(dir, None) is None:
+                palabra.dict_posiciones[dir] = pal_ptes_representar.pop(0)
+                palabra.dict_posiciones[dir].direccion_origen_tmp = dir
+            else:
+                pal_repres = palabra.dict_posiciones.get(dir)
+                if pal_repres in pal_ptes_representar:
+                    pal_ptes_representar.remove(pal_repres)
+                pal_repres.direccion_origen_tmp = dir
+
     ###################################################################################################################
 
 
