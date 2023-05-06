@@ -209,6 +209,11 @@ texto = "El cuerpo humano es una maravilla de la biología, con sus sistemas com
 
 
 texto = "Mi perro es un golden retriever de tres años que adora jugar con su pelota en el parque y siempre me da la bienvenida moviendo la cola cuando llego a casa."
+texto = "El sol brilla en el cielo azul los pájaros cantan en los árboles verdes el viento sopla suavemente a través de las hojas en el campo las vacas pastan tranquilamente en la ciudad la gente camina apresurada por las calles en el mar los barcos navegan en aguas cristalinas en todas partes la naturaleza sigue su curso y el mundo sigue girando."
+texto = "La vida es como un viaje en el que cada uno elige su propio camino a veces es fácil otras veces es difícil hay momentos de alegría y momentos de tristeza pero sin importar qué tan difícil sea el camino siempre hay algo que aprender cada experiencia buena o mala nos ayuda a crecer y a ser más fuertes la naturaleza nos rodea y nos regala su belleza y su sabiduría hay que aprender a apreciarla y cuidarla al final del camino lo importante no es lo que hayamos acumulado sino las personas que hayamos tocado y las huellas que hayamos dejado en el mundo."
+texto = "Mi novia tiene una toalla de hospital para su perro"
+texto = "Isthar come paja en el pajar mientras Jasper le mira mientras Tina caza palomas para cenar"
+
 #spacy_load ="es_core_news_sm"
 #spacy_load = "es_core_news_md
 spacy_load = "es_core_news_lg"

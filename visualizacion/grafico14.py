@@ -1,5 +1,6 @@
 import math
 import random
+import shutil
 import time
 import os
 
@@ -850,6 +851,65 @@ def print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, fina
     if PRINT_IMG or final:
         return _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
 
+
+def get_relations_from_list_words(list_relaciones_all, list_palabras_custom):
+    # Añadir nodos y aristas
+    list_relaciones = list_relaciones_all.copy()
+    list_relaciones_to_remove = []
+    for relation in list_relaciones_all:
+        if relation.pal_origen is None or relation.pal_dest is None or \
+                relation.pal_origen not in list_palabras_custom or relation.pal_dest not in list_palabras_custom:
+            list_relaciones_to_remove.append(relation)
+
+    for relation in list_relaciones_to_remove:
+        list_relaciones.remove(relation)
+
+    return list_relaciones
+
+def get_lists_zoom_palabras(list_palabras, list_relaciones, position_elems, matrix_dim):
+    list_palabras = list_palabras.copy()
+    list_relaciones_all = list_relaciones.copy()
+    position_elems = position_elems.copy()
+    matrix_dim = matrix_dim.copy()
+    list_palabras_zoom = []
+    list_relaciones_zoom = []
+
+    # de todas las palabras que hay en list_palabras, cuantos grafos diferentes hay
+    list_grafos = list(set([a.grafo for a in list_palabras]))
+    list_grafos.sort(key=lambda x: x.id, reverse=False)
+
+    # Primero se crean nuevas listas por grafo, y después, dentro del grafo, por importancia y por palabras proximas:
+
+    list_pal_grafo_anterior = []
+    for grafo in list_grafos:
+        list_pal = grafo.palabras_list.copy()
+        list_pal.sort(key=lambda x: x.importancia, reverse=False)
+        limit_count_pal = [3, 7, 12, 20, 30, 40, 50, 999]
+        for limit in limit_count_pal:
+            new_list_pal = list_pal_grafo_anterior.copy()
+            count_pal = 0
+            for pal in list_pal:
+                # continuo en linea recta con un minimo de 3 palabras hasta que encuentre la siguiente palabra de mayor importancia fuera de la linea recta
+                if count_pal < limit:
+                    new_list_pal.append(pal)
+                else:
+                    # Si la siguiente palabra con mayor importancia esta a izq o dcha
+                    if pal.dict_posiciones[DIR_IZQ] == pal or pal.dict_posiciones[DIR_DCHA] == pal:
+                        new_list_pal.append(pal)
+                    else:
+                        break
+                count_pal += 1
+            list_palabras_zoom.append(new_list_pal)
+            if len(new_list_pal) == len(list_pal):
+                break
+        list_pal_grafo_anterior = list_pal.copy()
+
+    for list_palabras_custom in list_palabras_zoom:
+        list_relaciones_new = get_relations_from_list_words(list_relaciones_all, list_palabras_custom)
+        list_relaciones_zoom.append(list_relaciones_new)
+
+    return list_palabras_zoom, list_relaciones_zoom
+
 def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
     position_elems = position_elems.copy()
 
@@ -865,27 +925,42 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
     dif_y = abs(max_axis_y - min_axis_y)//2 - abs(max_axis_y - min_axis_y)//5
     dif_x = abs(max_axis_x - min_axis_x)//2 - abs(max_axis_x - min_axis_x)//5
 
-    fig, ax = plt.subplots(figsize=(dif_x, dif_y))
+
     #fig, ax = plt.subplots(figsize=(24, 16))
     #fig, ax = plt.subplots()
 
-    # Dibujar nodos
-    draw_all_nodes(ax, position_elems)
+    list_palabras_zoom, list_relaciones_zoom = \
+        get_lists_zoom_palabras(list_palabras, list_relaciones, position_elems, matrix_dim)
 
-    # Dibujar aristas
-    draw_all_edges(ax, list_relaciones, position_elems, matrix_dim)
+    fig = None
+    # borrar la carpeta img_save/ y crearla de nuevo
+    if os.path.exists("img_save"):
+        shutil.rmtree("img_save")
+    os.mkdir("img_save")
 
-    # draw_edge(ax, position_elems_deprec["ruben"], position_elems_deprec["pescado"], color=light_blue, label='come', label_offset=(0, 0.1))
-    # draw_edge(ax, position_elems_deprec["pescado"], position_elems_deprec["restaurante"], color=light_blue, label='en', label_offset=(0, 0.1))
-    # draw_edge(ax, position_elems_deprec["restaurante"], position_elems_deprec["pepe"], color=green, label='de', label_offset=(0, 0.1))
+    for i in range(len(list_palabras_zoom)):
+        list_palabras = list_palabras_zoom[i]
+        list_relaciones = list_relaciones_zoom[i]
 
-    # Configurar límites y aspecto del gráfico
-    ax.set_ylim(min_axis_y, max_axis_y)
-    ax.set_xlim(min_axis_x, max_axis_x)
-    ax.set_aspect('equal')
-    ax.axis('on')
+        fig, ax = plt.subplots(figsize=(dif_x, dif_y))
 
-    plt.show()
+        # Dibujar nodos
+        draw_all_nodes(ax, position_elems, list_palabras)
+
+        # Dibujar aristas
+        draw_all_edges(ax, list_relaciones, position_elems, matrix_dim)
+
+        # Configurar límites y aspecto del gráfico
+        ax.set_ylim(min_axis_y, max_axis_y)
+        ax.set_xlim(min_axis_x, max_axis_x)
+        ax.set_aspect('equal')
+        ax.axis('on')
+
+        # Guardar figura en archivo
+        plt.savefig(f"img_save/FiguraImport{i}")
+
+        plt.show()
+
     return fig
 
 def calcular_direccion_aprox(relation_draw, position_elems):
@@ -1005,9 +1080,11 @@ def draw_all_edges(ax, list_relaciones, position_elems, matrix_dim):
             logger.debug("Error al dibujar la relación " + str(e))
 
 
-def draw_all_nodes(ax, position_elems):
+def draw_all_nodes(ax, position_elems, list_palabras):
     for pal, (x, y) in position_elems.items():
         node_text = pal.texto
+        if pal not in list_palabras:
+            continue
         logger.info(pal.texto)
         if pal.lugar_sintactico.lower() in (TYPE_SINTAX_ROOT):
             pal.figura = FIGURA_ELIPSE

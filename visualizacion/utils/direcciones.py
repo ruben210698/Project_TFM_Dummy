@@ -123,6 +123,7 @@ def encajar_en_dict_direcciones_con_elem_comunes(palabra, elements_comunes, list
             list_direcciones_orden = find_dir_generic[-1]
             is_possible = True
         else:
+            print("Aqui falla test7")
             list_direcciones_orden = find_dir_generic[number_to_search]
             is_possible = is_possible_in_dict(palabra, list_direcciones_orden, palabras_relaciones_proximas)
         number_to_search += 1
@@ -155,14 +156,6 @@ def encajar_en_dict_direcciones_con_elem_comunes(palabra, elements_comunes, list
                     number_to_search += 1
         # Ahora ya tenemos una lista de direcciones con los elementos comunes juntos, los que ya estaban de antes y
         # los nuevos.
-
-
-        #dir_1 = list_direcciones_orden.pop(0)
-        #find_dir_prox = DICT_PROX_DIR.get(dir_1, [])
-        #list_dir_elem_prox = find_dir_prox[len(elem_comun) - 2]
-        # si todos los elementos en palabra.dict_posiciones son Nulos, True
-        #if all([palabra.dict_posiciones.get(elem, None) is None for elem in list_dir_elem_prox]):
-            # rellena esos elementos con un elem de elem_comun
         elem_comun = elem_comun.copy()
         list_direcciones_orden = list_direcciones_orden.copy()
         while len(elem_comun) > 0:
@@ -199,6 +192,7 @@ def encajar_en_dict_direcciones_con_elem_comunes(palabra, elements_comunes, list
             for elem_com in elemes_com:
                 # Los elem_com ya estan representados
                 find_dir_prox = DICT_PROX_DIR.get(elem_com.direccion_origen_tmp, [])
+                print("Aqui falla test7")
                 list_dir_elem_prox = find_dir_prox[i + len(list_pal_rel_prox) - 2].copy()
                 # si todos los elemes_com tienen direccion_origen dentro de la lista_dir_elem_prox, True
                 if all([elem.direccion_origen_tmp in list_dir_elem_prox for elem in elemes_com]):
