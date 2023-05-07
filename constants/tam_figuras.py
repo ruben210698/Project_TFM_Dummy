@@ -1,3 +1,4 @@
-ELIPSE = (0.3, 2)
-RECTANGULO = (0.25, 0.5)
+#
+ELIPSE = (0.7, 0.7)
+RECTANGULO = (0.7, 0.7)
 HEXAGONO = (0.35, 0.35)

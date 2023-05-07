@@ -3,7 +3,7 @@ import re
 
 from utils.Palabra import Palabra
 from constants.direcciones_relaciones import CENTRO
-
+import matplotlib.pyplot as plt
 
 
 
@@ -25,6 +25,7 @@ class Relacion:
         self.pal_tmp_opuesta = None
         self.lugar_sintactico = lugar_sintactico
         self.tam_text = self.get_tam_texto(texto)
+        self.tam_text_real = self.get_tam_texto_real()
         self.cte_sum_x = 1
         self.cte_sum_y = 1
         self.id = id if id is not None else self.generar_id()
@@ -69,8 +70,24 @@ class Relacion:
     @staticmethod
     def get_tam_texto(texto):
         # Método que calcula la dimensión dependiendo del tamaño de la palabra
-        return len(texto) - len(texto) // 4 if len(texto) > 2 else 2
+        return len(texto) - len(texto) // 3 if len(texto) > 2 else 2
         #return len(texto)//2 if len(texto) > 2 else 2
+
+
+    def get_tam_texto_real(self, ax = None):
+        if ax is None:
+            return len(self.texto) / 3
+        else:
+            texto = self.texto
+            fontname = 'Times New Roman'
+            fontsize = 15
+            texto_obj = ax.text(0, 0, texto, fontname=fontname, fontsize=fontsize)
+            bbox = texto_obj.get_window_extent()
+            ancho = bbox.width / fontsize
+            altura = bbox.height / fontsize
+            return ancho
+
+
 
     def add_rel_dest(self, palabra_dest):
         Palabra.relaciones_dict_destino[self.pal_dest].append(palabra_dest)

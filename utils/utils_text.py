@@ -113,7 +113,7 @@ def unir_palabras_sin_relacion(pal1, pal2, list_relaciones, list_palabras, texto
         pal1.position_doc = pal2.position_doc
 
     pal1.importancia = min(pal1.importancia, pal2.importancia)
-    pal1.dimension = Palabra.get_dimension(pal1.texto)
+    pal1.dimension_x = Palabra.get_dimension(pal1.texto)
     pal2.delete_palabra()
     # guarda todas las relaciones menos las de la pal1 y pal2 respectivamente
     if pal2 in list_palabras:
@@ -169,7 +169,7 @@ def unir_palabras(pal1, pal2, list_relaciones, list_palabras):
         pal1.position_doc = pal2.position_doc
 
     pal1.importancia = min(pal1.importancia, pal2.importancia)
-    pal1.dimension = Palabra.get_dimension(pal1.texto)
+    pal1.dimension_x = Palabra.get_dimension(pal1.texto)
     pal2.delete_palabra()
     # guarda todas las relaciones menos las de la pal1 y pal2 respectivamente
     list_palabras.remove(pal2)

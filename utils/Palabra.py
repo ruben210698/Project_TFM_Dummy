@@ -47,7 +47,7 @@ class Palabra:
             self.importancia = importancia
         self.num_relaciones = num_relaciones
 
-        self.dimension = self.get_dimension(texto)
+        self.dimension_x = self.get_dimension(texto)
         self.dimension_y = 1
         self.cte_sum_x = 2
         self.cte_sum_y = 2
@@ -56,8 +56,8 @@ class Palabra:
         self.has_been_plotted_relations = False
         self.position_doc = position_doc
         self.figura = None
-        self.multiplicador_borde_figura = None
-        self.tam_eje_y_figura = None
+        self.tam_eje_x_figura = self.dimension_x
+        self.tam_eje_y_figura = self.dimension_y
         self.pos_x = None
         self.pos_y = None
 
@@ -170,6 +170,7 @@ class Palabra:
         # FIXME
         #self.dimension_y = len(self.list_texto_enumeracion) * 3 + 2
         self.dimension_y = 1
+        self.tam_eje_y_figura = 1
 
     @staticmethod
     def _get_dim_relation_tree(relation):
@@ -271,9 +272,15 @@ class Palabra:
         #         i += 1
         #     self.palabras_relaciones_proximas = new_palabras_relaciones_proximas
 
+        self.list_palabras_relacionadas_1er_grado = [pal for pal in self.list_palabras_relacionadas_1er_grado if pal != self]
         self.list_palabras_relacionadas_1er_grado = list(set(self.list_palabras_relacionadas_1er_grado))
+        self.list_palabras_relacionadas_2o_grado = [pal for pal in self.list_palabras_relacionadas_2o_grado if pal != self]
         self.list_palabras_relacionadas_2o_grado = list(set(self.list_palabras_relacionadas_2o_grado))
+        self.list_palabras_relacionadas_dest_1er_grado = [pal for pal in self.list_palabras_relacionadas_dest_1er_grado if
+                                                    pal != self]
         self.list_palabras_relacionadas_dest_1er_grado = list(set(self.list_palabras_relacionadas_dest_1er_grado))
+        self.list_palabras_relacionadas_dest_2o_grado = [pal for pal in self.list_palabras_relacionadas_dest_2o_grado if
+                                                          pal != self]
         self.list_palabras_relacionadas_dest_2o_grado = list(set(self.list_palabras_relacionadas_dest_2o_grado))
         self.list_all_pal_subgrafo += self.list_palabras_relacionadas_1er_grado
         self.list_all_pal_subgrafo = [pal for pal in list(set(self.list_all_pal_subgrafo)) if pal != self.pal_raiz]
@@ -296,6 +303,8 @@ class Palabra:
                 self.list_palabras_relacionadas_2o_grado.remove(self)
             if self in self.list_palabras_relacionadas_1er_grado:
                 self.list_palabras_relacionadas_1er_grado.remove(self)
+            self.list_palabras_relacionadas_1er_grado = [pal for pal in self.list_palabras_relacionadas_1er_grado if
+                                                         pal != self]
         except Exception as _:
             pass
 
@@ -315,9 +324,17 @@ class Palabra:
                 self.list_palabras_relacionadas_dest_1er_grado.remove(self)
         except Exception as _:
             pass
+        self.list_palabras_relacionadas_1er_grado = [pal for pal in self.list_palabras_relacionadas_1er_grado if
+                                                     pal != self]
         self.list_palabras_relacionadas_1er_grado = list(set(self.list_palabras_relacionadas_1er_grado))
+        self.list_palabras_relacionadas_2o_grado = [pal for pal in self.list_palabras_relacionadas_2o_grado if
+                                                     pal != self]
         self.list_palabras_relacionadas_2o_grado = list(set(self.list_palabras_relacionadas_2o_grado))
+        self.list_palabras_relacionadas_dest_1er_grado = [pal for pal in self.list_palabras_relacionadas_dest_1er_grado if
+                                                     pal != self]
         self.list_palabras_relacionadas_dest_1er_grado = list(set(self.list_palabras_relacionadas_dest_1er_grado))
+        self.list_palabras_relacionadas_dest_2o_grado = [pal for pal in self.list_palabras_relacionadas_dest_2o_grado if
+                                                     pal != self]
         self.list_palabras_relacionadas_dest_2o_grado = list(set(self.list_palabras_relacionadas_dest_2o_grado))
         self.list_all_pal_subgrafo += self.list_palabras_relacionadas_1er_grado
         self.list_all_pal_subgrafo = [pal for pal in list(set(self.list_all_pal_subgrafo)) if pal != self.pal_raiz]

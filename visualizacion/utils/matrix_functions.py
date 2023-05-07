@@ -259,8 +259,9 @@ def get_id_ocupando_relacion_matrix(matrix, y, x):
 
 
 def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False):
+    matrix = matrix.copy()
     if not in_draw and relacion.has_been_plotted:
-       return True, matrix
+       return True, matrix, None
     pos_y_media, pos_x_media = get_pos_media_matrix(matrix)
     if in_draw:
         pal_origen = relacion.pal_origen
@@ -287,7 +288,7 @@ def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False)
     id_dest = relacion.pal_dest.id
 
     if x_origen is None or x_dest is None or y_origen is None or y_dest is None:
-        return True, matrix
+        return True, matrix, None
 
     x_origen = int(x_origen + pos_x_media)
     y_origen = int(y_origen + pos_y_media)
@@ -297,68 +298,68 @@ def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False)
     try:
         if (x_dest - x_origen) == 0 and y_origen < y_dest:  # ARRIBA
             pos_y = y_origen + int(abs((y_dest-y_origen) / 2))
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA,
                                                    MARGIN_RELATION_ARRIBA, ampliar=False, ids_to_skip=ids_to_skip)
-            return is_empty, matrix
+            return is_empty, matrix, id_conflict
 
         if (x_dest - x_origen) == 0 and y_origen > y_dest:  # ABAJO
             pos_y = y_dest + int(abs((y_origen - y_dest) / 2))
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA,
                                                    MARGIN_RELATION_ARRIBA, ampliar=False, ids_to_skip=ids_to_skip)
-            return is_empty, matrix
+            return is_empty, matrix, id_conflict
 
         if (y_dest - y_origen) == 0 and x_origen < x_dest:  # DCHA
             pos_x = x_origen + int(abs((x_dest-x_origen) / 2))
-            is_empty, matrix = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA,
                                                    ampliar=False, ids_to_skip=ids_to_skip)
-            return is_empty, matrix
+            return is_empty, matrix, id_conflict
 
-        if (y_dest - y_origen) == 0 and x_origen < x_dest:  # IZQ
+        if (y_dest - y_origen) == 0 and x_origen > x_dest:  # IZQ
             pos_x = x_dest + int(abs((x_origen - x_dest) / 2))
-            is_empty, matrix = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA,
                                                    ampliar=False, ids_to_skip=ids_to_skip)
-            return is_empty, matrix
+            return is_empty, matrix, id_conflict
 
         # DCHA_ARRIBA
         if x_origen < x_dest:
             pos_y = y_origen + int(abs((y_dest-y_origen) / 2))
             pos_x = x_origen + int(abs((x_dest-x_origen) / 2))
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
                                                    MARGIN_RELATION_DCHA_ARRIBA, ampliar=False, ids_to_skip=ids_to_skip)
-            return is_empty, matrix
+            return is_empty, matrix, id_conflict
 
         # IZQ_ARRIBA
         if x_origen > x_dest and y_origen < y_dest:
             pos_y = y_origen + int(abs((y_dest - y_origen) / 2))
             pos_x = x_dest + int(abs((x_origen - x_dest) / 2))
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
                                                    MARGIN_RELATION_DCHA_ARRIBA, ampliar=False, ids_to_skip=ids_to_skip)
-            return is_empty, matrix
+            return is_empty, matrix, id_conflict
 
         # IZQ_ABAJO
         if x_origen > x_dest and y_origen > y_dest:
             pos_y = y_dest + int(abs((y_origen - y_dest) / 2))
             pos_x = x_dest + int(abs((x_origen - x_dest) / 2))
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
                                                    MARGIN_RELATION_DCHA_ARRIBA, ampliar=False, ids_to_skip=ids_to_skip)
-            return is_empty, matrix
+            return is_empty, matrix, id_conflict
 
         # DCHA_ABAJO
         if x_origen < x_dest and y_origen > y_dest:
             pos_y = y_dest + int(abs((y_origen - y_dest) / 2))
             pos_x = x_origen + int(abs((x_dest - x_origen) / 2))
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
                                                    MARGIN_RELATION_DCHA_ARRIBA, ampliar=False, ids_to_skip=ids_to_skip)
-            return is_empty, matrix
+            return is_empty, matrix, id_conflict
 
 
     except:
         pass
 
     if in_draw:
-        return False, matrix
+        return False, matrix, None
     else:
-        return True, matrix
+        return True, matrix, None
 
 
 
@@ -377,13 +378,13 @@ def _is_elipse_relation(matrix, relacion):
     try:
         if (x_dest - x_origen) == 0:  # ARRIBA O ABAJO
             pos_y = min(y_origen, y_dest) + int((abs(y_origen) + abs(y_dest))/2)
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, pos_y, x_origen, MARGIN_RELATION_ARRIBA,
                                                    MARGIN_RELATION_ARRIBA, ampliar=False)
             return is_empty
 
         if (y_dest - y_origen) == 0:  # DCHA O IZQ
             pos_x = min(x_origen, x_dest) + int((abs(x_origen) + abs(x_dest)) / 2)
-            is_empty, matrix = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, y_origen, pos_x, MARGIN_RELATION_DCHA, MARGIN_RELATION_DCHA,
                                                    ampliar=False)
             return is_empty
 
@@ -391,7 +392,7 @@ def _is_elipse_relation(matrix, relacion):
         if x_origen < x_dest and y_origen < y_dest:
             pos_y = y_origen + int((abs(y_origen) + abs(y_dest)) / 2)
             pos_x = x_origen + int((abs(x_origen) + abs(x_dest)) / 2)
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
                                                    MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
             return is_empty
 
@@ -399,7 +400,7 @@ def _is_elipse_relation(matrix, relacion):
         if x_origen > x_dest and y_origen < y_dest:
             pos_y = y_origen + int((abs(y_origen) + abs(y_dest)) / 2)
             pos_x = x_dest + int((abs(x_origen) + abs(x_dest)) / 2)
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
                                                    MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
             return is_empty
 
@@ -407,7 +408,7 @@ def _is_elipse_relation(matrix, relacion):
         if x_origen > x_dest and y_origen > y_dest:
             pos_y = y_dest + int((abs(y_origen) + abs(y_dest)) / 2)
             pos_x = x_dest + int((abs(x_origen) + abs(x_dest)) / 2)
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
                                                    MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
             return is_empty
 
@@ -415,7 +416,7 @@ def _is_elipse_relation(matrix, relacion):
         if x_origen < x_dest and y_origen > y_dest:
             pos_y = y_dest + int((abs(y_origen) + abs(y_dest)) / 2)
             pos_x = x_origen + int((abs(x_origen) + abs(x_dest)) / 2)
-            is_empty, matrix = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
+            is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
                                                    MARGIN_RELATION_DCHA_ARRIBA, ampliar=False)
             return is_empty
 
@@ -442,16 +443,16 @@ def is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x=0, ampliar=
             for axis_y_loop in range(pos_y, pos_y + dim_y):
                 axis_y = axis_y_loop - dim_y // 2
                 if matrix[axis_y][axis_x] not in ids_to_skip:
-                    return False, matrix
-        return True, matrix
+                    return False, matrix, matrix[axis_y][axis_x] # id
+        return True, matrix, 0
     except:
         if ampliar:
             matrix = ampliar_matriz(matrix)
             # Si se amplia la matriz, es que cabe seguro
             # return is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x)
-            return True, matrix
+            return True, matrix, 0
         else:
-            return False, matrix
+            return False, matrix, 0
 
 
 def find_better_center_position(matrix_dim, palabra, pos_y_media, pos_x_media):
@@ -462,7 +463,7 @@ def find_better_center_position(matrix_dim, palabra, pos_y_media, pos_x_media):
     pos_y = pos_y_media
     # Lo que hace es recorrer de 200 en 200 los elementos.
     for pos_y in range(pos_y_media, -4000, -20):
-        is_empty, matrix_dim = is_empty_pos_matrix(matrix_dim, pos_y, pos_x, dim_y=5, dim_x=10)
+        is_empty, matrix_dim, id_conflict = is_empty_pos_matrix(matrix_dim, pos_y, pos_x, dim_y=5, dim_x=10)
         if is_empty:
             return pos_y, pos_x, matrix_dim
 

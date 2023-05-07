@@ -672,12 +672,12 @@ def test10():
 #test7() # 22
 #test8() # 10
 #test9() # 24
-#test9() # 27
+#test10() # 27
 
 
 #list_palabras, list_relaciones = test5()
 #list_palabras, list_relaciones = test2()
-list_palabras, list_relaciones = test5()
+list_palabras, list_relaciones = test6()
 generate_graph(texto, list_palabras, list_relaciones)
 
 

@@ -74,7 +74,7 @@ def draw_edge(ax, u, v, width=1.0, color='k', label='', label_offset=(0, 0)):
 def get_importance_dict(list_palabras):
     new_dict = {}
     for pal in list_palabras:
-        new_dict[pal] = {"importancia": pal.importancia, "dimension":pal.dimension}
+        new_dict[pal] = {"importancia": pal.importancia, "dimension":pal.dimension_x}
     #ordenar el diccionario por importancia
     new_dict = dict(sorted(new_dict.items(), key=lambda item: item[1]["importancia"]))
     return new_dict
@@ -189,11 +189,11 @@ def get_suggested_position(matrix_dim, palabra):
     if relacion is not None and relacion.direction == DIR_IZQ:
         x = x - 1
     # cabe????
-    for x_test in range(palabra.dimension + 2):
+    for x_test in range(palabra.dimension_x + 2):
         if matrix_dim[y][x_test + x] != id_to_find and matrix_dim[y][x_test + x] != 0:
             imprimir_matriz(matrix_dim)
             matrix_dim[y][x] = 0
-            x = x - palabra.dimension // 2 - 2
+            x = x - palabra.dimension_x // 2 - 2
             matrix_dim[y][x] = id_to_find
             imprimir_matriz(matrix_dim)
             break
@@ -292,10 +292,10 @@ def get_position_dict(list_palabras):
         # obtener la posicion del primer 0 de la lista
         axis_y = pos_y_sugerida
         pos0 = pos_x_sugerida + matrix_dim[axis_y][pos_x_sugerida:].index(id_to_find)
-        pos.update({palabra: (pos0 - palabra.dimension // 2 -pos_x_media , axis_y - pos_y_media)})
+        pos.update({palabra: (pos0 - palabra.dimension_x // 2 - pos_x_media , axis_y - pos_y_media)})
 
         # reemplazar los 0s por 1s para range(value['dimension']+2)
-        matrix_dim[axis_y][pos0:pos0 + palabra.dimension + 2] = [palabra.id for x in range(palabra.dimension + 2)]
+        matrix_dim[axis_y][pos0:pos0 + palabra.dimension_x + 2] = [palabra.id for x in range(palabra.dimension_x + 2)]
 
 
         #if value_import['importancia'] % 2 != 0:
@@ -320,7 +320,7 @@ def get_position_dict(list_palabras):
         added_list_pal_dest = [rel.pal_dest for rel in list_relaciones_pal]
         list_palabras_ordenadas = insert_start_list(list_palabras_ordenadas, added_list_pal_dest)
         for relation in list_relaciones_pal:
-            rel_x, rel_y, direction = get_next_direction(matrix_dim, pos0, pos0 + palabra.dimension + 1, axis_y)
+            rel_x, rel_y, direction = get_next_direction(matrix_dim, pos0, pos0 + palabra.dimension_x + 1, axis_y)
             relation.direction = direction
             if direction == DIR_DCHA:
                 matrix_dim[rel_y][rel_x] = relation.id

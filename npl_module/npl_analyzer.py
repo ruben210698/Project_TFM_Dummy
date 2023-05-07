@@ -214,6 +214,8 @@ texto = "La vida es como un viaje en el que cada uno elige su propio camino a ve
 texto = "Mi novia tiene una toalla de hospital para su perro"
 texto = "Isthar come paja en el pajar mientras Jasper le mira mientras Tina caza palomas para cenar"
 
+texto = "Mañana es domingo, es el día de la madre y no vamos a ir a misa"
+
 #spacy_load ="es_core_news_sm"
 #spacy_load = "es_core_news_md
 spacy_load = "es_core_news_lg"

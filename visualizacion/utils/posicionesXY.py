@@ -85,12 +85,12 @@ def get_pos_dir_dcha(matrix_dim, palabra, relation):
     pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media + int((relation.pal_tmp_opuesta.dimension_x + relation.pal_tmp_opuesta.cte_sum_x)) + (relation.tam_text + relation.cte_sum_x)
 
     for x_loop in range(pos_x, pos_x + RECTA_DISTANCIA_DE_INTENTO_X, 1):
-        is_empty, matrix_dim = is_empty_pos_matrix(
+        is_empty, matrix_dim, id_conflict = is_empty_pos_matrix(
                 matrix_dim, pos_y, x_loop,
                 dim_y=palabra.dimension_y + palabra.cte_sum_y,
                 dim_x=palabra.dimension_x + palabra.cte_sum_x)
         if is_empty:
-            is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
+            is_empty, matrix_dim, id_conflict = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
             if is_empty:
                 return pos_y, x_loop, matrix_dim
 
@@ -112,13 +112,13 @@ def get_pos_dir_arriba(matrix_dim, palabra, relation):
     pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media
 
     for y_loop in range(pos_y, pos_y + RECTA_DISTANCIA_DE_INTENTO_Y, 1):
-        is_empty, matrix_dim = is_empty_pos_matrix(
+        is_empty, matrix_dim, id_conflict = is_empty_pos_matrix(
                 matrix_dim, y_loop, pos_x,
                 dim_y=palabra.dimension_y + palabra.cte_sum_y,
                 dim_x=palabra.dimension_x + palabra.cte_sum_x,
                 margen_x=RECTA_MARGIN)
         if is_empty:
-            is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, y_loop, pos_x, relation)
+            is_empty, matrix_dim, id_conflict = is_empty_relation_in_matrix(matrix_dim, y_loop, pos_x, relation)
             if is_empty:
                 return y_loop, pos_x, matrix_dim
 
@@ -136,13 +136,13 @@ def get_pos_dir_abajo(matrix_dim, palabra, relation):
     pos_x = relation.pal_tmp_opuesta.pos_x + pos_x_media
 
     for y_loop in range(pos_y, pos_y - RECTA_DISTANCIA_DE_INTENTO_Y, -1):
-        is_empty, matrix_dim = is_empty_pos_matrix(
+        is_empty, matrix_dim, id_conflict = is_empty_pos_matrix(
                 matrix_dim, y_loop, pos_x,
                 dim_y=palabra.dimension_y + palabra.cte_sum_y,
                 dim_x=palabra.dimension_x + palabra.cte_sum_x,
                 margen_x=RECTA_MARGIN)  # va a la dcha
         if is_empty:
-            is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, y_loop, pos_x, relation)
+            is_empty, matrix_dim, id_conflict = is_empty_relation_in_matrix(matrix_dim, y_loop, pos_x, relation)
             if is_empty:
                 return y_loop, pos_x, matrix_dim
 
@@ -162,12 +162,12 @@ def get_pos_dir_izq(matrix_dim, palabra, relation):
             (relation.tam_text + relation.cte_sum_x)
 
     for x_loop in range(pos_x, pos_x - RECTA_DISTANCIA_DE_INTENTO_X, -1):
-        is_empty, matrix_dim = is_empty_pos_matrix(
+        is_empty, matrix_dim, id_conflict = is_empty_pos_matrix(
                 matrix_dim, pos_y, x_loop,
                 dim_y=palabra.dimension_y + palabra.cte_sum_y,
                 dim_x=palabra.dimension_x + palabra.cte_sum_x)
         if is_empty:
-            is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
+            is_empty, matrix_dim, id_conflict = is_empty_relation_in_matrix(matrix_dim, pos_y, x_loop, relation)
             if is_empty:
                 return pos_y, x_loop, matrix_dim
 
@@ -202,13 +202,13 @@ def get_pos_dir_dcha_arriba(matrix_dim, palabra, relation):
 
         for y_loop in range(pos_y, pos_y + DIAGONAL_DISTANCIA_DE_INTENTO_Y, 1):
             for x_loop in range(pos_x, pos_x + DIAGONAL_DISTANCIA_DE_INTENTO_X, 1):
-                is_empty, matrix_dim = is_empty_pos_matrix(
+                is_empty, matrix_dim, id_conflict = is_empty_pos_matrix(
                         matrix_dim, y_loop, x_loop,
                         dim_y=palabra.dimension_y + palabra.cte_sum_y,
                         dim_x=palabra.dimension_x + palabra.cte_sum_x,
                         margen_x=DIAGONAL_MARGIN_X)
                 if is_empty:
-                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, y_loop, x_loop, relation)
+                    is_empty, matrix_dim, id_conflict = is_empty_relation_in_matrix(matrix_dim, y_loop, x_loop, relation)
                     if is_empty:
                         return pos_y, x_loop, matrix_dim
 
@@ -228,13 +228,13 @@ def get_pos_dir_dcha_abajo(matrix_dim, palabra, relation):
 
         for y_loop in range(pos_y, pos_y - DIAGONAL_DISTANCIA_DE_INTENTO_Y, -1):
             for x_loop in range(pos_x, pos_x + DIAGONAL_DISTANCIA_DE_INTENTO_X, 1):
-                is_empty, matrix_dim = is_empty_pos_matrix(
+                is_empty, matrix_dim, id_conflict = is_empty_pos_matrix(
                         matrix_dim, y_loop, x_loop,
                         dim_y=palabra.dimension_y + palabra.cte_sum_y,
                         dim_x=palabra.dimension_x + palabra.cte_sum_x,
                         margen_x=DIAGONAL_MARGIN_X)
                 if is_empty:
-                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, y_loop, x_loop, relation)
+                    is_empty, matrix_dim, id_conflict = is_empty_relation_in_matrix(matrix_dim, y_loop, x_loop, relation)
                     if is_empty:
                         return pos_y, x_loop, matrix_dim
 
@@ -254,13 +254,13 @@ def get_pos_dir_izq_abajo(matrix_dim, palabra, relation):
 
         for y_loop in range(pos_y, pos_y - DIAGONAL_DISTANCIA_DE_INTENTO_Y, -1):
             for x_loop in range(pos_x, pos_x - DIAGONAL_DISTANCIA_DE_INTENTO_X, -1):
-                is_empty, matrix_dim = is_empty_pos_matrix(
+                is_empty, matrix_dim, id_conflict = is_empty_pos_matrix(
                         matrix_dim, y_loop, x_loop,
                         dim_y=palabra.dimension_y + palabra.cte_sum_y,
                         dim_x=palabra.dimension_x + palabra.cte_sum_x,
                         margen_x=-DIAGONAL_MARGIN_X)
                 if is_empty:
-                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, y_loop, x_loop, relation)
+                    is_empty, matrix_dim, id_conflict = is_empty_relation_in_matrix(matrix_dim, y_loop, x_loop, relation)
                     if is_empty:
                         return pos_y, x_loop, matrix_dim
 
@@ -279,13 +279,13 @@ def get_pos_dir_izq_arriba(matrix_dim, palabra, relation):
 
         for y_loop in range(pos_y, pos_y + DIAGONAL_DISTANCIA_DE_INTENTO_Y, 1):
             for x_loop in range(pos_x, pos_x - DIAGONAL_DISTANCIA_DE_INTENTO_X, -1):
-                is_empty, matrix_dim = is_empty_pos_matrix(
+                is_empty, matrix_dim, id_conflict = is_empty_pos_matrix(
                         matrix_dim, y_loop, x_loop,
                         dim_y=palabra.dimension_y + palabra.cte_sum_y,
                         dim_x=palabra.dimension_x + palabra.cte_sum_x,
                         margen_x=-DIAGONAL_MARGIN_X)
                 if is_empty:
-                    is_empty, matrix_dim = is_empty_relation_in_matrix(matrix_dim, y_loop, x_loop, relation)
+                    is_empty, matrix_dim, id_conflict = is_empty_relation_in_matrix(matrix_dim, y_loop, x_loop, relation)
                     if is_empty:
                         return pos_y, x_loop, matrix_dim
 
