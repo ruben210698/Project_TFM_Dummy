@@ -85,7 +85,7 @@ class Relacion:
             bbox = texto_obj.get_window_extent()
             ancho = bbox.width / fontsize
             altura = bbox.height / fontsize
-            return ancho
+            return ancho + 1
 
 
 

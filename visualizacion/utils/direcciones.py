@@ -117,7 +117,7 @@ def encajar_en_dict_direcciones_con_elem_comunes(palabra, elements_comunes, list
     list_direcciones_orden = []
     find_dir_generic = DICT_DIR_BY_ORIGEN.get(palabra.direccion_origen_final, [])
     while not is_possible:
-        if len(list_relaciones_pal) > len(find_dir_generic):
+        if len(list_relaciones_pal) > len(find_dir_generic) or number_to_search > len(find_dir_generic) -1:
             # FIXME: en este caso lo ideal seria tener un diccionario secundario que aceptase otras 12 relaciones
             #  este diccionario seria solo con las de dcha_arriba, dcha_abajo, izq_arriba, izq_abajo (trasversales)
             #  (3 por cada direccion) y de esta forma caben todas en el grafo. Pero eso a futuro.
@@ -231,7 +231,7 @@ def encajar_en_dict_direcciones_sin_elem_comunes(palabra, list_relaciones_pal, l
     list_direcciones_orden = []
     find_dir_generic = DICT_DIR_BY_ORIGEN.get(palabra.direccion_origen_final, [])
     while not is_possible:
-        if len(list_relaciones_pal) > len(find_dir_generic):
+        if len(list_relaciones_pal) > len(find_dir_generic) or number_to_search > len(find_dir_generic) -1:
             # FIXME: en este caso lo ideal seria tener un diccionario secundario que aceptase otras 12 relaciones
             #  este diccionario seria solo con las de dcha_arriba, dcha_abajo, izq_arriba, izq_abajo (trasversales)
             #  (3 por cada direccion) y de esta forma caben todas en el grafo. Pero eso a futuro.

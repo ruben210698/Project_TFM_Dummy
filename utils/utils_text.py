@@ -35,23 +35,33 @@ def truncate_a_8_relaciones(list_palabras):
     return list_palabras
 
 
-def unir_2_relaciones(rel1, rel2, remove_rel2=True):
+def unir_2_relaciones(rel1, rel2, remove_rel2=True, sep=" "):
     logger.info("Uniendo relaciones: " + rel1.texto + " y " + rel2.texto)
     if rel1.position_doc <= rel2.position_doc:
-        rel1.texto = rel1.texto + " " + rel2.texto
+        rel1.texto = rel1.texto + sep + rel2.texto
     else:
-        rel1.texto = rel2.texto + " " + rel1.texto
+        rel1.texto = rel2.texto + sep + rel1.texto
         rel1.position_doc = rel2.position_doc
     rel1.importancia = min(rel1.importancia, rel2.importancia)
     rel1.tam_text = Relacion.get_tam_texto(rel1.texto)
     if remove_rel2:
         rel2.delete_relation()
 
+
+def son_pal_rel_contiguas(pal_rel1, pal_rel2):
+    for i in range(2):
+        if pal_rel1.position_doc + len(pal_rel1.texto) + i == pal_rel2.position_doc or \
+            pal_rel2.position_doc + len(pal_rel2.texto) + i == pal_rel1.position_doc:
+            return True
+    return False
+
+
 def unir_list_all_relaciones(list_relaciones, list_modified = []):
     #TODO meter un filtro y si es el mismo texto que no lo una.
 
     # En caso de que 2 relaciones tengan el mismo origen y destino, unirlas
     list_relaciones = list(set(list_relaciones))
+    list_relaciones.sort(key=lambda x: x.position_doc)
     list_relaciones_new = list_relaciones.copy()
     for rel in list_relaciones:
         for rel2 in list_relaciones:
@@ -59,7 +69,10 @@ def unir_list_all_relaciones(list_relaciones, list_modified = []):
                 rel != rel2 and rel.pal_origen == rel2.pal_origen and rel.pal_dest == rel2.pal_dest:
                 logger.info(rel2.position_doc)
                 logger.info(rel.position_doc)
-                unir_2_relaciones(rel, rel2)
+                if son_pal_rel_contiguas(rel, rel2):
+                    unir_2_relaciones(rel, rel2)
+                else:
+                    unir_2_relaciones(rel, rel2, sep=' / ')
                 list_relaciones_new.remove(rel2)
                 list_modified.append(rel)
                 return unir_list_all_relaciones(list_relaciones_new, list_modified)
@@ -125,7 +138,8 @@ def unir_palabras_sin_relacion(pal1, pal2, list_relaciones, list_palabras, texto
 
 def unir_palabras(pal1, pal2, list_relaciones, list_palabras):
     basic_relation = get_relation_entre_pal(pal1, pal2)
-    #TODO if basic_relation == None:
+    if basic_relation == None:
+        return unir_palabras_sin_relacion(pal1, pal2, list_relaciones, list_palabras, texto_entre_palabras="")
 
     # Primero uno todas las relaciones dest en pal1 con las dest pal2, eliminando las comunes y las que hay entre
     # las 2 palabras.
@@ -287,7 +301,8 @@ def unir_conjuncion_y(list_palabras, list_relaciones):
 
     for rel_y in list_rel_y_eliminar:
         rel_y.delete_relation()
-        list_relaciones.remove(rel_y)
+        if rel_y in list_relaciones:
+            list_relaciones.remove(rel_y)
 
     for pal1, pal2 in dict_palabras_juntar.items():
         try:
@@ -297,6 +312,16 @@ def unir_conjuncion_y(list_palabras, list_relaciones):
             logger.info(f"Error al unir palabras: {e}")
 
     return list_palabras, list_relaciones
+
+
+def unir_primera_palabra(list_palabras, list_relaciones):
+    list_palabras_copy = list_palabras.copy()
+    list_palabras_copy.sort(key=lambda x: x.position_doc)
+    if son_pal_rel_contiguas(list_palabras_copy[0], list_palabras_copy[1]):
+        list_relaciones, list_palabras = \
+            unir_palabras(list_palabras_copy[0], list_palabras_copy[1], list_relaciones, list_palabras)
+    return list_palabras, list_relaciones
+
 
 
 

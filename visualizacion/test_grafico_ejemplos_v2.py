@@ -537,7 +537,7 @@ def test9():
     list_relaciones.append(Relacion('en', Palabra.palabras_dict.get('cielo-20') , Palabra.palabras_dict.get('azul-26'), position_doc=14 , lugar_sintactico='amod', importancia = 2046, id=-38))
     list_relaciones.append(Relacion('el', Palabra.palabras_dict.get('cielo-20') , Palabra.palabras_dict.get('azul-26'), position_doc=17 , lugar_sintactico='amod', importancia = 2046, id=-39))
     list_relaciones.append(Relacion('los', Palabra.palabras_dict.get('árbol-57') , Palabra.palabras_dict.get('verde-65'), position_doc=53 , lugar_sintactico='amod', importancia = 2122, id=-42))
-
+    return list_palabras, list_relaciones
 
 def test10():
     # Para revisar lo de unir relaciones
@@ -661,7 +661,7 @@ def test10():
     list_relaciones.append(Relacion('ser', Palabra.palabras_dict.get('fuerte-293') , Palabra.palabras_dict.get('naturaleza-304'), position_doc=285 , lugar_sintactico='nsubj', importancia = 2597, id=-129))
     list_relaciones.append(Relacion('más', Palabra.palabras_dict.get('fuerte-293') , Palabra.palabras_dict.get('naturaleza-304'), position_doc=289 , lugar_sintactico='nsubj', importancia = 2597, id=-130))
     list_relaciones.append(Relacion('hayamos', Palabra.palabras_dict.get('persona-479') , Palabra.palabras_dict.get('huella-513'), position_doc=492 , lugar_sintactico='conj', importancia = 2992, id=-141))
-
+    return list_palabras, list_relaciones
 
 #test1() # 6
 #test2() # 14
@@ -677,7 +677,7 @@ def test10():
 
 #list_palabras, list_relaciones = test5()
 #list_palabras, list_relaciones = test2()
-list_palabras, list_relaciones = test6()
+list_palabras, list_relaciones = test5()
 generate_graph(texto, list_palabras, list_relaciones)
 
 

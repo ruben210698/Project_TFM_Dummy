@@ -21,7 +21,7 @@ from constants.figuras import *
 from constants import tam_figuras
 
 from utils.utils_text import unir_list_all_relaciones, unir_siglos_annos_all_list, unir_conjuncion_y, \
-    truncate_a_8_relaciones
+    truncate_a_8_relaciones, unir_primera_palabra
 
 from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_ARRIBA, DIR_ABAJO, DIR_ARRIBA, \
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
@@ -706,6 +706,7 @@ def update_ctes_dim_relaciones_por_num_relaciones(list_palabras):
 
 
 def text_tranformations(list_palabras, list_relaciones):
+    list_palabras, list_relaciones = unir_primera_palabra(list_palabras, list_relaciones)
     list_palabras, list_relaciones = unir_conjuncion_y(list_palabras, list_relaciones)
     list_relaciones = unir_list_all_relaciones(list_relaciones)
     list_palabras, list_relaciones = unir_siglos_annos_all_list(list_palabras, list_relaciones)
@@ -906,6 +907,7 @@ def get_lists_zoom_palabras(list_palabras, list_relaciones, position_elems, matr
         list_pal = grafo.palabras_list.copy()
         list_pal.sort(key=lambda x: x.importancia, reverse=False)
         limit_count_pal = [3, 7, 12, 20, 30, 40, 50, 999]
+        new_list_pal = list_pal_grafo_anterior.copy()
         for limit in limit_count_pal:
             new_list_pal = list_pal_grafo_anterior.copy()
             count_pal = 0
@@ -921,9 +923,9 @@ def get_lists_zoom_palabras(list_palabras, list_relaciones, position_elems, matr
                         break
                 count_pal += 1
             list_palabras_zoom.append(new_list_pal)
-            if len(new_list_pal) == len(list_pal):
+            if len(new_list_pal) == len(list_pal) + len(list_pal_grafo_anterior):
                 break
-        list_pal_grafo_anterior = list_pal.copy()
+        list_pal_grafo_anterior = new_list_pal.copy()
 
     for list_palabras_custom in list_palabras_zoom:
         list_relaciones_new = get_relations_from_list_words(list_relaciones_all, list_palabras_custom)
@@ -956,6 +958,11 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
     dif_y = abs(max_axis_y - min_axis_y)//2 - abs(max_axis_y - min_axis_y)//5
     dif_x = abs(max_axis_x - min_axis_x)//2 - abs(max_axis_x - min_axis_x)//5
 
+    if dif_y < 4:
+        dif_y = 4
+        max_axis_y = max_axis_y + 2
+        min_axis_y = min_axis_y - 2
+
     #fig, ax = plt.subplots(figsize=(24, 16))
     #fig, ax = plt.subplots()
     if ZOOM_ACTIVE:
@@ -975,7 +982,11 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
         list_palabras = list_palabras_zoom[i]
         list_relaciones = list_relaciones_zoom[i]
 
-        fig, ax = plt.subplots(figsize=(dif_x, dif_y))
+        if dif_y < 5:
+            fig, ax = plt.subplots(figsize=(dif_x, dif_y), subplot_kw=dict(aspect="equal"))
+            ax.set_ylim(min_axis_y, max_axis_y)
+        else:
+            fig, ax = plt.subplots(figsize=(dif_x, dif_y))
 
         # Dibujar nodos
         draw_all_nodes(ax, position_elems, list_palabras)
@@ -983,13 +994,13 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
         # Dibujar aristas
         draw_all_edges(ax, list_relaciones, position_elems, matrix_dim)
 
-        ax.plot()
-        plt.show()
         # Configurar límites y aspecto del gráfico
         ax.set_ylim(min_axis_y, max_axis_y)
         ax.set_xlim(min_axis_x, max_axis_x)
         ax.set_aspect('equal')
         ax.axis('on')
+
+        ax.plot()
 
         # Guardar figura en archivo
         plt.savefig(f"web_project/imagenes/FiguraImport{i}")
@@ -1053,8 +1064,14 @@ def draw_all_edges(ax, list_relaciones, position_elems, matrix_dim):
             y_origen_draw = coord_pal_origen[1]
             y_dest_draw = coord_pal_dest[1]
 
-
             relation_draw.direccion_actual = calcular_direccion_aprox(relation_draw, position_elems)
+
+            # Control de que no se pisen relaciones de izquierda a dcha
+            if relation_draw.direccion_actual == DIR_DCHA and pal_origen.dict_posiciones[DIR_DCHA] != pal_dest:
+                continue
+            elif relation_draw.direccion_actual == DIR_IZQ and pal_origen.dict_posiciones[DIR_IZQ] != pal_dest:
+                continue
+
 
             if relation_draw.direccion_actual == DIR_DCHA:
                 x_dest_draw = coord_pal_dest[0] - pal_dest.tam_eje_x_figura/2
