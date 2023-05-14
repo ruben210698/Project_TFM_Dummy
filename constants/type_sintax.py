@@ -45,6 +45,8 @@ TYPE_SINTAX_FLAT = 'flat'
 
 compound = 'compound'
 
+TYPE_SINTAX_PALABRA = [TYPE_SINTAX_FLAT, TYPE_SINTAX_NMOD]
+LIST_TYPES_SINTAGMA_PREDOMINANTE = [TYPE_SINTAX_NSUBJ] # CD, CI, CCL... son los que voy a poner de diferentes colores
 
 
 """

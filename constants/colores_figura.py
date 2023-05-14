@@ -1,6 +1,8 @@
 from constants.colores import *
 
-TYPE_SINTAX_ROOT = light_blue
-TYPE_SINTAX_AMOD = red
-TYPE_SINTAX_NMOD = purple
-TYPE_SINTAX_FLAT = green
+DEFAULT = default
+COLOR_SINTAX_ROOT = light_blue
+COLOR_SINTAX_AMOD = red
+COLOR_SINTAX_NMOD = purple
+COLOR_SINTAX_FLAT = green
+COLOR_SINTAX_NSUBJ = green

@@ -14,7 +14,8 @@ from constants.direcciones_relaciones import CENTRO
 from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_ARRIBA, DIR_ABAJO, DIR_ARRIBA, \
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
     FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO
-
+from constants.type_sintax import TYPE_SINTAX_NSUBJ
+from constants import colores_figura, colores_figura_letra, colores
 
 """
 ¿Por qué hay un id_actual que a veces es autoincremental y a veces no?
@@ -58,6 +59,7 @@ class Palabra:
             self.importancia = 1000 + int(position_doc)
         else:
             self.importancia = importancia
+
         self.num_relaciones = num_relaciones
 
         self.dimension_x = self.get_dimension(texto)
@@ -74,6 +76,7 @@ class Palabra:
         self.tam_eje_y_figura = self.dimension_y
         self.pos_x = None
         self.pos_y = None
+        self.color_figura = colores.default
 
         self.list_texto_enumeracion = []
         self.is_enumeracion = False
@@ -114,6 +117,19 @@ class Palabra:
         Palabra.relaciones_dict_origen[self] = []
         Palabra.relaciones_dict_destino[self] = []
         Palabra.palabras_dict_id[self.id] = self
+
+        self.aciones_especificas_tipo_palabra()
+
+
+
+    def aciones_especificas_tipo_palabra(self):
+        if self.lugar_sintactico == TYPE_SINTAX_NSUBJ:
+            self.importancia = 1
+            self.color_figura = colores_figura.COLOR_SINTAX_NSUBJ
+        else:
+            self.color_figura = colores_figura.DEFAULT
+
+
 
     # get palabra by lema si existe
     @classmethod
@@ -453,11 +469,8 @@ class Palabra:
             self.num_relaciones) + ", False, '" + self.txt_lema + "', " + str(self.position_doc) + "))"
 
 
-    def _add_det_in_text(self, new_text_previous ='', new_text_after='', sep =' '):
-        self.texto = new_text_previous + sep + self.texto + sep + new_text_after
-        self.dimension_x = self.get_dimension(self.texto)
 
-    def add_determinantes_text(self, new_det_text, position_new_text):
+    def add_aux_text(self, new_det_text, position_new_text):
         from utils.utils_text import son_pal_rel_contiguas
         self.determinantes_text.update({new_det_text: position_new_text})
         # ordenar el diccionario por el valor de la posicion

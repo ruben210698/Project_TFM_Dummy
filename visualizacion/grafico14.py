@@ -706,12 +706,12 @@ def update_ctes_dim_relaciones_por_num_relaciones(list_palabras):
 
 
 def text_tranformations(list_palabras, list_relaciones):
-    list_palabras, list_relaciones = unir_primera_palabra(list_palabras, list_relaciones)
-    list_palabras, list_relaciones = unir_conjuncion_y(list_palabras, list_relaciones)
-    list_relaciones = unir_list_all_relaciones(list_relaciones)
-    list_palabras, list_relaciones = unir_siglos_annos_all_list(list_palabras, list_relaciones)
-    list_relaciones = unir_list_all_relaciones(list_relaciones)
-    list_relaciones = remove_relations_without_words(list_relaciones, list_palabras)
+    #list_palabras, list_relaciones = unir_primera_palabra(list_palabras, list_relaciones)
+    #list_palabras, list_relaciones = unir_conjuncion_y(list_palabras, list_relaciones)
+    #list_relaciones = unir_list_all_relaciones(list_relaciones)
+    #list_palabras, list_relaciones = unir_siglos_annos_all_list(list_palabras, list_relaciones)
+    #list_relaciones = unir_list_all_relaciones(list_relaciones)
+    #list_relaciones = remove_relations_without_words(list_relaciones, list_palabras)
 
     # al final:
     Palabra.refresh_relaciones_dict(list_relaciones)
@@ -1216,13 +1216,15 @@ def draw_all_nodes(ax, position_elems, list_palabras):
         if ZOOM_ACTIVE and pal not in list_palabras:
             continue
         logger.info(pal.texto)
+        color_figura = pal.color_figura
+
         if pal.lugar_sintactico.lower() in (TYPE_SINTAX_ROOT):
             pal.figura = FIGURA_ELIPSE
             pal.tam_eje_y_figura = tam_figuras.ELIPSE[1] * (pal.dimension_y)
             pal.tam_eje_x_figura = tam_figuras.ELIPSE[0] * (pal.dimension_x)
             ellipse_width = 0.6 * (pal.dimension_x + pal.cte_sum_x)
             ellipse = Ellipse((x, y), width=ellipse_width, height=1,
-                              color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
+                              color=dict_color_figura.get(pal.lugar_sintactico, color_figura), zorder=2)
             ax.add_patch(ellipse)
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
                     color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
@@ -1233,7 +1235,7 @@ def draw_all_nodes(ax, position_elems, list_palabras):
             pal.tam_eje_x_figura = tam_figuras.RECTANGULO[0] * (pal.dimension_x)
             rectangle_width = tam_figuras.RECTANGULO[0] * pal.dimension_x
             rectangle = Rectangle((x - rectangle_width / 2, y - 0.4*pal.dimension_y), width=rectangle_width, height=1,
-                                  color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
+                                  color=dict_color_figura.get(pal.lugar_sintactico, color_figura), zorder=2)
             ax.add_patch(rectangle)
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
                     color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
@@ -1244,7 +1246,7 @@ def draw_all_nodes(ax, position_elems, list_palabras):
             pal.tam_eje_x_figura = tam_figuras.HEXAGONO[0] * (pal.dimension_x)
             polygon_radius = 0.4 * len(node_text)
             polygon = RegularPolygon((x, y), numVertices=6, radius=polygon_radius, orientation=0,
-                                     color=dict_color_figura.get(pal.lugar_sintactico, colores.default), zorder=2)
+                                     color=dict_color_figura.get(pal.lugar_sintactico, color_figura), zorder=2)
             ax.add_patch(polygon)
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
                     color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
@@ -1255,7 +1257,7 @@ def draw_all_nodes(ax, position_elems, list_palabras):
             pal.tam_eje_x_figura = tam_figuras.RECTANGULO[0] * (pal.dimension_x)
             rectangle_width = tam_figuras.RECTANGULO[0] * pal.dimension_x
             rectangle = Rectangle((x - rectangle_width / 2, y - 0.4*pal.dimension_y), width=rectangle_width, height=0.5,
-                                  color=dict_color_figura.get(pal.lugar_sintactico, colores.default),
+                                  color=dict_color_figura.get(pal.lugar_sintactico, color_figura),
                                   zorder=2)
             ax.add_patch(rectangle)
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
@@ -1272,7 +1274,7 @@ def draw_all_nodes(ax, position_elems, list_palabras):
                 xy=(x - rectangle_width / 2, y - height * 0.4),
                 width=rectangle_width,
                 height=height,
-                color=dict_color_figura.get(pal.lugar_sintactico, colores.default),
+                color=dict_color_figura.get(pal.lugar_sintactico, color_figura),
                 zorder=2)
             ax.add_patch(rectangle)
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center',

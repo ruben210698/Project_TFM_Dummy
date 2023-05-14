@@ -6,8 +6,7 @@ from constants.type_sintax import *
 TYPE_RELACION = "RELACION"
 TYPE_PALABRA = "PALABRA"
 TYPE_PUNTUACION = "PUNTUACION"
-
-LIST_TYPES_CONNECTOR_RELATION = [TYPE_MORF_DET, TYPE_MORF_ADP, TYPE_MORF_CCONJ]
+TYPE_FLAT = "FLAT"
 
 
 
@@ -51,6 +50,7 @@ class TokenNLP:
         self.lugar_sintact_original = token_actual.dep_
         self.lema = token_actual.lemma_
         self.position_doc = token_actual.idx
+        self.ent_type = token_actual.ent_type_ # TODO sacar algo de aqui
 
         self.num_oracion = num_oracion
         self.tipo_sintagma = None # el tipo del root sintagma
@@ -58,7 +58,8 @@ class TokenNLP:
 
         TokenNLP.nlp_token_dict[self.position_doc] = self
 
-        if (self.tipo_morfol not in LIST_TYPES_CONNECTOR_RELATION or self.lugar_sintact_original == TYPE_SINTAX_ROOT):
+        if (self.tipo_morfol not in LIST_TYPES_CONNECTOR_RELATION or self.lugar_sintact_original == TYPE_SINTAX_ROOT)\
+            or (self.lugar_sintact_original in TYPE_SINTAX_PALABRA):
             self.tipo_palabra = TYPE_PALABRA
         elif self.tipo_morfol == TYPE_MORF_PUNCT:
             self.tipo_palabra = TYPE_PUNTUACION
@@ -73,6 +74,8 @@ class TokenNLP:
         # Hijos
         self.list_children_nlp = []
         for child in token_actual.children:
+            if child.pos_ == TYPE_MORF_PUNCT:
+                continue
             child_nlp = TokenNLP.nlp_token_dict.get(child.idx, child)
             self.list_children_nlp.append(child_nlp)
 
@@ -93,6 +96,14 @@ class TokenNLP:
             else: # Si el padre no es root sintagma y el actual tampoco, es que el padre del padre es root sintagma,
                 # tambien coge lo del padre, aunque esto igual hay que revisarlo
                 self.tipo_sintagma = self.token_nlp_padre.tipo_sintagma
+
+            # Hay sintagmas que predominan sobre otros. Si tiene uno de estos, es que si es root
+            if self.lugar_sintact_original in LIST_TYPES_SINTAGMA_PREDOMINANTE and \
+                    self.tipo_sintagma != self.lugar_sintact_original:
+                self.is_root_sintagma = True
+                self.tipo_sintagma = self.lugar_sintact_original
+
+
 
         if self.tipo_sintagma is None:
             self.tipo_sintagma = self.lugar_sintact_original
