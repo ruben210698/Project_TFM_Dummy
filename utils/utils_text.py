@@ -4,6 +4,8 @@ from utils.Palabra import Palabra
 from utils.Relacion import Relacion
 
 import logging
+
+from utils.TokenNLP import TokenNLP
 from utils.logger import FORMAT_1
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.CRITICAL) #######################################################
@@ -48,10 +50,37 @@ def unir_2_relaciones(rel1, rel2, remove_rel2=True, sep=" "):
         rel2.delete_relation()
 
 
-def son_pal_rel_contiguas(pal_rel1, pal_rel2):
+def son_pal_rel_contiguas(pal_rel1=None, pal_rel2=None, text1='', pos1 = 0, text2 = '', pos2 = 0):
+    pal1_pos_doc = 0
+    pal1_text = ''
+    pal2_text = ''
+    pal2_pos_doc = 0
+    if pal_rel1 is None:
+        pal1_text = text1
+        pal1_pos_doc = pos1
+    else:
+        if isinstance(pal_rel1, Palabra):
+            pal1_pos_doc = pal_rel1.position_doc
+            pal1_text = pal_rel1.texto
+        elif isinstance(pal_rel1, TokenNLP):
+            pal1_text = pal_rel1.text
+            pal1_pos_doc = pal_rel1.position_doc
+
+    if pal_rel2 is None:
+        pal2_text = text2
+        pal2_pos_doc = pos2
+    else:
+        if isinstance(pal_rel2, Palabra):
+            pal2_text = pal_rel2.texto
+            pal2_pos_doc = pal_rel2.position_doc
+        elif isinstance(pal_rel2, TokenNLP):
+            pal2_text = pal_rel2.text
+            pal2_pos_doc = pal_rel2.position_doc
+
+
     for i in range(2):
-        if pal_rel1.position_doc + len(pal_rel1.texto) + i == pal_rel2.position_doc or \
-            pal_rel2.position_doc + len(pal_rel2.texto) + i == pal_rel1.position_doc:
+        if pal1_pos_doc + len(pal1_text) + i == pal2_pos_doc or \
+            pal2_pos_doc + len(pal2_text) + i == pal1_pos_doc:
             return True
     return False
 

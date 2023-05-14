@@ -40,7 +40,9 @@ class Relacion:
         self.x_dest_draw = None
         self.y_dest_draw = None
 
+        # TODO eliminar de todas partes, esto no sirve, puede estar super duplicado incluso con la pos en el docuemnto.
         Relacion.relaciones_dict[self.texto] = self # TODO añadir la posicion del documento
+
         Relacion.relaciones_dict_id[self.id] = self
         Palabra.relaciones_dict_origen[self.pal_origen].append(self)
         Palabra.relaciones_dict_origen[self.pal_origen] = \

@@ -23,270 +23,209 @@ from utils.Palabra import Palabra
 from utils.Relacion import Relacion
 from constants.type_morfologico import *
 from constants.type_sintax import *
+from utils.TokenNLP import TokenNLP, TYPE_RELACION, TYPE_PALABRA
+from utils.utils_text import son_pal_rel_contiguas
 # from visualizacion.graficoFinal2 import print_graph
 from visualizacion.grafico14 import print_graph, generate_graph
 
+nlp = spacy.load("es_core_news_lg")
 
-#spacy_load ="es_core_news_sm"
-#spacy_load = "es_core_news_md
-#spacy_load = "es_core_news_lg"
+#LIST_TYPES_CONNECTOR_RELATION = [TYPE_MORF_ADP, TYPE_MORF_ADP, TYPE_MORF_CONJ, TYPE_MORF_CCONJ, TYPE_MORF_SCONJ,
+#                                 TYPE_MORF_DET, TYPE_MORF_PRON, TYPE_MORF_PART, TYPE_MORF_VERB, TYPE_MORF_AUX]
 
-# python -m spacy download es_core_news_sm
-nlp = spacy.load("es_core_news_sm")
-#nlp = spacy.load("es_core_news_md")
-# El que mejor lo hace, el primero considera "dibuja" adjetivo -.- y el segundo "rie" adjetivo tambien.
-#nlp = spacy.load("es_core_news_lg")
-
-LIST_TYPES_CONNECTOR_RELATION = [TYPE_MORF_ADP, TYPE_MORF_ADP, TYPE_MORF_CONJ, TYPE_MORF_CCONJ, TYPE_MORF_SCONJ,
-                                 TYPE_MORF_DET, TYPE_MORF_PRON, TYPE_MORF_PART, TYPE_MORF_VERB, TYPE_MORF_AUX]
-LIST_TYPES_SINTAX_RELATION = [TYPE_SINTAX_ADVMOD, TYPE_SINTAX_NPADVMOD]
+LIST_TYPES_CONNECTOR_RELATION = [TYPE_MORF_DET, TYPE_MORF_ADP, TYPE_MORF_CCONJ]
 
 
-def get_relation(rel, fifo_heads, fifo_children):
-    possible_relations = []
-    for key in fifo_heads:
-        if key.pos_ == TYPE_MORF_PUNCT:
-            continue
-        list_value = fifo_heads[key]
-        for pal in list_value:
-            if isinstance(pal, Token) and pal == rel and key not in possible_relations and \
-                    Palabra.palabras_dict.get(key.lemma_ + '-' + str(key.idx), None) is not None: # es decir, que existe una palabra y no es una relacion
-                possible_relations.append(key)
-            # El caso de que la palabra anterior sea una relacion y si esté relacionada con esta otra
-            elif isinstance(pal, Token) and (pal == rel.head or pal == rel.left_edge or pal == rel.right_edge) \
-                    and key not in possible_relations and Palabra.palabras_dict.get(key.lemma_ + '-' + str(key.idx), None) is not None:
-                possible_relations.append(key)
+#LIST_TYPES_SINTAX_RELATION = [TYPE_SINTAX_ADVMOD, TYPE_SINTAX_NPADVMOD]
 
-    for key in fifo_children:
-        if key.pos_ == TYPE_MORF_PUNCT:
-            continue
-        list_value = fifo_children[key]
-        for pal in list_value:
-            if isinstance(pal, Token) and pal == rel and key not in possible_relations and \
-                    Palabra.palabras_dict.get(key.lemma_ + '-' + str(key.idx), None) is not None: # es decir, que existe una palabra y no es una relacion
-                possible_relations.append(key)
 
-    # Obtener los heads de las palabras relacionadas. Asi engordar la lista de posibles relaciones
-    # Solo 1er grado, por eso solo hay un bucle y se hace una copia de la lista.
-    possible_relations_copy = possible_relations.copy()
-    for pal in possible_relations_copy:
-        if pal.head is not None and pal.head != rel and pal.head not in possible_relations:
-            possible_relations.append(pal.head)
-        for child in pal.children:
-            if child not in possible_relations and child != rel:
-                possible_relations.append(child)
 
-    return possible_relations
+
 
 def get_list_palabras_relaciones(texto,spacy_load):
-    nlp = spacy.load(spacy_load)
-    list_palabras =  []
-    list_relaciones = []
-    list_tokens_rel = []
+    list_token_nlp_oraciones = preprocesing_oracion_nlp(texto, spacy_load)
 
-    # Primero los objetos y luego las relaciones.
-    doc = nlp(texto)
-    fifo_heads = {}
-    fifo_children = {}
-    nueva_oracion = True
-    for token in doc:
-        token = token_manual_modifier.set_token_manual(token)
-        print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
-              "|| dep_:", token.dep_, token.shape_, token.is_alpha, token.is_stop)
+    list_palabras = get_list_palabras(list_token_nlp_oraciones)
+    list_relaciones = get_list_relaciones(list_palabras)
 
-        texto_palabra = token.text
-        tipo_morfol = token.pos_
-        lugar_sintact = token.dep_
-        lema_palabra = token.lemma_
-        position_doc = token.idx
-
-        if tipo_morfol == TYPE_MORF_PUNCT:
-            #nueva_oracion = True
-            continue
-        # Crear objeto Palabra y añadir a lista de palabras
-        nueva_palabra = token
-        if nueva_palabra is None:
-            continue
-
-        if (tipo_morfol not in LIST_TYPES_CONNECTOR_RELATION and lugar_sintact not in LIST_TYPES_SINTAX_RELATION) \
-                or nueva_oracion:
-            nueva_palabra = Palabra.get_palabra_by_lema(lema_palabra, position_doc)
-            if nueva_palabra is None:
-                nueva_palabra = Palabra(texto_palabra, tipo_morfol, lugar_sintact, txt_lema=lema_palabra,
-                                        position_doc=position_doc)
-            list_palabras.append(nueva_palabra)
-        else:
-            list_tokens_rel.append(token)
-
-        nueva_oracion = False
-
-        if token.head is not None and token.head != token:
-            if token.head not in fifo_heads.keys():
-                fifo_heads.update({token.head: [nueva_palabra]})
-            else:
-                fifo_heads[token.head].append(nueva_palabra)
-
-        for child in token.children:
-            print("-->child:", child)
-            if child not in fifo_children.keys():
-                fifo_children.update({child: [nueva_palabra]})
-            else:
-                fifo_children[child].append(nueva_palabra)
-
-
-
-    doc = nlp(texto)
-    dict_relations_1_2 = {}
-
-
-
-    for relation in list_tokens_rel:
-        print(relation)
-        fifo_heads_copy = fifo_heads.get(relation, [])
-
-        relation_possible_list = None
-        if fifo_heads_copy == []:
-            relation_possible_list = get_relation(relation, fifo_heads, fifo_children)
-            for rel_possibl in relation_possible_list:
-                palabra = Palabra.palabras_dict.get(rel_possibl.lemma_ + '-' + str(rel_possibl.idx), None)
-                if palabra is not None:
-                    fifo_heads_copy.append(palabra)
-
-        # ver si alguna palabra head es token y en caso de serlo, buscar si existe palabra relacionada.
-        if fifo_heads_copy is not None and fifo_heads_copy != []:
-            fifo_heads_copy = fifo_heads_copy.copy()
-            relacion1 = None
-            relacion2 = None
-            position_doc = relation.idx
-            #position_rel = relation.pos
-
-            for pal in fifo_heads.get(relation, []):
-                if isinstance(pal, Token):
-                    #TODO para el futuro, de momento se quita y ya
-                    for i in range(len(fifo_heads_copy)-1, -1, -1): #recorrerlo al reves para hacer bien el POP
-                        if isinstance(fifo_heads_copy[i], Token) and fifo_heads_copy[i] == pal:
-                            fifo_heads_copy.pop(i)
-
-            if len(fifo_heads_copy) <= 1:
-                relation_possible_list_new = get_relation(relation, fifo_heads, fifo_children)
-                for rel_possibl in relation_possible_list_new:
-                    palabra = Palabra.palabras_dict.get(rel_possibl.lemma_ + '-' + str(rel_possibl.idx), None)
-                    if palabra is not None and palabra not in fifo_heads_copy:
-                        fifo_heads_copy.append(palabra)
-
-            if len(fifo_heads_copy) <= 1:
-                # No hay relaciones posibles
+    # Sacar las palabras que no se han sacado antes, omitiendo las Ys (que ya se verá como hacer enumeraciones después)
+    # Y hay que comprobar que, si una palabra es igual a la que hay en la relación, no se ponga (en minusculas y sin acentos)
+    for oracion in list_token_nlp_oraciones:
+        for token in oracion:
+            if token.representado:
                 continue
+            else:
+                if token.tipo_morfol == TYPE_MORF_CCONJ:
+                    continue
+                if token.token_nlp_padre is not None:
+                    pal_padre = token.token_nlp_padre.palabra_que_representa
+                    rel_dest_padre = Palabra.relaciones_dict_destino.get(pal_padre)
+                    entontrada = False
+                    if rel_dest_padre is not None and rel_dest_padre != []:
+                        for rel in rel_dest_padre:
+                            if rel.texto == token.text or rel.texto.__contains__(' ' + token.text + ' '):
+                                entontrada = True
+                                break
+                    if entontrada:
+                        continue
+                    # Si no esta en la relacion, se lo añado a la palabra, ya que no tiene relación hijo
+                    pal_padre.add_determinantes_text(token.text, token.position_doc)
 
-            # Ordena y determinar relacionPal1.
-            relacion1 = fifo_heads_copy[0]
-            for pal in fifo_heads_copy:
-                if isinstance(pal, Palabra) and pal.position_doc < relacion1.position_doc:
-                    relacion1 = pal
-            fifo_heads_copy.remove(relacion1)
 
-            for pal_rel_2 in fifo_heads_copy:
-                nueva_relacion = Relacion(
-                    texto=relation.text,
-                    pal_origen=relacion1,
-                    pal_dest=pal_rel_2,
-                    position_doc=position_doc,
-                    lugar_sintactico=pal_rel_2.lugar_sintactico)
-                list_relaciones.append(nueva_relacion)
-                dict_relations_1_2.update({relacion1: pal_rel_2})
+                print("hola")
+                print(token)
 
     return list_palabras, list_relaciones
 
 
-#texto = "Ruben dibuja koalas en bañador y chanclas"
+def get_list_relaciones(list_palabras):
+    list_relaciones = []
+    for palabra in list_palabras:
+        token_nlp = palabra.token_nlp
+        if token_nlp.palabra_padre_final is None:
+            continue
+
+        list_rel_padre = token_nlp.tokens_relacion_padre_final
+        if list_rel_padre != []:
+            for token_rel in list_rel_padre:
+                nueva_relacion = Relacion(
+                    texto=token_rel.text,
+                    pal_origen=token_nlp.palabra_padre_final,
+                    pal_dest=palabra,
+                    position_doc=token_rel.position_doc,
+                    lugar_sintactico=token_nlp.tipo_sintagma)
+                list_relaciones.append(nueva_relacion)
+                token_rel.representado = True
+                token_rel.list_rel_que_representa.append(nueva_relacion)
+            print(list_rel_padre)
+        else:
+            # Relación sin texto
+            nueva_relacion = Relacion(
+                texto='',
+                pal_origen=token_nlp.palabra_padre_final,
+                pal_dest=palabra,
+                position_doc=token_nlp.position_doc,
+                lugar_sintactico=token_nlp.tipo_sintagma)
+            list_relaciones.append(nueva_relacion)
+    return list_relaciones
 
 
-texto = "Ruben dibuja koalas en bañador saltando entre acantilados mientras su amigo graba la escena y se rie."
-texto = "Okami jugó en el parque con palos"
-texto = "Ruben cocina hamburguesas en la Freidora de aire"
-texto = "Ruben cocina hamburguesas con carne picada y cebolla en la sartén que tiene el aceite hirviendo"
-texto = "La dinastía de los Austrias gobernó España desde el siglo XVI hasta el siglo XVII. Durante su reinado, el país " \
-        "experimentó una época de esplendor y decadencia. Los monarcas austriacos, entre ellos Carlos I y Felipe II, " \
-        "ampliaron el territorio español mediante la conquista de América y la anexión de Portugal. Sin embargo, también " \
-        "fueron responsables de la Inquisición española y de la expulsión de los judíos. La falta de recursos y las guerras " \
-        "en Europa contribuyeron al declive de la monarquía, que terminó con la llegada de la dinastía de los Borbones " \
-        "en el siglo XVIII. El legado de los Austrias en España se puede ver en su arquitectura y arte, especialmente en " \
-        "Madrid y en las ciudades andaluzas de Granada y Córdoba."
+def get_list_palabras(list_token_nlp_oraciones):
+    list_palabras = []
+    for oracion_nlp in list_token_nlp_oraciones:
+        for token_nlp in oracion_nlp:
+            if token_nlp.tipo_palabra is TYPE_PALABRA:
+                nueva_palabra = Palabra.constructor_alternativo(token_nlp=token_nlp)
+                list_palabras.append(nueva_palabra)
+                token_nlp.representado = True
+                token_nlp.palabra_que_representa = nueva_palabra
+                for child in token_nlp.list_children_nlp:
+                    child.palabra_padre_final = nueva_palabra
 
-#texto = "Los Austrias gobernaron España en el siglo XVI y XVII, ampliando su territorio pero también responsables de la Inquisición y la expulsión de judíos. Su legado se ve en la arquitectura y el arte, especialmente en Madrid, Granada y Córdoba."
-#texto = "Los Austrias gobernaron España en el siglo XVI y XVII, responsables también de la Inquisición, expulsión de judíos. Su legado: arquitectura y arte en Madrid y Córdoba."
-#texto = "Los Austrias gobernaron España en el siglo XVI, responsables también de la Inquisición"
-texto ="La naturaleza es impresionante en su variedad de paisajes, desde montañas majestuosas y extensas llanuras hasta océanos y ríos caudalosos."
-texto = "El cuerpo humano es una maravilla de la biología, con sus sistemas complejos interconectados, como el sistema nervioso que coordina las funciones del cuerpo y el sistema cardiovascular que mantiene el flujo sanguíneo, así como órganos vitales como el corazón y los pulmones que trabajan juntos para mantenernos vivos."
-#texto = "La educación es fundamental para el desarrollo personal y social, ya que nos proporciona conocimientos y habilidades útiles para enfrentar desafíos cotidianos, así como para comprender y participar activamente en la sociedad y el mundo que nos rodea."
+            if token_nlp.tipo_palabra is TYPE_RELACION:
+                # De momento no creo la relacion, solo guardo el token en tokens_relacion_padre_final
+                for child in token_nlp.list_children_nlp:
+                    child.palabra_padre_final = token_nlp.palabra_padre_final  # Si es relacion, hereda el padre del padre
+                    child.tokens_relacion_padre_final.append(token_nlp)
+        print(oracion_nlp)
+    return list_palabras
 
 
-texto = "Mi perro es un golden retriever de tres años que adora jugar con su pelota en el parque y siempre me da la bienvenida moviendo la cola cuando llego a casa."
-texto = "El sol brilla en el cielo azul los pájaros cantan en los árboles verdes el viento sopla suavemente a través de las hojas en el campo las vacas pastan tranquilamente en la ciudad la gente camina apresurada por las calles en el mar los barcos navegan en aguas cristalinas en todas partes la naturaleza sigue su curso y el mundo sigue girando."
-texto = "La vida es como un viaje en el que cada uno elige su propio camino a veces es fácil otras veces es difícil hay momentos de alegría y momentos de tristeza pero sin importar qué tan difícil sea el camino siempre hay algo que aprender cada experiencia buena o mala nos ayuda a crecer y a ser más fuertes la naturaleza nos rodea y nos regala su belleza y su sabiduría hay que aprender a apreciarla y cuidarla al final del camino lo importante no es lo que hayamos acumulado sino las personas que hayamos tocado y las huellas que hayamos dejado en el mundo."
-texto = "Mi novia tiene una toalla de hospital para su perro"
+def analyse_token_recursive(token_padre, token_actual, num_oracion):
+    new_list_token_nlp = []
+    if TokenNLP.nlp_token_dict.get(token_actual.idx, None) is not None:
+        return
 
-texto = "Mientras programo, un pajaro ha saltado por el balcón y se ha comido una golondrina"
-#texto = "Isthar come paja en el pajar mientras Jasper le mira mientras Tina caza palomas para cenar"
+    new_token_nlp = TokenNLP(token_actual, num_oracion, token_padre, token_actual.children)
+    new_list_token_nlp.append(new_token_nlp)
+
+    print(token_actual)
+    for child in token_actual.children:
+        new_list_token_nlp_2 = analyse_token_recursive(token_actual, child, num_oracion)
+        new_list_token_nlp = new_list_token_nlp + new_list_token_nlp_2
+
+    return new_list_token_nlp
+
+
+
+def preprocesing_oracion_nlp(texto, spacy_load):
+    nlp = spacy.load(spacy_load)
+    doc = nlp(texto)
+
+    ## Primero lo divido en oraciones
+    list_token_oraciones = []
+    list_token_nlp_oraciones = []
+    list_oracion_actual = []
+
+    get_list_token_oraciones(doc, list_oracion_actual, list_token_oraciones)
+
+    # Después, recorro la oración empezando por el Root
+    num_oracion = -1
+    for list_token_oracion in list_token_oraciones:
+        num_oracion += 1
+        list_token_nlp = []
+
+        print("Oracion: ", num_oracion)
+        # Ordenar la lista de tokens de la oracion por el número de children
+        list_token_oracion.sort(key=lambda x: len(list(x.children)), reverse=True)
+        # sacar de list_token_oracion el elemento cuyo token.dep_ == ROOT
+        root = None
+        for token in list_token_oracion:
+            if token.dep_ == TYPE_SINTAX_ROOT:
+                root = token
+                break
+        if root is not None:
+            list_token_oracion.remove(root)
+            list_token_oracion.insert(0, root)
+        # Recorrer tokens y buscar palabras y relaciones
+        for token in list_token_oracion:
+            list_texts_ok = [token.text for token in list_token_nlp]
+            if token.text not in list_texts_ok:
+                list_token_nlp_2 = analyse_token_recursive(None, token, num_oracion)
+                list_token_nlp = list_token_nlp + list_token_nlp_2
+
+        for token_nlp in list_token_nlp:
+            token_nlp.refresh_parents_children()
+
+        list_token_nlp_oraciones.append(list_token_nlp)
+
+    return list_token_nlp_oraciones
+
+
+def get_list_token_oraciones(doc, list_oracion_actual, list_token_oraciones):
+    for token in doc:
+        print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
+              "|| dep_:", token.dep_, token.shape_, token.is_alpha, token.is_stop)
+
+        tipo_morfol = token.pos_
+
+        if tipo_morfol == TYPE_MORF_PUNCT:
+            # TODO hacer y que solo lo haga con los puntos, no con las comas.
+            list_token_oraciones.append(list_oracion_actual)
+            list_oracion_actual = []
+            continue
+        else:
+            list_oracion_actual.append(token)
+    if list_oracion_actual not in list_token_oraciones:
+        list_token_oraciones.append(list_oracion_actual)
+
+
 texto = "Mi perro y mi gato juegan juntos en el parque con una pelota"
-#texto = "Me llamo Rubén y tengo 25 años. Vivo en Madrid y trabajo en una empresa de tecnología. Me gusta leer, viajar y pasar tiempo con mi familia y amigos."
-#texto = "Los Austrias gobernaron España en el siglo XVI y XVII, responsables también de la Inquisición, expulsión de judíos. Su legado: arquitectura y arte en Madrid y Córdoba."
-#texto = "Ruben cocina hamburguesas en la Freidora de aire"
-#texto = "La naturaleza es impresionante en su variedad de paisajes, desde montañas majestuosas y extensas llanuras hasta océanos y ríos caudalosos."
 
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
-spacy_load = "es_core_news_sm"
+spacy_load = "es_core_news_lg"
 
 print("Texto: ", texto)
 list_palabras, list_relaciones = get_list_palabras_relaciones(texto, spacy_load)
-#mirar la lista de relaciones_dict_dest y origen y ver si alguna palabra de la list_palabras no tiene ninguna
-# relacion con ninguna otra palabra. Si es asi, añadir a lista_palabras_sin_relacion
-lista_palabras_sin_relacion = []
-for palabra in list_palabras:
-    if palabra not in Palabra.relaciones_dict_origen.keys() and palabra not in Palabra.relaciones_dict_destino.keys():
-        lista_palabras_sin_relacion.append(palabra)
-lista_palabras_sin_aparicion = texto.split(" ")
-for palabra in list_palabras:
-    if palabra.texto in lista_palabras_sin_aparicion:
-        lista_palabras_sin_aparicion.remove(palabra.texto)
-for relacion in list_relaciones:
-    if relacion.texto in lista_palabras_sin_aparicion:
-        lista_palabras_sin_aparicion.remove(relacion.texto)
-print(lista_palabras_sin_aparicion)
 
-spacy_load = "es_core_news_lg"
-list_palabras2, list_relaciones2 = get_list_palabras_relaciones(texto, spacy_load)
 
-# hay alguna de las palabras de list_palabras2 que no esten en list_palabras_sin_aparicion?
-list_palabras2_copy = list_palabras2.copy()
-for palabra in list_palabras2:
-    if palabra.texto not in lista_palabras_sin_aparicion:
-        list_palabras2_copy.remove(palabra)
-print(list_palabras2_copy)
 
-list_relaciones2_copy = list_relaciones2.copy()
-for relacion in list_relaciones2:
-    if relacion.texto not in lista_palabras_sin_aparicion:
-        list_relaciones2_copy.remove(relacion)
-print(list_relaciones2_copy)
 
-#TODO, no se qué hacer, si aceptar todas las relaciones o solo la primera de cada tipo (es decir, texto)
-def remove_repeated_relations(list_relaciones):
-    # Elimina desde la ultima
-    # pero dejando una de ellas y comparandola con el texto
-    list_relaciones_copy = list_relaciones.copy()
-    # lista con solo los textos de las relaciones
-    list_textos = [rel.texto for rel in list_relaciones]
-    for i in range(len(list_relaciones)-1, -1, -1):
-        relacion = list_relaciones[i]
-        if relacion.texto in list_textos[:i]:
-            list_relaciones_copy.remove(relacion)
-    return list_relaciones_copy
 
-list_palabras = list_palabras + list_palabras2_copy
-list_relaciones = list_relaciones + remove_repeated_relations(list_relaciones2_copy)
+
+
 
 print("Palabras: ", list_palabras)
 print("Relaciones: ", list_relaciones)
@@ -301,72 +240,3 @@ Palabra.refresh_dict_palabras()
 generate_graph(texto, list_palabras, list_relaciones)
 
 
-# if token in fifo_heads.keys():
-#     rel_pal_origen = fifo_heads[token]
-#     print("Es el padre de ", fifo_heads[token].texto)
-#     # TODO hacer algo especial si es verbo.
-#
-#     new_relation = \
-#         Relacion(nueva_palabra.texto, pal_origen=rel_pal_origen, pal_dest=None)
-#     list_relaciones.append(new_relation)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # para obtener el padre sintactico, debo buscar token.head. En Ruben dibuja Koalas, el padre de Ruben es "dibuja"
-    # TODO: para los verbos quiero hacer algo más especial. Que se pongan en un simbolo pero con flechas vacias a los lados.
-    #  pero que si es un verbo final (Ruben se rie), que se ponga una flecha retroalimentandose o algo asi.
-
-    # TODO: la conunción Y. o mirar como hacer lo de la conjuncion. Tiene que coger la misma relacion que la palabra
-    #  anterior y ponerla en la palabra actual
-
-    # Si la palabra tiene un padre sintáctico, crear objeto Relacion y añadir a lista de relaciones
-    # if token.head != token:
-    #     texto_relacion = token.head.text
-    #     lugar_sintactico_relacion = token.dep_
-    #     pal_origen = nueva_palabra
-    #     pal_dest = Palabra.palabras_dict[texto_relacion]
-    #     nueva_relacion = Relacion(texto_relacion, pal_origen, pal_dest, lugar_sintactico_relacion)
-    #     list_relaciones.append(nueva_relacion)
-
-
-
-
-
-"""
-
-texto3 = "ruben dibuja koalas en bañador saltando entre acantilados mientras su amigo graba la escena y se rie."
-
-list_palabras = []
-list_palabras.append(Palabra("ruben", NOMBRE, SUJETO, importancia=1))
-list_palabras.append(Palabra("koalas", NOMBRE, CD, importancia=2))
-list_palabras.append(Palabra("bañador", NOMBRE, CCL, importancia=2))
-list_palabras.append(Palabra("acantilados", NOMBRE, CCL, importancia=2))
-list_palabras.append(Palabra("amigo", NOMBRE, CCCOMP, importancia=3))
-list_palabras.append(Palabra("escena", NOMBRE, CD, importancia=3))
-list_palabras.append(Palabra("rie", VERBO, PREDICADO, importancia=3))
-
-list_relaciones = []
-list_relaciones.append(Relacion("dibuja", pal_origen=palabras_dict["ruben"], pal_dest=palabras_dict["koalas"], lugar_sintactico=PREDICADO, importancia=2))
-list_relaciones.append(Relacion("en", pal_origen=palabras_dict["koalas"], pal_dest=palabras_dict["bañador"], lugar_sintactico=CCL, importancia=2))
-list_relaciones.append(Relacion("saltando", pal_origen=palabras_dict["koalas"], pal_dest=palabras_dict["acantilados"], lugar_sintactico=CCL, importancia=2))
-list_relaciones.append(Relacion("mientras", pal_origen=palabras_dict["ruben"], pal_dest=palabras_dict["amigo"], lugar_sintactico=CCCOMP, importancia=3))
-list_relaciones.append(Relacion("graba", pal_origen=palabras_dict["amigo"], pal_dest=palabras_dict["escena"], lugar_sintactico=CD, importancia=3))
-list_relaciones.append(Relacion("", pal_origen=palabras_dict["amigo"], pal_dest=palabras_dict["rie"], lugar_sintactico=PREDICADO, importancia=3))
-
-"""

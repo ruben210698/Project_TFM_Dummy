@@ -15,6 +15,7 @@ from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
     FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO
 
+
 """
 ¿Por qué hay un id_actual que a veces es autoincremental y a veces no?
 Pues porque hay palabras como verbos, adjetivos o sustantivos que se van a repetir en la oración pero
@@ -32,12 +33,24 @@ class Palabra:
     relaciones_dict_origen = {}
     relaciones_dict_destino = {}
 
-    def __init__(self, texto, tipo, lugar_sintactico, id=None, importancia=None, num_relaciones=0, autoincremental=True,
-                 txt_lema=None, position_doc=9999):
+    @staticmethod
+    def constructor_alternativo(token_nlp):
+        instancia = Palabra(texto=token_nlp.text,
+                            tipo_morf=token_nlp.tipo_morfol,
+                            lugar_sintactico=token_nlp.tipo_sintagma,
+                            txt_lema=token_nlp.lema,
+                            position_doc=token_nlp.position_doc,
+                            num_oracion=token_nlp.num_oracion,
+                            token_nlp=token_nlp
+                            )
+        return instancia
 
+    def __init__(self, texto, tipo_morf, lugar_sintactico, id=None, importancia=None, num_relaciones=0,
+                 autoincremental=True, txt_lema=None, position_doc=9999, num_oracion=0, token_nlp=None):
+        self.token_nlp = token_nlp
         self.texto = texto
         self.txt_lema = txt_lema if txt_lema is not None else self.limpiar_texto(texto)
-        self.tipo = tipo
+        self.tipo = tipo_morf
         self.lugar_sintactico = lugar_sintactico
         self.id = id if id is not None else self.generar_id(texto, autoincremental)
         # A menor valor de imporancia, mayor importancia tiene. Valor max=1
@@ -55,6 +68,7 @@ class Palabra:
         self.has_been_plotted = False
         self.has_been_plotted_relations = False
         self.position_doc = position_doc
+        self.num_oracion = num_oracion
         self.figura = None
         self.tam_eje_x_figura = self.dimension_x
         self.tam_eje_y_figura = self.dimension_y
@@ -92,6 +106,10 @@ class Palabra:
             DIR_ABAJO: None
         }
 
+        self.determinantes_text = {}
+        self.text_original = texto
+
+
         Palabra.palabras_dict[self.txt_lema + "-" + str(self.position_doc)] = self
         Palabra.relaciones_dict_origen[self] = []
         Palabra.relaciones_dict_destino[self] = []
@@ -101,7 +119,7 @@ class Palabra:
     @classmethod
     def get_palabra_by_lema(cls, txt_lema, position_doc):
         if Palabra.palabras_dict.get(txt_lema, None) is not None and \
-                Palabra.palabras_dict[ txt_lema].position_doc == position_doc:
+                Palabra.palabras_dict[txt_lema].position_doc == position_doc:
             return Palabra.palabras_dict[txt_lema]
         else:
             return None
@@ -168,7 +186,7 @@ class Palabra:
         self.list_texto_enumeracion.append(new_texto)
         self.is_enumeracion = True
         # FIXME
-        #self.dimension_y = len(self.list_texto_enumeracion) * 3 + 2
+        # self.dimension_y = len(self.list_texto_enumeracion) * 3 + 2
         self.dimension_y = 1
         self.tam_eje_y_figura = 1
 
@@ -199,13 +217,11 @@ class Palabra:
         except Exception as _:
             pass
 
-
     def refresh_relaciones_proximas_2o_grado(self):
         list_pal_to_check = [a for a in self.list_palabras_relacionadas_1er_grado if a != self]
 
         pal_to_check_2 = []
         self.palabras_relaciones_proximas = []
-
 
         for pal in list_pal_to_check:
             list_to_check = [a for a in pal.list_palabras_relacionadas_dest_2o_grado if a != self and a != pal] + \
@@ -216,7 +232,7 @@ class Palabra:
         # que cree listas diferentes para los elementos que estan relacionados entre si:
 
         pal_to_check_2_copy = pal_to_check_2.copy()
-        new_rel_origin= []
+        new_rel_origin = []
         while pal_to_check_2 != []:
             pal = pal_to_check_2.pop(0)
             new_rel = []
@@ -225,7 +241,7 @@ class Palabra:
                     new_rel.append(pal2)
             if new_rel == []:
                 pass
-                #new_rel_origin.append(pal)
+                # new_rel_origin.append(pal)
             else:
                 new_rel.append(pal)
                 self.palabras_relaciones_proximas.append(new_rel)
@@ -272,15 +288,18 @@ class Palabra:
         #         i += 1
         #     self.palabras_relaciones_proximas = new_palabras_relaciones_proximas
 
-        self.list_palabras_relacionadas_1er_grado = [pal for pal in self.list_palabras_relacionadas_1er_grado if pal != self]
+        self.list_palabras_relacionadas_1er_grado = [pal for pal in self.list_palabras_relacionadas_1er_grado if
+                                                     pal != self]
         self.list_palabras_relacionadas_1er_grado = list(set(self.list_palabras_relacionadas_1er_grado))
-        self.list_palabras_relacionadas_2o_grado = [pal for pal in self.list_palabras_relacionadas_2o_grado if pal != self]
-        self.list_palabras_relacionadas_2o_grado = list(set(self.list_palabras_relacionadas_2o_grado))
-        self.list_palabras_relacionadas_dest_1er_grado = [pal for pal in self.list_palabras_relacionadas_dest_1er_grado if
+        self.list_palabras_relacionadas_2o_grado = [pal for pal in self.list_palabras_relacionadas_2o_grado if
                                                     pal != self]
+        self.list_palabras_relacionadas_2o_grado = list(set(self.list_palabras_relacionadas_2o_grado))
+        self.list_palabras_relacionadas_dest_1er_grado = [pal for pal in self.list_palabras_relacionadas_dest_1er_grado
+                                                          if
+                                                          pal != self]
         self.list_palabras_relacionadas_dest_1er_grado = list(set(self.list_palabras_relacionadas_dest_1er_grado))
         self.list_palabras_relacionadas_dest_2o_grado = [pal for pal in self.list_palabras_relacionadas_dest_2o_grado if
-                                                          pal != self]
+                                                         pal != self]
         self.list_palabras_relacionadas_dest_2o_grado = list(set(self.list_palabras_relacionadas_dest_2o_grado))
         self.list_all_pal_subgrafo += self.list_palabras_relacionadas_1er_grado
         self.list_all_pal_subgrafo = [pal for pal in list(set(self.list_all_pal_subgrafo)) if pal != self.pal_raiz]
@@ -328,17 +347,17 @@ class Palabra:
                                                      pal != self]
         self.list_palabras_relacionadas_1er_grado = list(set(self.list_palabras_relacionadas_1er_grado))
         self.list_palabras_relacionadas_2o_grado = [pal for pal in self.list_palabras_relacionadas_2o_grado if
-                                                     pal != self]
+                                                    pal != self]
         self.list_palabras_relacionadas_2o_grado = list(set(self.list_palabras_relacionadas_2o_grado))
-        self.list_palabras_relacionadas_dest_1er_grado = [pal for pal in self.list_palabras_relacionadas_dest_1er_grado if
-                                                     pal != self]
+        self.list_palabras_relacionadas_dest_1er_grado = [pal for pal in self.list_palabras_relacionadas_dest_1er_grado
+                                                          if
+                                                          pal != self]
         self.list_palabras_relacionadas_dest_1er_grado = list(set(self.list_palabras_relacionadas_dest_1er_grado))
         self.list_palabras_relacionadas_dest_2o_grado = [pal for pal in self.list_palabras_relacionadas_dest_2o_grado if
-                                                     pal != self]
+                                                         pal != self]
         self.list_palabras_relacionadas_dest_2o_grado = list(set(self.list_palabras_relacionadas_dest_2o_grado))
         self.list_all_pal_subgrafo += self.list_palabras_relacionadas_1er_grado
         self.list_all_pal_subgrafo = [pal for pal in list(set(self.list_all_pal_subgrafo)) if pal != self.pal_raiz]
-
 
     def refresh_pal_relations(self):
         try:
@@ -360,10 +379,8 @@ class Palabra:
             self.relations_origen_and_dest = []
             self.relations_pending = []
 
-
-
     def refresh_list_all_pal_subgrafo(self):
-        #self.list_all_pal_subgrafo = []
+        # self.list_all_pal_subgrafo = []
         list_palabras_dest = [pal.pal_dest for pal in Palabra.relaciones_dict_origen.get(self, [])]
         list_palabras_origen = [pal.pal_origen for pal in Palabra.relaciones_dict_destino.get(self, [])]
         list_all_pal_subgrafo = list_palabras_dest + list_palabras_origen
@@ -374,7 +391,6 @@ class Palabra:
         # un bucle en el que recorra todas las palabras y saque sus list_all_pal_subgrafo pero de forma recursiva
         for pal in list_all_pal_subgrafo:
             list_all_pal_subgrafo += pal.list_all_pal_subgrafo
-
 
     # Funcion recursiva que devuelve el subgrafo completo de una palabra
     def get_subgrafo_completo(self, pal_origen=None):
@@ -395,7 +411,6 @@ class Palabra:
             list_palabras_relacionadas_1er_grado_copy.remove(self.pal_raiz)
         if self in list_palabras_relacionadas_1er_grado_copy:
             list_palabras_relacionadas_1er_grado_copy.remove(self)
-
 
         if list_palabras_relacionadas_1er_grado_copy == []:
             self.list_all_pal_subgrafo = []
@@ -432,8 +447,41 @@ class Palabra:
         self.subgrafo_completado = True
         return True
 
-
     def to_create_Palabra_str(self):
         return "list_palabras.append(Palabra('" + self.texto + "', '" + self.tipo + "', '" + self.lugar_sintactico + "', " + str(
             self.id) + ", " + str(self.importancia) + ", " + str(
             self.num_relaciones) + ", False, '" + self.txt_lema + "', " + str(self.position_doc) + "))"
+
+
+    def _add_det_in_text(self, new_text_previous ='', new_text_after='', sep =' '):
+        self.texto = new_text_previous + sep + self.texto + sep + new_text_after
+        self.dimension_x = self.get_dimension(self.texto)
+
+    def add_determinantes_text(self, new_det_text, position_new_text):
+        from utils.utils_text import son_pal_rel_contiguas
+        self.determinantes_text.update({new_det_text: position_new_text})
+        # ordenar el diccionario por el valor de la posicion
+        determinantes_text_copy = self.determinantes_text.copy()
+        determinantes_text_copy.update({self.text_original: self.position_doc})
+        determinantes_text_copy = dict(sorted(determinantes_text_copy.items(), key=lambda item: item[1]))
+        det_prev = None
+        pos_prev = None
+        new_text = ''
+        for det, pos in determinantes_text_copy.items():
+            if det_prev is None:
+                det_prev = det
+                pos_prev = pos
+                new_text = det
+                continue
+            if son_pal_rel_contiguas(text1=det_prev, pos1 = pos_prev, text2=det, pos2=pos):
+                sep = ' '
+            else:
+                sep = ' / '
+
+            # Esta ordenado de menor a mayor asi queno hay que preocuparse si es anterior o posterior
+            new_text = new_text + sep + det
+            det_prev = det
+            pos_prev = pos
+
+        self.texto = new_text
+        self.dimension_x = self.get_dimension(self.texto)
