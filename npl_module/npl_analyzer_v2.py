@@ -70,7 +70,6 @@ def get_list_palabras_relaciones(texto,spacy_load):
                     # Si no esta en la relacion, se lo añado a la palabra, ya que no tiene relación hijo
                     pal_padre.add_aux_text(token.text, token.position_doc)
 
-
                 print("hola")
                 print(token)
 
@@ -128,6 +127,15 @@ def get_list_palabras(list_token_nlp_oraciones):
                 if (token_nlp.tipo_morfol == 'AUX' and token_nlp.token_nlp_padre.tipo_morfol == 'VERB') or \
                         (token_nlp.tipo_morfol == 'PRON' and token_nlp.token_nlp_padre.tipo_morfol == 'VERB'):
                     # Es el auxiliar de un verbo (ha saltado, se ha comido...)
+                    nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
+                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                # Ahora el AUX que va con afjetivo, para "es impresionante"
+                elif token_nlp.tipo_morfol == 'AUX' and token_nlp.lugar_sintact_original == 'cop' and \
+                    token_nlp.token_nlp_padre.tipo_morfol in ('ADJ', 'NOUN'):
+                    nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
+                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                elif token_nlp.lugar_sintact_original == TYPE_SINTAX_FLAT:
+                    # Es el auxiliar de una palabra (Felipe II...)
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
                     nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
                 else:
@@ -246,18 +254,21 @@ texto = "La vida es como un viaje en el que cada uno elige su propio camino a ve
 texto = "Mi novia tiene una toalla de hospital para su perro"
 
 
-#texto = "Isthar come paja en el pajar mientras Jasper le mira mientras Tina caza palomas para cenar"
+texto = "Isthar come paja en el pajar mientras Jasper le mira mientras Tina caza palomas para cenar"
 #texto = "Mi perro y mi gato juegan juntos en el parque con una pelota"
 #texto = "Me llamo Rubén y tengo 25 años. Vivo en Madrid y trabajo en una empresa de tecnología. Me gusta leer, viajar y pasar tiempo con mi familia y amigos."
 #texto = "Los Austrias gobernaron España en el siglo XVI y XVII, responsables también de la Inquisición, expulsión de judíos. Su legado: arquitectura y arte en Madrid y Córdoba."
 #texto = "Ruben cocina hamburguesas en la Freidora de aire"
 #texto = "La naturaleza es impresionante en su variedad de paisajes, desde montañas majestuosas y extensas llanuras hasta océanos y ríos caudalosos."
 
-#TEST Flat
-texto = "Felipe II fué rey de españa hace tiempo. Maria Antonieta era reina de Francia."
-texto = "Mientras programo, un pajaro ha saltado por el balcón y se ha comido una golondrina"
+###################################################################################################
+##### TEST Flat
+#texto = "Felipe II fué rey de españa hace tiempo. Maria Antonieta era reina de Francia."
+#texto = "Mientras programo, un pajaro ha saltado por el balcón y se ha comido una golondrina"
+#texto = "La naturaleza es impresionante en su variedad de paisajes"
 # Para esta, idenfica mal el CD ya que pone a Golondrina como sujeto
-
+# el SmallModel si calcula bien que es 'obj', es decir, CD.
+###################################################################################################
 
 ########################################################################################################################
 ########################################################################################################################

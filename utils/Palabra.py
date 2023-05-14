@@ -14,8 +14,10 @@ from constants.direcciones_relaciones import CENTRO
 from constants.direcciones_relaciones import DIR_DCHA, DIR_DCHA_ABAJO, DIR_DCHA_ARRIBA, DIR_ABAJO, DIR_ARRIBA, \
     DIR_IZQ, DIR_IZQ_ARRIBA, DIR_IZQ_ABAJO, FIND_DIR_CENTRO, FIND_DIR_DCHA, FIND_DIR_DCHA_ABAJO, FIND_DIR_DCHA_ARRIBA, \
     FIND_DIR_ABAJO, FIND_DIR_ARRIBA, FIND_DIR_IZQ, FIND_DIR_IZQ_ARRIBA, FIND_DIR_IZQ_ABAJO, DICT_DIR_BY_ORIGEN, CENTRO
-from constants.type_sintax import TYPE_SINTAX_NSUBJ
-from constants import colores_figura, colores_figura_letra, colores
+from constants.type_sintax import *
+from constants.type_morfologico import *
+
+from constants import colores_figura, colores_figura_letra, colores, figuras
 
 """
 ¿Por qué hay un id_actual que a veces es autoincremental y a veces no?
@@ -51,7 +53,7 @@ class Palabra:
         self.token_nlp = token_nlp
         self.texto = texto
         self.txt_lema = txt_lema if txt_lema is not None else self.limpiar_texto(texto)
-        self.tipo = tipo_morf
+        self.tipo_morf = tipo_morf
         self.lugar_sintactico = lugar_sintactico
         self.id = id if id is not None else self.generar_id(texto, autoincremental)
         # A menor valor de imporancia, mayor importancia tiene. Valor max=1
@@ -71,7 +73,7 @@ class Palabra:
         self.has_been_plotted_relations = False
         self.position_doc = position_doc
         self.num_oracion = num_oracion
-        self.figura = None
+        self.tipo_figura = None
         self.tam_eje_x_figura = self.dimension_x
         self.tam_eje_y_figura = self.dimension_y
         self.pos_x = None
@@ -126,8 +128,14 @@ class Palabra:
         if self.lugar_sintactico == TYPE_SINTAX_NSUBJ:
             self.importancia = 1
             self.color_figura = colores_figura.COLOR_SINTAX_NSUBJ
+            self.tipo_figura = figuras.FIGURA_RECTANGULO
+        if self.tipo_morf == TYPE_MORF_VERB:
+            self.color_figura = colores_figura.COLOR_MORF_VERB
+            self.tipo_figura = figuras.FIGURA_ELIPSE
         else:
             self.color_figura = colores_figura.DEFAULT
+            self.tipo_figura = figuras.FIGURA_RECTANGULO
+
 
 
 
@@ -464,7 +472,7 @@ class Palabra:
         return True
 
     def to_create_Palabra_str(self):
-        return "list_palabras.append(Palabra('" + self.texto + "', '" + self.tipo + "', '" + self.lugar_sintactico + "', " + str(
+        return "list_palabras.append(Palabra('" + self.texto + "', '" + self.tipo_morf + "', '" + self.lugar_sintactico + "', " + str(
             self.id) + ", " + str(self.importancia) + ", " + str(
             self.num_relaciones) + ", False, '" + self.txt_lema + "', " + str(self.position_doc) + "))"
 

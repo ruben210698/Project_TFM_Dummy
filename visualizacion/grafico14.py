@@ -1217,9 +1217,11 @@ def draw_all_nodes(ax, position_elems, list_palabras):
             continue
         logger.info(pal.texto)
         color_figura = pal.color_figura
+        tipo_figura = pal.tipo_figura
 
-        if pal.lugar_sintactico.lower() in (TYPE_SINTAX_ROOT):
-            pal.figura = FIGURA_ELIPSE
+        if pal.tipo_figura == FIGURA_ELIPSE:
+        #if pal.lugar_sintactico.lower() in (TYPE_SINTAX_ROOT):
+            pal.tipo_figura = FIGURA_ELIPSE
             pal.tam_eje_y_figura = tam_figuras.ELIPSE[1] * (pal.dimension_y)
             pal.tam_eje_x_figura = tam_figuras.ELIPSE[0] * (pal.dimension_x)
             ellipse_width = 0.6 * (pal.dimension_x + pal.cte_sum_x)
@@ -1229,8 +1231,9 @@ def draw_all_nodes(ax, position_elems, list_palabras):
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
                     color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
 
-        elif pal.lugar_sintactico.lower() in (TYPE_SINTAX_AMOD, TYPE_SINTAX_NMOD):
-            pal.figura = FIGURA_RECTANGULO
+        elif pal.tipo_figura == FIGURA_RECTANGULO:
+        #elif pal.lugar_sintactico.lower() in (TYPE_SINTAX_AMOD, TYPE_SINTAX_NMOD):
+            pal.tipo_figura = FIGURA_RECTANGULO
             pal.tam_eje_y_figura = tam_figuras.RECTANGULO[1] * (pal.dimension_y)
             pal.tam_eje_x_figura = tam_figuras.RECTANGULO[0] * (pal.dimension_x)
             rectangle_width = tam_figuras.RECTANGULO[0] * pal.dimension_x
@@ -1241,7 +1244,7 @@ def draw_all_nodes(ax, position_elems, list_palabras):
                     color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
         #
         elif pal.lugar_sintactico.lower() in (): #(TYPE_SINTAX_FLAT):
-            pal.figura = FIGURA_HEXAGONO
+            pal.tipo_figura = FIGURA_HEXAGONO
             pal.tam_eje_y_figura = tam_figuras.HEXAGONO[1] * (pal.dimension_y)
             pal.tam_eje_x_figura = tam_figuras.HEXAGONO[0] * (pal.dimension_x)
             polygon_radius = 0.4 * len(node_text)
@@ -1252,7 +1255,7 @@ def draw_all_nodes(ax, position_elems, list_palabras):
                     color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
         #
         elif pal.lugar_sintactico.lower() in ():
-            pal.figura = FIGURA_RECTANGULO
+            pal.tipo_figura = FIGURA_RECTANGULO
             pal.tam_eje_y_figura = tam_figuras.RECTANGULO[1] * (pal.dimension_y)
             pal.tam_eje_x_figura = tam_figuras.RECTANGULO[0] * (pal.dimension_x)
             rectangle_width = tam_figuras.RECTANGULO[0] * pal.dimension_x
@@ -1263,7 +1266,7 @@ def draw_all_nodes(ax, position_elems, list_palabras):
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
                     color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
         else:
-            pal.figura = FIGURA_RECTANGULO
+            pal.tipo_figura = FIGURA_RECTANGULO
             pal.tam_eje_y_figura = tam_figuras.RECTANGULO[1] * (pal.dimension_y)
             pal.tam_eje_x_figura = tam_figuras.RECTANGULO[0] * (pal.dimension_x)
             rectangle_width = tam_figuras.RECTANGULO[0] * pal.dimension_x

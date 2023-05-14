@@ -256,7 +256,7 @@ def unir_siglos_annos_all_list(list_palabras, list_relaciones):
     for pal in list_palabras_copy:
         if encontrado:
             continue
-        if pal.lugar_sintactico == 'compound' and pal.tipo == 'NOUN' and \
+        if pal.lugar_sintactico == 'compound' and pal.tipo_morf == 'NOUN' and \
                 (detect_numero_romano(pal.texto) or detect_numero_int(pal.texto)):
             # Esto es el numero del siglo o del año:
             list_relaciones_posibles = Palabra.relaciones_dict_destino[pal]
