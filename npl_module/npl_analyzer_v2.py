@@ -4,6 +4,7 @@ Tambien quiero que cree relaciones entre ellas.
 """
 import re
 import spacy
+from unidecode import unidecode
 from spacy import displacy
 from spacy.matcher import Matcher
 from spacy.tokens import Span
@@ -160,13 +161,19 @@ def get_list_palabras(list_token_nlp_oraciones):
         for token_nlp in oracion_nlp:
             if token_nlp.tipo_palabra is TYPE_PALABRA:
                 if (token_nlp.tipo_morfol == 'AUX' and token_nlp.token_nlp_padre.tipo_morfol == 'VERB') or \
-                        (token_nlp.tipo_morfol == 'PRON' and token_nlp.token_nlp_padre.tipo_morfol == 'VERB'):
+                        (token_nlp.tipo_morfol == 'PRON' and token_nlp.lugar_sintact_original != 'nsubj'
+                         and token_nlp.token_nlp_padre.tipo_morfol == 'VERB'):
                     # Es el auxiliar de un verbo (ha saltado, se ha comido...)
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
                     nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
                 # Ahora el AUX que va con afjetivo, para "es impresionante"
                 elif token_nlp.tipo_morfol == 'AUX' and token_nlp.lugar_sintact_original == 'cop' and \
                     token_nlp.token_nlp_padre.tipo_morfol in ('ADJ', 'NOUN'):
+                    nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
+                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                # estudio informatica:
+                elif token_nlp.tipo_morfol == 'ADJ' and \
+                    token_nlp.token_nlp_padre.lugar_sintact_original in ('appos'):
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
                     nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
                 elif token_nlp.tipo_morfol == 'SCONJ':
@@ -212,11 +219,44 @@ def analyse_token_recursive(token_padre, token_actual, num_oracion):
 
 
 
+def completar_sujeto_omitido(oracion, nlp):
+    doc = nlp(oracion)
+    sujeto_omitido = None
+
+    hay_sujeto = False
+    for token in doc:
+        if token.dep_ == "nsubj":
+            hay_sujeto = True
+        if token.dep_ == "nsubj" and token.head.pos_ == "VERB":
+            sujeto_omitido = token
+            break
+
+    if sujeto_omitido is None and not hay_sujeto:
+        for token in doc:
+            if token.tag_ == 'PRON' and token.head.pos_ == "VERB":
+                sujeto_omitido = token
+                break
+
+    if sujeto_omitido:
+        sujeto_completo = sujeto_omitido.lemma_
+        return oracion.replace(sujeto_omitido.text, sujeto_completo)
+    else:
+        return oracion
+
+
+
+
+
+
 def preprocesing_oracion_nlp(texto, spacy_load):
     texto = texto.replace('\n', '. ').replace('\r', '. ').replace('\t', '. ').\
         replace("    ", " ").replace("   ", " ").replace("  ", " ")
-
     nlp = spacy.load(spacy_load)
+
+
+    texto = completar_sujeto_omitido(texto, nlp)
+    print(texto)
+
     doc = nlp(texto)
     spacy_patrones(doc, nlp)
 
@@ -272,12 +312,13 @@ def spacy_patrones(doc, nlp):
         "antiguamente", "hoy", "pronto", "asiduamente", "inicialmente", "puntualmente", "aún", "inmediatamente",
         "recién", "ayer", "instantáneamente", "recientemente", "constantemente", "jamás", "siempre",
         "contemporáneamente", "luego", "simultáneamente", "cuando", "mañana", "tarde", "desde", "mientras",
-        "temprano", "después", "momentáneamente", "ya", "día" "días", "dia", "días", "semana", "semanas", "mes",
+        "temprano", "después", "momentáneamente", "ya", "día", "días", "dia", "dias", "semana", "semanas", "mes",
         "meses",
         "aun","recien", "instantaneamente", "contemporaneamente", "cuando", "despues", "momentaneamente"
     ]
+    unicode_adverbsCCT = [unidecode(adverbCCT) for adverbCCT in adverbsCCT]
 
-    patterns = [[{"LOWER": adverbCCT}] for adverbCCT in adverbsCCT]
+    patterns = [[{"LOWER": adverbCCT}] for adverbCCT in adverbsCCT+unicode_adverbsCCT]
 
     matcher = Matcher(nlp.vocab)
     matcher.add("Time_Patterns", patterns)
@@ -310,8 +351,8 @@ def spacy_patrones(doc, nlp):
         "alrededor", "detrás", "sobre",
         "a traves", "aqui", "aca", "atras", "ahi", "alla", "alli", "detras"
     ]
-
-    patterns = [[{"LOWER": adverbCCL}] for adverbCCL in adverbsCCL]
+    unicode_adverbsCCL = [unidecode(adverbCCL) for adverbCCL in adverbsCCL]
+    patterns = [[{"LOWER": unidecode(adverbCCL)}] for adverbCCL in adverbsCCL + unicode_adverbsCCL]
 
     matcher = Matcher(nlp.vocab)
     matcher.add("Time_Patterns", patterns)
@@ -382,9 +423,15 @@ texto = "Mientras programo, un pajaro ha saltado por el balcón y se ha comido u
 #texto = "La naturaleza es impresionante en su variedad de paisajes"
 ###################################################################################################
 
-#### TEST CCL
+#### TEST Root-VB a SUJ-VB
 texto = "El perro de mi vecino se llama Toby y sale a jugar al parque todos los días"
+texto = "Me llamo Ruben, estudio informatica y espero poder acabar el master algún día"
 
+
+
+#### TEST Sujeto omitido
+texto = "Me voy a jugar al futbol"
+texto = "El otro día me llamaron de una empresa nueva"
 
 
 
