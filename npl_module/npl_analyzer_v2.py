@@ -39,7 +39,20 @@ nlp = spacy.load("es_core_news_lg")
 
 
 
+def print_spacy_tree(doc):
+    print()
+    # Imprimir el árbol de dependencias sintácticas en formato de árbol
+    for token in doc:
+        print(token.text, token.dep_, token.head.text)
 
+    def print_tree(token, level=0):
+        print('\t' * level + f"{token.text} -- {token.dep_}")
+        for child in token.children:
+            print_tree(child, level + 1)
+
+    root = [token for token in doc if token.head == token][0]
+    print_tree(root)
+    print()
 
 def get_list_palabras_relaciones(texto,spacy_load):
     list_token_nlp_oraciones = preprocesing_oracion_nlp(texto, spacy_load)
@@ -58,6 +71,8 @@ def get_list_palabras_relaciones(texto,spacy_load):
                     continue
                 if token.token_nlp_padre is not None:
                     pal_padre = token.token_nlp_padre.palabra_que_representa
+                    if pal_padre is None:
+                        pal_padre = token.palabra_padre_final
                     rel_dest_padre = Palabra.relaciones_dict_destino.get(pal_padre)
                     entontrada = False
                     if rel_dest_padre is not None and rel_dest_padre != []:
@@ -67,8 +82,9 @@ def get_list_palabras_relaciones(texto,spacy_load):
                                 break
                     if entontrada:
                         continue
-                    # Si no esta en la relacion, se lo añado a la palabra, ya que no tiene relación hijo
-                    pal_padre.add_aux_text(token.text, token.position_doc)
+                    if pal_padre is not None:
+                        # Si no esta en la relacion, se lo añado a la palabra, ya que no tiene relación hijo
+                        pal_padre.add_aux_text(token.text, token.position_doc)
 
                 print("hola")
                 print(token)
@@ -134,6 +150,9 @@ def get_list_palabras(list_token_nlp_oraciones):
                     token_nlp.token_nlp_padre.tipo_morfol in ('ADJ', 'NOUN'):
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
                     nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                elif token_nlp.tipo_morfol == 'SCONJ':
+                    nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
+                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
                 elif token_nlp.lugar_sintact_original == TYPE_SINTAX_FLAT:
                     # Es el auxiliar de una palabra (Felipe II...)
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
@@ -180,6 +199,9 @@ def preprocesing_oracion_nlp(texto, spacy_load):
 
     nlp = spacy.load(spacy_load)
     doc = nlp(texto)
+    spacy_patrones(doc, nlp)
+
+    print_spacy_tree(doc)
 
     ## Primero lo divido en oraciones
     list_token_oraciones = []
@@ -222,11 +244,82 @@ def preprocesing_oracion_nlp(texto, spacy_load):
     return list_token_nlp_oraciones
 
 
+def spacy_patrones(doc, nlp):
+    # Definir los patrones de coincidencia
+    # Ref: https://www.ejemplos.co/ejemplos-de-adverbios-de-tiempo/
+    adverbsCCT = [
+        "actualmente", "enseguida", "normalmente", "ahora", "entretanto", "nunca", "anoche", "eternamente",
+        "ocasionalmente", "anteriormente", "finalmente", "posteriormente", "antes", "frecuentemente", "primeramente",
+        "antiguamente", "hoy", "pronto", "asiduamente", "inicialmente", "puntualmente", "aún", "inmediatamente",
+        "recién", "ayer", "instantáneamente", "recientemente", "constantemente", "jamás", "siempre",
+        "contemporáneamente", "luego", "simultáneamente", "cuando", "mañana", "tarde", "desde", "mientras",
+        "temprano", "después", "momentáneamente", "ya", "día" "días", "dia", "días", "semana", "semanas", "mes",
+        "meses",
+        "aun","recien", "instantaneamente", "contemporaneamente", "cuando", "despues", "momentaneamente"
+    ]
+
+    patterns = [[{"LOWER": adverbCCT}] for adverbCCT in adverbsCCT]
+
+    matcher = Matcher(nlp.vocab)
+    matcher.add("Time_Patterns", patterns)
+
+    matches = matcher(doc)
+
+    for match_id, start, end in matches:
+        matched_span = doc[start:end]
+        print("CCT: ", matched_span.text)
+        for token in matched_span:
+            if token.dep_ in LIST_SINTAX_PATTERN_MODIFY:
+                print("Old token:")
+                print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
+                      "|| dep_:", token.dep_, "|| ent_type_:", token.ent_type_, "|| ", token.shape_, token.is_alpha,
+                      token.is_stop)
+                token.dep_ = TYPE_SINTAX_PATTERN_CCT
+                print("New token:")
+                print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
+                      "|| dep_:", token.dep_, "|| ent_type_:", token.ent_type_, "|| ", token.shape_, token.is_alpha,
+                      token.is_stop)
+
+    ######################################################
+    ######################################################
+    # REF: https://www.ejemplos.co/25-ejemplos-de-adverbios-de-lugar/
+    adverbsCCL = [
+        "a través", "aquí", "donde", "abajo", "arriba", "en",
+        "acá", "atrás", "encima", "afuera", "bajo", "enfrente",
+        "ahí", "cerca", "entre", "al borde", "delante", "junto a",
+        "allá", "dentro", "lejos de", "allí", "desde", "por debajo",
+        "alrededor", "detrás", "sobre",
+        "a traves", "aqui", "aca", "atras", "ahi", "alla", "alli", "detras"
+    ]
+
+    patterns = [[{"LOWER": adverbCCL}] for adverbCCL in adverbsCCL]
+
+    matcher = Matcher(nlp.vocab)
+    matcher.add("Time_Patterns", patterns)
+
+    matches = matcher(doc)
+
+    for match_id, start, end in matches:
+        matched_span = doc[start:end]
+        print("CCL: ", matched_span.text)
+        for token in matched_span:
+            if token.dep_ in LIST_SINTAX_PATTERN_MODIFY:
+                print("Old token:")
+                print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
+                      "|| dep_:", token.dep_, "|| ent_type_:", token.ent_type_, "|| ", token.shape_, token.is_alpha,
+                      token.is_stop)
+                token.dep_ = TYPE_SINTAX_PATTERN_CCL
+                print("New token:")
+                print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
+                      "|| dep_:", token.dep_, "|| ent_type_:", token.ent_type_, "|| ", token.shape_, token.is_alpha,
+                      token.is_stop)
+
+
 def get_list_token_oraciones(doc, list_oracion_actual, list_token_oraciones):
     for token in doc:
         ########################################
         print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
-              "|| dep_:", token.dep_, token.shape_, token.is_alpha, token.is_stop)
+              "|| dep_:", token.dep_, "|| ent_type_:", token.ent_type_, "|| ", token.shape_, token.is_alpha, token.is_stop)
         for child in token.children:
             print("-->child:", child)
         ########################################
@@ -263,19 +356,28 @@ texto = "Isthar come paja en el pajar mientras Jasper le mira mientras Tina caza
 
 ###################################################################################################
 ##### TEST Flat
-#texto = "Felipe II fué rey de españa hace tiempo. Maria Antonieta era reina de Francia."
-#texto = "Mientras programo, un pajaro ha saltado por el balcón y se ha comido una golondrina"
-#texto = "La naturaleza es impresionante en su variedad de paisajes"
+texto = "Felipe II fué rey de españa hace tiempo. Maria Antonieta era reina de Francia."
+texto = "Mientras programo, un pajaro ha saltado por el balcón y se ha comido una golondrina"
 # Para esta, idenfica mal el CD ya que pone a Golondrina como sujeto
 # el SmallModel si calcula bien que es 'obj', es decir, CD.
+#texto = "La naturaleza es impresionante en su variedad de paisajes"
 ###################################################################################################
+
+#### TEST CCL
+texto = "El perro de mi vecino se llama Toby y sale a jugar al parque todos los días"
+
+
+
 
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
 #spacy_load = "es_core_news_lg"
 #spacy_load = "es_core_news_sm"
+#spacy_load = "es_core_news_md"
 spacy_load = "es_core_news_lg"
+# NLTK, AllenNLP y StanfordNLP
+
 
 print("Texto: ", texto)
 list_palabras, list_relaciones = get_list_palabras_relaciones(texto, spacy_load)

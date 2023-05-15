@@ -39,6 +39,7 @@ PAL_DEBUG = 'naturaleza'
 PAL_DEBUG = os.getenv('PAL_DEBUG', '')
 ZOOM_ACTIVE = eval(os.getenv('ZOOM_ACTIVE', 'True'))
 create_logger()
+CONTADOR_EVITAR_BUCLE_INFINITO = 0
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -356,6 +357,7 @@ def update_palabras_in_matrix(matrix_dim, palabra):
 
 def represent_list_relations(list_palabras_representadas, list_relaciones, matrix_dim, palabra, position_elems,
                              force_draw=False):
+    global CONTADOR_EVITAR_BUCLE_INFINITO
     if palabra.texto == PAL_DEBUG:
         print("Hola")
     refresh_directions(palabra)
@@ -394,6 +396,10 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
 
     list_rel_pending = []
     while list_dir_pending != []:
+        CONTADOR_EVITAR_BUCLE_INFINITO += 1
+        if CONTADOR_EVITAR_BUCLE_INFINITO > 500:
+            print("Bucle infinito")
+            break
         # Necesario para refrescar las palabras temporales
         list_relaciones_pal = get_rel_origen_and_dest_unidas(palabra).copy()
         dir_actual = list_dir_pending.pop(0)
@@ -576,6 +582,7 @@ def get_next_word_to_repres(palabra_old):
     return None
 
 def get_position_dict(list_palabras, list_relaciones):
+    global CONTADOR_EVITAR_BUCLE_INFINITO
     importance_dict = get_importance_dict(list_palabras)
     matrix_dim, pos_y_media, pos_x_media = generate_matrix(list_palabras)
 
@@ -585,6 +592,7 @@ def get_position_dict(list_palabras, list_relaciones):
     list_palabras_ordenadas = list_palabras.copy()
     list_palabras_ordenadas.sort(key=lambda x: x.numero_grafos, reverse=True)
     while len(list_palabras_ordenadas) != 0:
+        CONTADOR_EVITAR_BUCLE_INFINITO = 0
         palabra = list_palabras_ordenadas.pop(0)
 
         # 1a función - 1a entrada
@@ -711,8 +719,8 @@ def text_tranformations(list_palabras, list_relaciones):
     #list_relaciones = unir_list_all_relaciones(list_relaciones)
     #list_palabras, list_relaciones = unir_siglos_annos_all_list(list_palabras, list_relaciones)
     #list_relaciones = unir_list_all_relaciones(list_relaciones)
-    #list_relaciones = remove_relations_without_words(list_relaciones, list_palabras)
 
+    list_relaciones = remove_relations_without_words(list_relaciones, list_palabras)
     # al final:
     Palabra.refresh_relaciones_dict(list_relaciones)
     insertar_grafos_aproximados_palabras(list_palabras)
@@ -1071,7 +1079,6 @@ def draw_all_edges(ax, list_relaciones, position_elems, matrix_dim):
                 continue
             elif relation_draw.direccion_actual == DIR_IZQ and pal_origen.dict_posiciones[DIR_IZQ] != pal_dest:
                 continue
-
 
             if relation_draw.direccion_actual == DIR_DCHA:
                 x_dest_draw = coord_pal_dest[0] - pal_dest.tam_eje_x_figura/2

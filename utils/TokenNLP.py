@@ -51,6 +51,12 @@ class TokenNLP:
         self.lema = token_actual.lemma_
         self.position_doc = token_actual.idx
         self.ent_type = token_actual.ent_type_ # TODO sacar algo de aqui
+        #if token_actual.ent_type_ in ['LOC', 'LUG']:
+        #    self.lugar_sintact_original = TYPE_SINTAX_PATTERN_CCL
+        #elif token_actual.ent_type_ in ['TIME', 'DATE']:
+        #    self.lugar_sintact_original = TYPE_SINTAX_PATTERN_CCT
+
+        self.token_tag = token_actual.tag_
 
         self.num_oracion = num_oracion
         self.tipo_sintagma = None # el tipo del root sintagma
@@ -89,19 +95,26 @@ class TokenNLP:
 
         if self.token_nlp_padre is not None:
             if self.token_nlp_padre.lugar_sintact_original == TYPE_SINTAX_ROOT:
-                self.is_root_sintagma = True
+                #self.is_root_sintagma = True
                 self.tipo_sintagma = self.lugar_sintact_original  # si es root sintagma, el tipo sintagma es el actual
+                if self.lugar_sintact_original in LIST_TYPES_SINTAGMA_PREDOMINANTE:
+                    self.is_root_sintagma = True
+            elif self.token_nlp_padre.tipo_sintagma in LIST_TYPES_SINTAGMA_DESCARTAR:
+                # Si el padre es, por ejemplo, det, no me interesa
+                self.tipo_sintagma = self.lugar_sintact_original
+            # Hay sintagmas que predominan sobre otros. Si tiene uno de estos, es que si es root
+            elif self.lugar_sintact_original in LIST_TYPES_SINTAGMA_PREDOMINANTE and \
+                    self.tipo_sintagma != self.lugar_sintact_original:
+                self.is_root_sintagma = True
+                self.tipo_sintagma = self.lugar_sintact_original
+
             elif self.token_nlp_padre.is_root_sintagma:  # si no es root sintagma, el tipo sintagma es el del padre
                 self.tipo_sintagma = self.token_nlp_padre.tipo_sintagma
+
             else: # Si el padre no es root sintagma y el actual tampoco, es que el padre del padre es root sintagma,
                 # tambien coge lo del padre, aunque esto igual hay que revisarlo
                 self.tipo_sintagma = self.token_nlp_padre.tipo_sintagma
 
-            # Hay sintagmas que predominan sobre otros. Si tiene uno de estos, es que si es root
-            if self.lugar_sintact_original in LIST_TYPES_SINTAGMA_PREDOMINANTE and \
-                    self.tipo_sintagma != self.lugar_sintact_original:
-                self.is_root_sintagma = True
-                self.tipo_sintagma = self.lugar_sintact_original
 
 
 

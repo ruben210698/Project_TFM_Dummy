@@ -44,17 +44,20 @@ class Palabra:
                             txt_lema=token_nlp.lema,
                             position_doc=token_nlp.position_doc,
                             num_oracion=token_nlp.num_oracion,
-                            token_nlp=token_nlp
+                            token_nlp=token_nlp,
+                            token_tag=token_nlp.token_tag
                             )
         return instancia
 
     def __init__(self, texto, tipo_morf, lugar_sintactico, id=None, importancia=None, num_relaciones=0,
-                 autoincremental=True, txt_lema=None, position_doc=9999, num_oracion=0, token_nlp=None):
+                 autoincremental=True, txt_lema=None, position_doc=9999, num_oracion=0, token_nlp=None,
+                 token_tag=None):
         self.token_nlp = token_nlp
         self.texto = texto
         self.txt_lema = txt_lema if txt_lema is not None else self.limpiar_texto(texto)
         self.tipo_morf = tipo_morf
         self.lugar_sintactico = lugar_sintactico
+        self.token_tag = token_tag
         self.id = id if id is not None else self.generar_id(texto, autoincremental)
         # A menor valor de imporancia, mayor importancia tiene. Valor max=1
         if importancia is None:
@@ -129,9 +132,15 @@ class Palabra:
             self.importancia = 1
             self.color_figura = colores_figura.COLOR_SINTAX_NSUBJ
             self.tipo_figura = figuras.FIGURA_RECTANGULO
-        if self.tipo_morf == TYPE_MORF_VERB:
+        elif self.tipo_morf == TYPE_MORF_VERB:
             self.color_figura = colores_figura.COLOR_MORF_VERB
             self.tipo_figura = figuras.FIGURA_ELIPSE
+        elif self.tipo_morf == TYPE_SINTAX_PATTERN_CCL:
+            self.color_figura = colores_figura.COLOR_SINTAX_CCL
+            self.tipo_figura = figuras.FIGURA_RECTANGULO
+        elif self.tipo_morf == TYPE_SINTAX_PATTERN_CCT:
+            self.color_figura = colores_figura.COLOR_SINTAX_CCT
+            self.tipo_figura = figuras.FIGURA_RECTANGULO
         else:
             self.color_figura = colores_figura.DEFAULT
             self.tipo_figura = figuras.FIGURA_RECTANGULO
@@ -506,3 +515,12 @@ class Palabra:
 
         self.texto = new_text
         self.dimension_x = self.get_dimension(self.texto)
+
+        # Obtener la sintaxis predominante
+        from utils.TokenNLP import TokenNLP
+        new_token_added = TokenNLP.nlp_token_dict.get(position_new_text, None)
+        if new_token_added is not None and new_token_added.is_root_sintagma and \
+            new_token_added.tipo_sintagma in LIST_TYPES_SINTAGMA_PREDOMINANTE and \
+            self.lugar_sintactico not in LIST_TYPES_SINTAGMA_PREDOMINANTE:
+            self.lugar_sintactico = new_token_added.tipo_sintagma
+

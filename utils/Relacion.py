@@ -5,6 +5,9 @@ from utils.Palabra import Palabra
 from constants.direcciones_relaciones import CENTRO
 import matplotlib.pyplot as plt
 
+from constants.type_sintax import *
+from constants.type_morfologico import *
+
 
 
 class Relacion:
@@ -17,6 +20,7 @@ class Relacion:
                  tipo_morf = None):
         self.delete = False
         self.texto = self.limpiar_texto(texto)
+        self.texto_original = texto
         self.pal_origen = pal_origen
         self.pal_dest = pal_dest
         self.pal_tmp = None # esta es la palabra, u origen o destino, que queremos que lea
@@ -52,6 +56,21 @@ class Relacion:
             Palabra.relaciones_dict_destino[self.pal_dest].append(self)
             pal_dest.refresh_grafos_aproximados()
 
+        self.refresh_empty_text()
+
+    def refresh_empty_text(self):
+        if self.texto_original != "" or self.pal_dest is None or self.pal_origen is None:
+            return
+        #if self.pal_origen.lugar_sintactico == TYPE_SINTAX_ROOT:
+        if self.pal_dest.lugar_sintactico in LIST_SINTAX_TYPES_CD:
+            self.texto = self.limpiar_texto('¿qué?')
+        elif self.pal_dest.lugar_sintactico in LIST_SINTAX_TYPES_CI:
+            self.texto = self.limpiar_texto('¿a quien?')
+        elif self.pal_dest.lugar_sintactico in LIST_SINTAX_TYPES_CCL:
+            self.texto = self.limpiar_texto('¿dónde?')
+        elif self.pal_dest.lugar_sintactico in LIST_SINTAX_TYPES_CCT:
+            self.texto = self.limpiar_texto('¿cuando?')
+
     @classmethod
     def generar_id(cls):
         cls.id_actual -= 1
@@ -66,7 +85,7 @@ class Relacion:
     @staticmethod
     def limpiar_texto(texto):
         texto_limpio = texto.lower()
-        texto_limpio = re.sub(r'\W+', '', texto_limpio)
+        #texto_limpio = re.sub(r'\W+', '', texto_limpio)
         return texto_limpio
 
     @staticmethod
