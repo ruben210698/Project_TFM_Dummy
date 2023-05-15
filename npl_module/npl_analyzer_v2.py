@@ -59,7 +59,28 @@ def get_list_palabras_relaciones(texto,spacy_load):
 
     list_palabras = get_list_palabras(list_token_nlp_oraciones)
     list_relaciones = get_list_relaciones(list_palabras)
+    manejar_palabras_restantes(list_token_nlp_oraciones)
+    relaciones_root_vb_cambio_suj_vb(list_relaciones)
 
+    return list_palabras, list_relaciones
+
+
+def relaciones_root_vb_cambio_suj_vb(list_relaciones):
+    # Modificar las relaciones para que, si ROOT es VB y la palDest es VERBO, se cambie la relación al Sujeto
+    # Existe alguna relacion entre root y Sujeto
+    sujeto = None
+    for rel in list_relaciones:
+        if rel.pal_dest.lugar_sintactico == TYPE_SINTAX_ROOT and rel.pal_origen.lugar_sintactico == TYPE_SINTAX_NSUBJ:
+            sujeto = rel.pal_origen
+            break
+    if sujeto is not None:
+        for rel in list_relaciones:
+            if rel.pal_origen.lugar_sintactico == TYPE_SINTAX_ROOT and rel.pal_origen.tipo_morf == TYPE_MORF_VERB \
+                    and rel.pal_dest.tipo_morf == TYPE_MORF_VERB and rel.pal_dest.lugar_sintactico != TYPE_SINTAX_NSUBJ:
+                rel.change_pal_origen(sujeto)
+
+
+def manejar_palabras_restantes(list_token_nlp_oraciones):
     # Sacar las palabras que no se han sacado antes, omitiendo las Ys (que ya se verá como hacer enumeraciones después)
     # Y hay que comprobar que, si una palabra es igual a la que hay en la relación, no se ponga (en minusculas y sin acentos)
     for oracion in list_token_nlp_oraciones:
@@ -88,8 +109,6 @@ def get_list_palabras_relaciones(texto,spacy_load):
 
                 print("hola")
                 print(token)
-
-    return list_palabras, list_relaciones
 
 
 def get_list_relaciones(list_palabras):
