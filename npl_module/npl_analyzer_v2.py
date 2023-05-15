@@ -29,7 +29,11 @@ from utils.utils_text import son_pal_rel_contiguas
 # from visualizacion.graficoFinal2 import print_graph
 from visualizacion.grafico14 import print_graph, generate_graph
 
-nlp = spacy.load("es_core_news_lg")
+
+# python -m spacy download es_dep_news_trf
+
+
+
 
 #LIST_TYPES_CONNECTOR_RELATION = [TYPE_MORF_ADP, TYPE_MORF_ADP, TYPE_MORF_CONJ, TYPE_MORF_CCONJ, TYPE_MORF_SCONJ,
 #                                 TYPE_MORF_DET, TYPE_MORF_PRON, TYPE_MORF_PART, TYPE_MORF_VERB, TYPE_MORF_AUX]
@@ -55,8 +59,8 @@ def print_spacy_tree(doc):
     print_tree(root)
     print()
 
-def get_list_palabras_relaciones(texto,spacy_load):
-    list_token_nlp_oraciones = preprocesing_oracion_nlp(texto, spacy_load)
+def get_list_palabras_relaciones(texto):
+    list_token_nlp_oraciones = preprocesing_oracion_nlp(texto)
 
     list_palabras = get_list_palabras(list_token_nlp_oraciones)
     list_relaciones = get_list_relaciones(list_palabras)
@@ -77,7 +81,7 @@ def relaciones_root_vb_cambio_suj_vb(list_relaciones):
     if sujeto is not None:
         for rel in list_relaciones:
             if rel.pal_origen.lugar_sintactico == TYPE_SINTAX_ROOT and rel.pal_origen.tipo_morf == TYPE_MORF_VERB \
-                    and rel.pal_dest.tipo_morf == TYPE_MORF_VERB and rel.pal_dest.lugar_sintactico != TYPE_SINTAX_NSUBJ:
+                    and rel.pal_dest.tipo_morf == TYPE_MORF_VERB and rel.pal_dest.lugar_sintactico not in LIST_SINTAX_TYPES_ROOT_VB_OK:
                 rel.change_pal_origen(sujeto)
 
 
@@ -237,30 +241,63 @@ def completar_sujeto_omitido(oracion, nlp):
                 sujeto_omitido = token
                 break
 
-    if sujeto_omitido:
+    if sujeto_omitido is not None and not hay_sujeto and sujeto_omitido.text != sujeto_omitido.lemma_:
         sujeto_completo = sujeto_omitido.lemma_
-        return oracion.replace(sujeto_omitido.text, sujeto_completo)
+        return oracion.replace(sujeto_omitido.text, sujeto_completo + " " + sujeto_omitido.text)
     else:
         return oracion
 
 
+def hay_sujeto(doc):
+    for token in doc:
+        if token.dep_ == "nsubj":
+            return True
+    return False
+
+
+def cambiar_root_nombre_propio(doc):
+    # Igual es porque el ROOT es el sujeto y no el verbo principal.
+    # Ocurre con los nombres propios, si ent_type es persona, debo cambiarlo
+    root = None
+    encontrado = False
+    for token in doc:
+        if token.dep_ == "ROOT" and token.ent_type_ == 'PER':
+            root = token
+            break
+    if root is None:
+        return doc, False
+
+    for chile_root in root.children:
+        if chile_root.dep_ == "ROOT" and chile_root.ent_type_ == "PERSON":
+            chile_root.dep_ = "nsubj"
+            encontrado = False
+            break
+    return doc, encontrado
 
 
 
-
-def preprocesing_oracion_nlp(texto, spacy_load):
+def preprocesing_oracion_nlp(texto):
     texto = texto.replace('\n', '. ').replace('\r', '. ').replace('\t', '. ').\
         replace("    ", " ").replace("   ", " ").replace("  ", " ")
-    nlp = spacy.load(spacy_load)
 
+    encontrado = False
+    doc = None
+    nlp = None
+    list_spacy_loads = ['es_dep_news_trf', 'es_core_news_lg', 'es_core_news_md', 'es_core_news_sm', 'es_dep_news_trf']
+    while not encontrado and list_spacy_loads != []:
+        spacy_load = list_spacy_loads.pop(0)
+        nlp = spacy.load(spacy_load)
+        texto = completar_sujeto_omitido(texto, nlp)
+        doc = nlp(texto)
+        print_spacy_tree(doc)
 
-    texto = completar_sujeto_omitido(texto, nlp)
-    print(texto)
+        # Cambiar los ROOT personales por sujetos y los verbos principales por ROOT con sus relaciones.
+        if not hay_sujeto(doc):
+            doc, encontrado = cambiar_root_nombre_propio(doc)
+        else:
+            encontrado = True
 
-    doc = nlp(texto)
     spacy_patrones(doc, nlp)
-
-    print_spacy_tree(doc)
 
     ## Primero lo divido en oraciones
     list_token_oraciones = []
@@ -428,43 +465,49 @@ texto = "El perro de mi vecino se llama Toby y sale a jugar al parque todos los 
 texto = "Me llamo Ruben, estudio informatica y espero poder acabar el master algún día"
 
 
-
 #### TEST Sujeto omitido
 texto = "Me voy a jugar al futbol"
 texto = "El otro día me llamaron de una empresa nueva"
 
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+texto = "Ruben cocina hamburguesas en la Freidora de aire ayer"
 
 
-########################################################################################################################
-########################################################################################################################
-########################################################################################################################
+texto = "Felipe II fué rey de españa hace tiempo. Maria Antonieta era reina de Francia."
+
+
+
+
+
+
+
 #spacy_load = "es_core_news_lg"
 #spacy_load = "es_core_news_sm"
 #spacy_load = "es_core_news_md"
-spacy_load = "es_core_news_lg"
+#spacy_load = "es_core_news_lg"
 # NLTK, AllenNLP y StanfordNLP
 
 
 print("Texto: ", texto)
-list_palabras, list_relaciones = get_list_palabras_relaciones(texto, spacy_load)
 
+ok_exec = False
+while not ok_exec:
+    list_palabras, list_relaciones = get_list_palabras_relaciones(texto)
 
+    print("Palabras: ", list_palabras)
+    print("Relaciones: ", list_relaciones)
+    for pal in list_palabras:
+        print(pal.to_create_Palabra_str())
 
+    for rel in list_relaciones:
+        print(rel.to_create_Relacion_str())
 
+    Palabra.refresh_dict_palabras()
 
-
-
-
-print("Palabras: ", list_palabras)
-print("Relaciones: ", list_relaciones)
-for pal in list_palabras:
-    print(pal.to_create_Palabra_str())
-
-for rel in list_relaciones:
-    print(rel.to_create_Relacion_str())
-
-Palabra.refresh_dict_palabras()
-
-generate_graph(texto, list_palabras, list_relaciones)
+    fig = generate_graph(texto, list_palabras, list_relaciones)
+    if fig is not None:
+        ok_exec = True
 
 

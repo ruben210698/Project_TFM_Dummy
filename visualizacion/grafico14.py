@@ -583,6 +583,7 @@ def get_next_word_to_repres(palabra_old):
 
 def get_position_dict(list_palabras, list_relaciones):
     global CONTADOR_EVITAR_BUCLE_INFINITO
+    CONTADOR_EVITAR_BUCLE_INFINITO_NVL2 = 0
     importance_dict = get_importance_dict(list_palabras)
     matrix_dim, pos_y_media, pos_x_media = generate_matrix(list_palabras)
 
@@ -593,6 +594,9 @@ def get_position_dict(list_palabras, list_relaciones):
     list_palabras_ordenadas.sort(key=lambda x: x.numero_grafos, reverse=True)
     while len(list_palabras_ordenadas) != 0:
         CONTADOR_EVITAR_BUCLE_INFINITO = 0
+        CONTADOR_EVITAR_BUCLE_INFINITO_NVL2 += 1
+        if CONTADOR_EVITAR_BUCLE_INFINITO_NVL2 > 300:
+            return None, None
         palabra = list_palabras_ordenadas.pop(0)
 
         # 1a función - 1a entrada
@@ -757,6 +761,9 @@ def generate_graph(texto, list_palabras, list_relaciones):
 
     # Crear posiciones de nodos
     position_elems, matrix_dim = get_position_dict(list_palabras, list_relaciones)
+
+    if position_elems is None:
+        return None
 
     return print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=True)
 
