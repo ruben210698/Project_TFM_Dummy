@@ -4,6 +4,7 @@ const images = [  'imagen0.png', 'imagen1.png',  'imagen2.png',  'imagen3.png', 
 let counter = 0;
 let max_counter = 0
 let new_image = 1
+let texto_recibido = 0
 
 function checkImageExistence(imageUrl) {
   return fetch(imageUrl)
@@ -79,6 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function enviarTexto() {
   new_image = 1
+  texto_recibido = 0
   var textoInput = document.getElementById('texto-input').value;
 
   // Realizar una petición al proceso Python
@@ -152,4 +154,31 @@ function showImagePeriodic() {
 
 // Verificar cambios en la carpeta cada segundo
 setInterval(showImagePeriodic, 3000);
+setInterval(obtenerTexto, 1000);
 
+
+
+
+
+function obtenerTexto() {
+    if (texto_recibido) {
+        return
+    }
+  fetch('http://localhost:5000/obtener_prints_python', {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Texto desde Python:', data.texto);
+      document.getElementById('texto-container').textContent = data.texto;
+        if (data.texto.length > 100) {
+          texto_recibido = 1
+        }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+}

@@ -19,7 +19,7 @@ from spacy.pipeline import EntityRecognizer
 from spacy.pipeline import EntityLinker
 from spacy.pipeline import EntityRuler
 
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 from npl_module import token_manual_modifier
@@ -32,6 +32,10 @@ from utils.TokenNLP import TokenNLP, TYPE_RELACION, TYPE_PALABRA
 from utils.utils_text import son_pal_rel_contiguas
 # from visualizacion.graficoFinal2 import print_graph
 from visualizacion.grafico14 import print_graph, generate_graph
+
+import sys
+from io import StringIO
+
 
 
 # python -m spacy download es_dep_news_trf
@@ -65,6 +69,9 @@ def print_spacy_tree(doc):
 
 def get_list_palabras_relaciones(texto):
     list_token_nlp_oraciones = preprocesing_oracion_nlp(texto)
+
+    print("#### Tras preprocesamiento: ")
+    imprimir_nuevos_tokens_nlp(list_token_nlp_oraciones)
 
     list_palabras = get_list_palabras(list_token_nlp_oraciones)
     list_relaciones = get_list_relaciones(list_palabras)
@@ -332,7 +339,10 @@ def preprocesing_oracion_nlp(texto):
         nlp = spacy.load(spacy_load)
         texto = completar_sujeto_omitido(texto, nlp)
         doc = nlp(texto)
-        print_spacy_tree(doc)
+        print("Spacy load: ", spacy_load)
+        print("Resultado sin procesar: ")
+        imprimir_doc(doc)
+        #print_spacy_tree(doc)
 
         # Cambiar los ROOT personales por sujetos y los verbos principales por ROOT con sus relaciones.
         if not hay_sujeto(doc):
@@ -340,7 +350,13 @@ def preprocesing_oracion_nlp(texto):
         else:
             encontrado = True
 
+    print("#### Resultado añadiendo sujeto omitido: ")
+    imprimir_doc(doc)
+
     spacy_patrones(doc, nlp)
+
+    print("#### Resultado añadiendo patrones (CCL, CCT): ")
+    imprimir_doc(doc)
 
     ## Primero lo divido en oraciones
     list_token_oraciones = []
@@ -348,6 +364,9 @@ def preprocesing_oracion_nlp(texto):
     list_oracion_actual = []
 
     get_list_token_oraciones(doc, list_oracion_actual, list_token_oraciones)
+
+    print("#### Obtenida nueva clase Token mia: ")
+    imprimir_nuevos_tokens_nlp(list_token_oraciones)
 
     # Después, recorro la oración empezando por el Root
     num_oracion = -1
@@ -458,14 +477,38 @@ def spacy_patrones(doc, nlp):
                       token.is_stop)
 
 
-def get_list_token_oraciones(doc, list_oracion_actual, list_token_oraciones):
+def imprimir_doc(doc):
     for token in doc:
         ########################################
         print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
               "|| dep_:", token.dep_, "|| ent_type_:", token.ent_type_, "|| ", token.shape_, token.is_alpha, token.is_stop)
         for child in token.children:
             print("-->child:", child)
-        ########################################
+    print()
+    print()
+def imprimir_nuevos_tokens_nlp(list_token_oraciones):
+    for oracion in list_token_oraciones:
+        for token in oracion:
+            ########################################
+            if isinstance(token, TokenNLP):
+                print(token.text, ": ", token.position_doc, token.lema, "|| pos_:", token.tipo_morfol, "|| tag_:", token.token_tag,
+                      "|| dep_:", token.lugar_sintact_original, "|| ent_type_:", token.ent_type)
+                for child_nlp in token.list_children_nlp:
+                    print("-->child:", child_nlp.text)
+            else:
+                print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
+                      "|| dep_:", token.dep_, "|| ent_type_:", token.ent_type_, "|| ", token.shape_, token.is_alpha,
+                      token.is_stop)
+                for child in token.children:
+                    print("-->child:", child)
+    print()
+    print()
+
+
+
+
+def get_list_token_oraciones(doc, list_oracion_actual, list_token_oraciones):
+    for token in doc:
         tipo_morfol = token.pos_
 
         if tipo_morfol == TYPE_MORF_PUNCT and token.lemma_ == ".":
@@ -533,7 +576,13 @@ texto = "El otro día me llamaron de una empresa nueva"
 #spacy_load = "es_core_news_lg"
 # NLTK, AllenNLP y StanfordNLP
 
+txt_prints = ""
 def ejecutar_texto(texto):
+    # Crear un objeto StringIO para redirigir la salida
+    string_io = StringIO()
+    sys.stdout = string_io
+    global txt_prints
+
     num_intentos = 0
     ok_exec = False
     while not ok_exec and num_intentos < 20:
@@ -542,15 +591,22 @@ def ejecutar_texto(texto):
             if list_palabras is None or list_palabras == []:
                 return "No se ha recibido texto"
 
-            print("Palabras: ", list_palabras)
-            print("Relaciones: ", list_relaciones)
+            #print("Palabras: ", list_palabras)
+            #print("Relaciones: ", list_relaciones)
             for pal in list_palabras:
                 print(pal.to_create_Palabra_str())
 
+            print()
             for rel in list_relaciones:
                 print(rel.to_create_Relacion_str())
 
             Palabra.refresh_dict_palabras()
+
+            # Obtener el contenido del string
+
+            txt_prints = string_io.getvalue()
+            # Restaurar la salida estándar
+            sys.stdout = sys.__stdout__
 
             fig = generate_graph(texto, list_palabras, list_relaciones)
             if fig is not None:
@@ -583,6 +639,14 @@ def ejecutar_texto(texto):
 app = Flask(__name__)
 CORS(app)
 ################################################
+
+
+@app.route('/obtener_prints_python', methods=['GET'])
+def obtener_prints_python():
+    global txt_prints
+    return jsonify(texto=txt_prints)
+
+
 
 
 @app.route('/', methods=['POST'])
