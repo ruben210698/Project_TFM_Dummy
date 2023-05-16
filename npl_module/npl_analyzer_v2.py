@@ -90,7 +90,7 @@ def manejar_palabras_restantes(list_token_nlp_oraciones):
     # Y hay que comprobar que, si una palabra es igual a la que hay en la relación, no se ponga (en minusculas y sin acentos)
     for oracion in list_token_nlp_oraciones:
         for token in oracion:
-            if token.representado:
+            if token.representado or token.tipo_morfol == 'SPACE' or token.tipo_morfol == 'PUNCT':
                 continue
             else:
                 if token.tipo_morfol == TYPE_MORF_CCONJ:
@@ -163,18 +163,43 @@ def get_list_palabras(list_token_nlp_oraciones):
     list_palabras = []
     for oracion_nlp in list_token_nlp_oraciones:
         for token_nlp in oracion_nlp:
+            if token_nlp.tipo_morfol == 'SPACE' or token_nlp.tipo_morfol == 'PUNCT':
+                continue
             if token_nlp.tipo_palabra is TYPE_PALABRA:
-                if (token_nlp.tipo_morfol == 'AUX' and token_nlp.token_nlp_padre.tipo_morfol == 'VERB') or \
-                        (token_nlp.tipo_morfol == 'PRON' and token_nlp.lugar_sintact_original != 'nsubj'
-                         and token_nlp.token_nlp_padre.tipo_morfol == 'VERB'):
+                if (token_nlp.tipo_morfol == 'AUX' and token_nlp.token_nlp_padre.tipo_morfol == 'VERB'):
                     # Es el auxiliar de un verbo (ha saltado, se ha comido...)
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
                     nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+
+                elif token_nlp.tipo_morfol == 'PRON' and token_nlp.lugar_sintact_original not in ('nsubj', 'obj') and \
+                     token_nlp.token_nlp_padre.tipo_morfol == 'VERB':
+                    nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
+                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                # En caso de que efectivamente sean pronombres que acompañen al verbo
+                elif token_nlp.tipo_morfol == 'PRON' and token_nlp.lugar_sintact_original not in ('nsubj') and \
+                     token_nlp.token_nlp_padre.tipo_morfol == 'VERB' and \
+                        token_nlp.lema in ("yo", "tú", "él", "ella", "usted", "nosotros", "nosotras", "vosotros",
+                                           "vosotras", "ellos", "ellas", "ustedes"):
+                    nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
+                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+
                 # Ahora el AUX que va con afjetivo, para "es impresionante"
                 elif token_nlp.tipo_morfol == 'AUX' and token_nlp.lugar_sintact_original == 'cop' and \
                     token_nlp.token_nlp_padre.tipo_morfol in ('ADJ', 'NOUN'):
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
                     nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+
+                # más rico, que vaya junto
+                elif token_nlp.tipo_morfol == 'ADV' and token_nlp.lugar_sintact_original == 'advmod' and \
+                     token_nlp.token_nlp_padre.tipo_morfol in ('ADJ', 'VERB'):
+                    nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
+                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                #
+                elif token_nlp.tipo_morfol == 'ADJ' and token_nlp.lugar_sintact_original == 'advmod' and \
+                     token_nlp.token_nlp_padre.tipo_morfol in ('ADJ', 'NOUN'):
+                    nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
+                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+
                 # estudio informatica:
                 elif token_nlp.tipo_morfol == 'ADJ' and \
                     token_nlp.token_nlp_padre.lugar_sintact_original in ('appos'):
@@ -223,29 +248,33 @@ def analyse_token_recursive(token_padre, token_actual, num_oracion):
 
 
 
-def completar_sujeto_omitido(oracion, nlp):
-    doc = nlp(oracion)
-    sujeto_omitido = None
+def completar_sujeto_omitido(oraciones, nlp):
+    list_oraciones = []
+    for oracion in oraciones.split('.'):
+        doc = nlp(oracion)
+        sujeto_omitido = None
 
-    hay_sujeto = False
-    for token in doc:
-        if token.dep_ == "nsubj":
-            hay_sujeto = True
-        if token.dep_ == "nsubj" and token.head.pos_ == "VERB":
-            sujeto_omitido = token
-            break
-
-    if sujeto_omitido is None and not hay_sujeto:
+        hay_sujeto = False
         for token in doc:
-            if token.tag_ == 'PRON' and token.head.pos_ == "VERB":
+            if token.dep_ == "nsubj":
+                hay_sujeto = True
+            if token.dep_ == "nsubj" and token.head.pos_ == "VERB":
                 sujeto_omitido = token
                 break
 
-    if sujeto_omitido is not None and not hay_sujeto and sujeto_omitido.text != sujeto_omitido.lemma_:
-        sujeto_completo = sujeto_omitido.lemma_
-        return oracion.replace(sujeto_omitido.text, sujeto_completo + " " + sujeto_omitido.text)
-    else:
-        return oracion
+        if sujeto_omitido is None and not hay_sujeto:
+            for token in doc:
+                if token.tag_ == 'PRON' and token.head.pos_ == "VERB":
+                    sujeto_omitido = token
+                    break
+
+        if sujeto_omitido is not None and not hay_sujeto and sujeto_omitido.text != sujeto_omitido.lemma_:
+            sujeto_completo = sujeto_omitido.lemma_
+            list_oraciones.append(oracion.replace(sujeto_omitido.text, sujeto_completo + " " + sujeto_omitido.text))
+        else:
+            list_oraciones.append(oracion)
+
+    return '. '.join(list_oraciones)
 
 
 def hay_sujeto(doc):
@@ -315,6 +344,8 @@ def preprocesing_oracion_nlp(texto):
         print("Oracion: ", num_oracion)
         # Ordenar la lista de tokens de la oracion por el número de children
         list_token_oracion.sort(key=lambda x: len(list(x.children)), reverse=True)
+        list_token_oracion = [token for token in list_token_oracion if token.pos_ not in ('SPACE', 'PUNCT') ]
+
         # sacar de list_token_oracion el elemento cuyo token.dep_ == ROOT
         root = None
         for token in list_token_oracion:
@@ -327,7 +358,8 @@ def preprocesing_oracion_nlp(texto):
         # Recorrer tokens y buscar palabras y relaciones
         for token in list_token_oracion:
             list_texts_ok = [token.text for token in list_token_nlp]
-            if token.text not in list_texts_ok or not (token.pos_ == TYPE_MORF_PUNCT and token.lemma_ == '.'):
+            if token.text not in list_texts_ok and not (token.pos_ == TYPE_MORF_PUNCT and token.lemma_ == '.')\
+                    and not (token.pos_ == 'SPACE'):
                 list_token_nlp_2 = analyse_token_recursive(None, token, num_oracion)
                 list_token_nlp = list_token_nlp + list_token_nlp_2
 
@@ -475,7 +507,10 @@ texto = "El otro día me llamaron de una empresa nueva"
 texto = "Ruben cocina hamburguesas en la Freidora de aire ayer"
 
 
-texto = "Felipe II fué rey de españa hace tiempo. Maria Antonieta era reina de Francia."
+texto = "Yo le añadí un poco de cilantro a la pasta para que supiera más rica. Tras esto, la quemé"
+texto = "Rubén le regaló juguetes a Okami por su cumpleaños. Pero ella los rompió en dos minutos."
+# TODO que el DOS vaya dentro del rectangulo
+#  Que el 'a Okami' lo pille como CI y no directo
 
 
 
