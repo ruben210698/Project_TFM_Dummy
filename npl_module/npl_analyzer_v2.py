@@ -19,7 +19,11 @@ from spacy.pipeline import EntityRecognizer
 from spacy.pipeline import EntityLinker
 from spacy.pipeline import EntityRuler
 
+from flask import Flask, request
+from flask_cors import CORS
+
 from npl_module import token_manual_modifier
+from utils.Grafo import Grafo
 from utils.Palabra import Palabra
 from utils.Relacion import Relacion
 from constants.type_morfologico import *
@@ -108,7 +112,7 @@ def manejar_palabras_restantes(list_token_nlp_oraciones):
                                 break
                     if entontrada:
                         continue
-                    if pal_padre is not None:
+                    if pal_padre is not None and isinstance(pal_padre, Palabra):
                         # Si no esta en la relacion, se lo añado a la palabra, ya que no tiene relación hijo
                         pal_padre.add_aux_text(token.text, token.position_doc)
 
@@ -166,52 +170,62 @@ def get_list_palabras(list_token_nlp_oraciones):
             if token_nlp.tipo_morfol == 'SPACE' or token_nlp.tipo_morfol == 'PUNCT':
                 continue
             if token_nlp.tipo_palabra is TYPE_PALABRA:
-                if (token_nlp.tipo_morfol == 'AUX' and token_nlp.token_nlp_padre.tipo_morfol == 'VERB'):
+                if (token_nlp.tipo_morfol == 'AUX' and token_nlp.token_nlp_padre is not None and
+                        token_nlp.token_nlp_padre.tipo_morfol == 'VERB'):
                     # Es el auxiliar de un verbo (ha saltado, se ha comido...)
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
-                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                    if nueva_palabra is not None and isinstance(nueva_palabra, Palabra):
+                        nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
 
                 elif token_nlp.tipo_morfol == 'PRON' and token_nlp.lugar_sintact_original not in ('nsubj', 'obj') and \
-                     token_nlp.token_nlp_padre.tipo_morfol == 'VERB':
+                     token_nlp.token_nlp_padre is not None and token_nlp.token_nlp_padre.tipo_morfol == 'VERB':
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
-                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                    if nueva_palabra is not None and isinstance(nueva_palabra, Palabra):
+                        nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
                 # En caso de que efectivamente sean pronombres que acompañen al verbo
                 elif token_nlp.tipo_morfol == 'PRON' and token_nlp.lugar_sintact_original not in ('nsubj') and \
-                     token_nlp.token_nlp_padre.tipo_morfol == 'VERB' and \
+                     token_nlp.token_nlp_padre is not None and token_nlp.token_nlp_padre.tipo_morfol == 'VERB' and \
                         token_nlp.lema in ("yo", "tú", "él", "ella", "usted", "nosotros", "nosotras", "vosotros",
                                            "vosotras", "ellos", "ellas", "ustedes"):
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
-                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                    if nueva_palabra is not None and isinstance(nueva_palabra, Palabra):
+                        nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
 
                 # Ahora el AUX que va con afjetivo, para "es impresionante"
                 elif token_nlp.tipo_morfol == 'AUX' and token_nlp.lugar_sintact_original == 'cop' and \
-                    token_nlp.token_nlp_padre.tipo_morfol in ('ADJ', 'NOUN'):
+                    token_nlp.token_nlp_padre is not None and token_nlp.token_nlp_padre.tipo_morfol in ('ADJ', 'NOUN'):
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
-                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                    if nueva_palabra is not None and isinstance(nueva_palabra, Palabra):
+                        nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
 
                 # más rico, que vaya junto
                 elif token_nlp.tipo_morfol == 'ADV' and token_nlp.lugar_sintact_original == 'advmod' and \
-                     token_nlp.token_nlp_padre.tipo_morfol in ('ADJ', 'VERB'):
+                     token_nlp.token_nlp_padre is not None and token_nlp.token_nlp_padre.tipo_morfol in ('ADJ', 'VERB'):
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
-                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                    if nueva_palabra is not None and isinstance(nueva_palabra, Palabra):
+                        nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
                 #
                 elif token_nlp.tipo_morfol == 'ADJ' and token_nlp.lugar_sintact_original == 'advmod' and \
-                     token_nlp.token_nlp_padre.tipo_morfol in ('ADJ', 'NOUN'):
+                     token_nlp.token_nlp_padre is not None and token_nlp.token_nlp_padre.tipo_morfol in ('ADJ', 'NOUN'):
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
-                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                    if nueva_palabra is not None and isinstance(nueva_palabra, Palabra):
+                        nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
 
                 # estudio informatica:
-                elif token_nlp.tipo_morfol == 'ADJ' and \
+                elif token_nlp.tipo_morfol == 'ADJ' and token_nlp.token_nlp_padre is not None and \
                     token_nlp.token_nlp_padre.lugar_sintact_original in ('appos'):
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
-                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
-                elif token_nlp.tipo_morfol == 'SCONJ':
+                    if nueva_palabra is not None and isinstance(nueva_palabra, Palabra):
+                        nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                elif token_nlp.tipo_morfol == 'SCONJ' and token_nlp.token_nlp_padre is not None:
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
-                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
-                elif token_nlp.lugar_sintact_original == TYPE_SINTAX_FLAT:
+                    if nueva_palabra is not None and isinstance(nueva_palabra, Palabra):
+                        nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                elif token_nlp.lugar_sintact_original == TYPE_SINTAX_FLAT and token_nlp.token_nlp_padre is not None:
                     # Es el auxiliar de una palabra (Felipe II...)
                     nueva_palabra = token_nlp.token_nlp_padre.palabra_que_representa
-                    nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
+                    if nueva_palabra is not None and isinstance(nueva_palabra, Palabra):
+                        nueva_palabra.add_aux_text(token_nlp.text, token_nlp.position_doc)
                 else:
                     nueva_palabra = Palabra.constructor_alternativo(token_nlp=token_nlp)
                     list_palabras.append(nueva_palabra)
@@ -504,18 +518,13 @@ texto = "El otro día me llamaron de una empresa nueva"
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
-texto = "Ruben cocina hamburguesas en la Freidora de aire ayer"
+#texto = "Ruben cocina hamburguesas en la Freidora de aire ayer"
 
 
-texto = "Yo le añadí un poco de cilantro a la pasta para que supiera más rica. Tras esto, la quemé"
-texto = "Rubén le regaló juguetes a Okami por su cumpleaños. Pero ella los rompió en dos minutos."
+#texto = "Yo le añadí un poco de cilantro a la pasta para que supiera más rica. Tras esto, la quemé"
+#texto = "Rubén le regaló juguetes a Okami por su cumpleaños. Pero ella los rompió en dos minutos."
 # TODO que el DOS vaya dentro del rectangulo
 #  Que el 'a Okami' lo pille como CI y no directo
-
-
-
-
-
 
 
 #spacy_load = "es_core_news_lg"
@@ -524,25 +533,110 @@ texto = "Rubén le regaló juguetes a Okami por su cumpleaños. Pero ella los ro
 #spacy_load = "es_core_news_lg"
 # NLTK, AllenNLP y StanfordNLP
 
+def ejecutar_texto(texto):
+    num_intentos = 0
+    ok_exec = False
+    while not ok_exec and num_intentos < 20:
+        try:
+            list_palabras, list_relaciones = get_list_palabras_relaciones(texto)
+            if list_palabras is None or list_palabras == []:
+                return "No se ha recibido texto"
 
-print("Texto: ", texto)
+            print("Palabras: ", list_palabras)
+            print("Relaciones: ", list_relaciones)
+            for pal in list_palabras:
+                print(pal.to_create_Palabra_str())
 
-ok_exec = False
-while not ok_exec:
-    list_palabras, list_relaciones = get_list_palabras_relaciones(texto)
+            for rel in list_relaciones:
+                print(rel.to_create_Relacion_str())
 
-    print("Palabras: ", list_palabras)
-    print("Relaciones: ", list_relaciones)
-    for pal in list_palabras:
-        print(pal.to_create_Palabra_str())
+            Palabra.refresh_dict_palabras()
 
-    for rel in list_relaciones:
-        print(rel.to_create_Relacion_str())
-
-    Palabra.refresh_dict_palabras()
-
-    fig = generate_graph(texto, list_palabras, list_relaciones)
-    if fig is not None:
-        ok_exec = True
+            fig = generate_graph(texto, list_palabras, list_relaciones)
+            if fig is not None:
+                ok_exec = True
+        except Exception as e:
+            print("Error: ", e)
+            ok_exec = False
+        num_intentos += 1
 
 
+
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+
+#ejecutar_texto(texto)
+
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+########################################################################################################################
+
+app = Flask(__name__)
+CORS(app)
+################################################
+
+
+@app.route('/', methods=['POST'])
+def recibir_texto():
+    borrar_imagenes_2()
+    texto = request.json['texto']
+
+    import os
+    os.environ['PRINT_MATRIX'] = 'False'
+    os.environ['PRINT_IMG'] = 'False'
+    os.environ['PRINT_GRAPH'] = 'False'
+    os.environ['ZOOM_ACTIVE'] = 'False'
+
+
+    if texto is None or texto == "":
+        return "No se ha recibido texto"
+
+    # Aquí puedes realizar cualquier procesamiento o análisis del texto que desees
+    print("Texto: ", texto)
+    ejecutar_texto(texto)
+    # El otro día me llamaron de una empresa nueva
+
+    Palabra.id_actual = 9
+    Palabra.palabras_dict = {}
+    Palabra.palabras_dict_id = {}
+    Palabra.relaciones_dict_origen = {}
+    Palabra.relaciones_dict_destino = {}
+    Relacion.id_actual = -9
+    Relacion.relaciones_dict = {}
+    Relacion.relaciones_dict_id = {}
+    Grafo.id_actual = 0
+    TokenNLP.nlp_token_dict = {}
+
+    return 'Texto recibido: {}'.format(texto)
+
+
+
+@app.route('/borrar-imagenes', methods=['POST'])
+def borrar_imagenes():
+    # Funcion desactivada ya que se le llama desde JS y no es necesario
+    pass
+def borrar_imagenes_2():
+    import os
+    ruta_imagenes = 'web_project/imagenes/'  # Ruta de la carpeta donde se encuentran las imágenes
+
+    # Eliminar todas las imágenes en la ruta especificada
+    for filename in os.listdir(ruta_imagenes):
+        file_path = os.path.join(ruta_imagenes, filename)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+
+    return 'Imágenes borradas exitosamente'
+
+
+
+if __name__ == '__main__':
+    app.run()

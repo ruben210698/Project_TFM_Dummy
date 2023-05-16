@@ -885,8 +885,14 @@ def draw_edge(ax, u, v, width=1.0, color='k', label='', label_offset=(0, 0), bol
             ax.text(x_label, y_label, label, fontname='Times New Roman', fontsize=15, ha='center', va='center', zorder=3)
 
 def print_graph(list_palabras, list_relaciones, position_elems, matrix_dim, final=False):
-    if PRINT_IMG or final:
-        return _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
+    try:
+        if list_palabras == []:
+            return None
+        if PRINT_IMG or final:
+            return _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim)
+    except Exception as e:
+        print(e)
+        return None
 
 
 def get_relations_from_list_words(list_relaciones_all, list_palabras_custom):
@@ -1018,7 +1024,7 @@ def _print_graph(list_palabras, list_relaciones, position_elems, matrix_dim):
         ax.plot()
 
         # Guardar figura en archivo
-        plt.savefig(f"web_project/imagenes/FiguraImport{i}")
+        plt.savefig(f"web_project/imagenes/imagen{i}")
 
         plt.show()
 
