@@ -675,6 +675,8 @@ def test10():
 #test10() # 27
 
 
+
+
 #list_palabras, list_relaciones = test5()
 #list_palabras, list_relaciones = test2()
 list_palabras, list_relaciones = test5()

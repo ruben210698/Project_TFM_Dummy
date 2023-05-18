@@ -36,4 +36,8 @@ class Grafo:
         return True
 
     def reordenar_pal_pending(self):
+        # todos los elementos que no esten representados y que no tengan relaciones pendientes
+        self.palabras_list_ordered_num_rel_pending = \
+            [elem for elem in self.palabras_list_ordered_num_rel_pending
+             if not elem.has_been_plotted or not elem.has_been_plotted_relations]
         self.palabras_list_ordered_num_rel_pending.sort(key=lambda x: x.numero_grafos, reverse=True)

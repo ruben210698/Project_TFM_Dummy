@@ -6,7 +6,7 @@ import os
 
 import networkx as nx
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyArrowPatch, RegularPolygon, Ellipse, Rectangle
+from matplotlib.patches import FancyArrowPatch, RegularPolygon, Ellipse, Rectangle, Circle
 
 from utils.Grafo import Grafo
 from utils.Palabra import Palabra
@@ -796,6 +796,7 @@ def draw_edge(ax, u, v, width=1.0, color='k', label='', label_offset=(0, 0), bol
     # es decir, que la felcha en vez de ir del punto A al B en linea recta, traza una pequeá parábola
     x_label = 0
     y_label = 0
+    color = colores.black
     if curve:
         annotation = ax.annotate('', xy=u, xytext=v,
                     arrowprops=dict(facecolor=color, edgecolor=color, shrink=0.05, connectionstyle="arc3,rad=-0.4", zorder=-1),
@@ -1239,17 +1240,30 @@ def draw_all_nodes(ax, position_elems, list_palabras):
         color_figura = pal.color_figura
         tipo_figura = pal.tipo_figura
 
-        if pal.tipo_figura == FIGURA_ELIPSE:
+        if tipo_figura == FIGURA_ELIPSE:
         #if pal.lugar_sintactico.lower() in (TYPE_SINTAX_ROOT):
             pal.tipo_figura = FIGURA_ELIPSE
             pal.tam_eje_y_figura = tam_figuras.ELIPSE[1] * (pal.dimension_y)
             pal.tam_eje_x_figura = tam_figuras.ELIPSE[0] * (pal.dimension_x)
             ellipse_width = 0.6 * (pal.dimension_x + pal.cte_sum_x)
             ellipse = Ellipse((x, y), width=ellipse_width, height=1,
-                              color=dict_color_figura.get(pal.lugar_sintactico, color_figura), zorder=2)
+                              facecolor=dict_color_figura.get(pal.lugar_sintactico, color_figura), zorder=2 , edgecolor='black')
             ax.add_patch(ellipse)
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
                     color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
+
+        elif tipo_figura == FIGURA_CIRCULO:
+        #elif pal.lugar_sintactico.lower() in (TYPE_SINTAX_ROOT):
+            pal.tipo_figura = FIGURA_CIRCULO
+            pal.tam_eje_y_figura = tam_figuras.CIRCULO[1] * (pal.dimension_y)
+            pal.tam_eje_x_figura = tam_figuras.CIRCULO[0] * (pal.dimension_x)
+            circle_width = 0.25 * (pal.dimension_x + pal.cte_sum_x)
+            circle = Circle((x, y), radius=circle_width, facecolor=dict_color_figura.get(pal.lugar_sintactico, color_figura),
+                            zorder=2, edgecolor='black')
+            ax.add_patch(circle)
+            ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
+                    color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
+
 
         elif pal.tipo_figura == FIGURA_RECTANGULO:
         #elif pal.lugar_sintactico.lower() in (TYPE_SINTAX_AMOD, TYPE_SINTAX_NMOD):
@@ -1258,7 +1272,8 @@ def draw_all_nodes(ax, position_elems, list_palabras):
             pal.tam_eje_x_figura = tam_figuras.RECTANGULO[0] * (pal.dimension_x)
             rectangle_width = tam_figuras.RECTANGULO[0] * pal.dimension_x
             rectangle = Rectangle((x - rectangle_width / 2, y - 0.4*pal.dimension_y), width=rectangle_width, height=1,
-                                  color=dict_color_figura.get(pal.lugar_sintactico, color_figura), zorder=2)
+                                  facecolor=dict_color_figura.get(pal.lugar_sintactico, color_figura),
+                                  edgecolor='black', zorder=2)
             ax.add_patch(rectangle)
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
                     color=dict_color_figura_letra.get(pal.lugar_sintactico, colores.black))
@@ -1297,7 +1312,9 @@ def draw_all_nodes(ax, position_elems, list_palabras):
                 xy=(x - rectangle_width / 2, y - height * 0.4),
                 width=rectangle_width,
                 height=height,
-                color=dict_color_figura.get(pal.lugar_sintactico, color_figura),
+                #color=dict_color_figura.get(pal.lugar_sintactico, color_figura),
+                facecolor=colores.white,
+                edgecolor='black',
                 zorder=2)
             ax.add_patch(rectangle)
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center',

@@ -132,6 +132,11 @@ class Palabra:
             self.importancia = 1
             self.color_figura = colores_figura.COLOR_SINTAX_NSUBJ
             self.tipo_figura = figuras.FIGURA_RECTANGULO
+        elif self.lugar_sintactico == TYPE_SINTAX_ROOT:
+            self.importancia = 2
+            self.color_figura = colores_figura.COLOR_SINTAX_ROOT
+            self.tipo_figura = figuras.FIGURA_CIRCULO
+
         elif self.tipo_morf == TYPE_MORF_VERB:
             self.color_figura = colores_figura.COLOR_MORF_VERB
             self.tipo_figura = figuras.FIGURA_ELIPSE

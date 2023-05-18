@@ -432,15 +432,15 @@ def spacy_patrones(doc, nlp):
         print("CCT: ", matched_span.text)
         for token in matched_span:
             if token.dep_ in LIST_SINTAX_PATTERN_MODIFY:
-                print("Old token:")
-                print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
-                      "|| dep_:", token.dep_, "|| ent_type_:", token.ent_type_, "|| ", token.shape_, token.is_alpha,
-                      token.is_stop)
+                #print("Old token:")
+                #print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
+                #      "|| dep_:", token.dep_, "|| ent_type_:", token.ent_type_, "|| ", token.shape_, token.is_alpha,
+                #      token.is_stop)
                 token.dep_ = TYPE_SINTAX_PATTERN_CCT
-                print("New token:")
-                print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
-                      "|| dep_:", token.dep_, "|| ent_type_:", token.ent_type_, "|| ", token.shape_, token.is_alpha,
-                      token.is_stop)
+                #print("New token:")
+                #print(token.text, ": ", token.idx, token.lemma_, "|| pos_:", token.pos_, "|| tag_:", token.tag_,
+                #      "|| dep_:", token.dep_, "|| ent_type_:", token.ent_type_, "|| ", token.shape_, token.is_alpha,
+                #      token.is_stop)
 
     ######################################################
     ######################################################
@@ -552,11 +552,13 @@ texto = "Mientras programo, un pajaro ha saltado por el balcón y se ha comido u
 #### TEST Root-VB a SUJ-VB
 texto = "El perro de mi vecino se llama Toby y sale a jugar al parque todos los días"
 texto = "Me llamo Ruben, estudio informatica y espero poder acabar el master algún día"
+texto = "Me llamo Ruben, estudio informatica y soy de Madrid"
 
 
 #### TEST Sujeto omitido
 texto = "Me voy a jugar al futbol"
 texto = "El otro día me llamaron de una empresa nueva"
+texto = "Mi perro es un golden retriever de tres años que adora jugar con su pelota en el parque y siempre me da la bienvenida moviendo la cola cuando llego a casa."
 
 ########################################################################################################################
 ########################################################################################################################
@@ -580,7 +582,7 @@ txt_prints = ""
 def ejecutar_texto(texto):
     # Crear un objeto StringIO para redirigir la salida
     string_io = StringIO()
-    sys.stdout = string_io
+    #sys.stdout = string_io
     global txt_prints
 
     num_intentos = 0
@@ -626,7 +628,7 @@ def ejecutar_texto(texto):
 ########################################################################################################################
 ########################################################################################################################
 
-#ejecutar_texto(texto)
+ejecutar_texto(texto)
 
 ########################################################################################################################
 ########################################################################################################################
@@ -702,5 +704,5 @@ def borrar_imagenes_2():
 
 
 
-if __name__ == '__main__':
-    app.run()
+#if __name__ == '__main__':
+#    app.run()
