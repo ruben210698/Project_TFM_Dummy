@@ -10,6 +10,62 @@ from constants.type_morfologico import *
 
 
 
+ancho_caracter = {
+    "A": 6,
+    "B": 7,
+    "C": 6,
+    "D": 7,
+    "E": 6,
+    "F": 5,
+    "G": 7,
+    "H": 7,
+    "I": 3,
+    "J": 4,
+    "K": 7,
+    "L": 6,
+    "M": 8,
+    "N": 7,
+    "O": 7,
+    "P": 6,
+    "Q": 7,
+    "R": 7,
+    "S": 6,
+    "T": 6,
+    "U": 7,
+    "V": 6,
+    "W": 9,
+    "X": 6,
+    "Y": 6,
+    "Z": 6,
+    "a": 5,
+    "b": 5,
+    "c": 4,
+    "d": 5,
+    "e": 5,
+    "f": 4,
+    "g": 5,
+    "h": 5,
+    "i": 2,
+    "j": 2,
+    "k": 5,
+    "l": 2,
+    "m": 8,
+    "n": 5,
+    "o": 5,
+    "p": 5,
+    "q": 5,
+    "r": 4,
+    "s": 4,
+    "t": 4,
+    "u": 5,
+    "v": 5,
+    "w": 7,
+    "x": 5,
+    "y": 5,
+    "z": 4,
+}
+
+
 class Relacion:
     id_actual = -9
     relaciones_dict = {}
@@ -91,22 +147,24 @@ class Relacion:
     @staticmethod
     def get_tam_texto(texto):
         # Método que calcula la dimensión dependiendo del tamaño de la palabra
-        return len(texto) - len(texto) // 3 if len(texto) > 2 else 2
+        return sum(ancho_caracter.get(c, 8) for c in texto) // 12
+        #return len(texto) - len(texto) // 3 if len(texto) > 2 else 2
         #return len(texto)//2 if len(texto) > 2 else 2
 
 
     def get_tam_texto_real(self, ax = None):
-        if ax is None:
-            return len(self.texto) / 3
-        else:
-            texto = self.texto
-            fontname = 'Times New Roman'
-            fontsize = 15
-            texto_obj = ax.text(0, 0, texto, fontname=fontname, fontsize=fontsize)
-            bbox = texto_obj.get_window_extent()
-            ancho = bbox.width / fontsize
-            altura = bbox.height / fontsize
-            return ancho + 1
+        return self.get_tam_texto(self.texto)
+        # if ax is None:
+        #     return len(self.texto) / 3
+        # else:
+        #     texto = self.texto
+        #     fontname = 'Times New Roman'
+        #     fontsize = 15
+        #     texto_obj = ax.text(0, 0, texto, fontname=fontname, fontsize=fontsize)
+        #     bbox = texto_obj.get_window_extent()
+        #     ancho = bbox.width / fontsize
+        #     altura = bbox.height / fontsize
+        #     return ancho + 1
 
 
 

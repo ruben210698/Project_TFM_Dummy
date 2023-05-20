@@ -1,5 +1,5 @@
-#tam_eje_x_figura,  tam_eje_y_figura
-ELIPSE = (0.7, 0.7)
-RECTANGULO = (0.7, 0.7)
+#tam_eje_x_figura,  tam_eje_y_figura, multiplicador radio
+ELIPSE = (1.2, 0.3, 1.1)
+RECTANGULO = (1.3, 1.3)
 HEXAGONO = (0.35, 0.35)
-CIRCULO = (0.7, 0.7)
+CIRCULO = (1.1, 1.1, 0.5)

@@ -4,7 +4,8 @@ white = "#FFFFFF"
 
 light_blue = "#afccff" # ok
 orange = "ffcc33" #ok
+green = "#99cc66" # ok
 
-green = "#33CC00"
+
 red = "#FF3333"
 purple = "#9933FF"

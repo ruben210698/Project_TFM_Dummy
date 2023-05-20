@@ -28,6 +28,60 @@ De esta forma, palabras que se repiten y no queremos que sean iguales en el graf
 y palabras que se repitan y queramos que se relacionen, se guardarán con el id como su hash y serán iguales.
 """
 
+ancho_caracter = {
+    "A": 6,
+    "B": 7,
+    "C": 6,
+    "D": 7,
+    "E": 6,
+    "F": 5,
+    "G": 7,
+    "H": 7,
+    "I": 3,
+    "J": 4,
+    "K": 7,
+    "L": 6,
+    "M": 8,
+    "N": 7,
+    "O": 7,
+    "P": 6,
+    "Q": 7,
+    "R": 7,
+    "S": 6,
+    "T": 6,
+    "U": 7,
+    "V": 6,
+    "W": 9,
+    "X": 6,
+    "Y": 6,
+    "Z": 6,
+    "a": 5,
+    "b": 5,
+    "c": 4,
+    "d": 5,
+    "e": 5,
+    "f": 4,
+    "g": 5,
+    "h": 5,
+    "i": 2,
+    "j": 2,
+    "k": 5,
+    "l": 2,
+    "m": 8,
+    "n": 5,
+    "o": 5,
+    "p": 5,
+    "q": 5,
+    "r": 4,
+    "s": 4,
+    "t": 4,
+    "u": 5,
+    "v": 5,
+    "w": 7,
+    "x": 5,
+    "y": 5,
+    "z": 4,
+}
 
 class Palabra:
     id_actual = 9
@@ -69,8 +123,10 @@ class Palabra:
 
         self.dimension_x = self.get_dimension(texto)
         self.dimension_y = 1
-        self.cte_sum_x = 2
-        self.cte_sum_y = 2
+        self.cte_sum_x = 1
+        if self.dimension_x < 4 and self.cte_sum_x < 2:
+            self.cte_sum_x += 1
+        self.cte_sum_y = 1
 
         self.has_been_plotted = False
         self.has_been_plotted_relations = False
@@ -184,7 +240,9 @@ class Palabra:
     @staticmethod
     def get_dimension(texto):
         # Método que calcula la dimensión dependiendo del tamaño de la palabra
-        return len(texto) - len(texto) // 4
+        len_txt = sum(ancho_caracter.get(c, 8) for c in texto) // 12
+        return len_txt
+        #return len(texto) - len(texto) // 4
 
     def __str__(self):
         return self.texto

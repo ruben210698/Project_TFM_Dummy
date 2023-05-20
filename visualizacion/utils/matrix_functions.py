@@ -321,7 +321,7 @@ def is_empty_relation_in_matrix(matrix, y_dest, x_dest, relacion, in_draw=False)
             return is_empty, matrix, id_conflict
 
         # DCHA_ARRIBA
-        if x_origen < x_dest:
+        if x_origen < x_dest and y_origen < y_dest:
             pos_y = y_origen + int(abs((y_dest-y_origen) / 2))
             pos_x = x_origen + int(abs((x_dest-x_origen) / 2))
             is_empty, matrix, id_conflict = is_empty_pos_matrix(matrix, pos_y, pos_x, MARGIN_RELATION_DCHA_ARRIBA,
@@ -426,6 +426,10 @@ def _is_elipse_relation(matrix, relacion):
 
 
 
+MARGIN_X_DCHA = 4
+MARGIN_X_IZQ = 3
+MARGIN_Y_ARRIBA = 2
+MARGIN_Y_ABAJO = 2
 
 def is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x=0, ampliar=True, ids_to_skip= []):
     ids_to_skip.append(0)
@@ -438,9 +442,9 @@ def is_empty_pos_matrix(matrix, pos_y, pos_x, dim_y, dim_x, margen_x=0, ampliar=
         elif margen_x > 0:
             dim_x_bis = dim_x + margen_x
 
-        for axis_x_loop in range(pox_x_bis, pos_x + dim_x_bis):
+        for axis_x_loop in range(pox_x_bis-MARGIN_X_IZQ, pos_x + dim_x_bis+MARGIN_X_DCHA):
             axis_x = axis_x_loop - dim_x // 2
-            for axis_y_loop in range(pos_y, pos_y + dim_y):
+            for axis_y_loop in range(pos_y-MARGIN_Y_ABAJO, pos_y + dim_y+MARGIN_Y_ARRIBA):
                 axis_y = axis_y_loop - dim_y // 2
                 if matrix[axis_y][axis_x] not in ids_to_skip:
                     return False, matrix, matrix[axis_y][axis_x] # id

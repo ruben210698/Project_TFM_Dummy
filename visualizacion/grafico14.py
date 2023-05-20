@@ -342,9 +342,10 @@ def update_palabras_in_matrix(matrix_dim, palabra):
     axis_y = palabra.pos_y + pos_y_media
     axis_x = palabra.pos_x + pos_x_media
     # bucle que recorre palabra.dimension_y desde -palabra.dimension_y//2 hasta palabra.dimension_y//2
+    dim_x_total = palabra.dimension_x + palabra.cte_sum_x
     for y in range(palabra.dimension_y):
         axis_y_loop = axis_y + y - palabra.dimension_y // 2
-        matrix_dim[axis_y_loop][axis_x:axis_x + palabra.dimension_x + palabra.cte_sum_x] = \
+        matrix_dim[axis_y_loop][axis_x - dim_x_total//2:axis_x + dim_x_total//2] = \
             [palabra.id for x in range(palabra.dimension_x + palabra.cte_sum_x)]
 
     # Esto fuera, no lo quiero hasta que llegue al calculo del grafo
@@ -410,6 +411,9 @@ def represent_list_relations(list_palabras_representadas, list_relaciones, matri
 
         if palabra.is_subgrafo_completado():
             continue
+
+        # TODO
+        force_draw = True
 
         if pal_to_draw.has_been_plotted:
             # al coger un numero random evitamos que se formen bucles infinitos
@@ -485,6 +489,7 @@ def represent_word(matrix_dim, palabra, relation, position_elems):
         palabra.direccion_origen_final = dir_tmp_origen
         palabra.pal_raiz = relation.pal_tmp_opuesta
 
+
     return matrix_dim, palabra, relation, position_elems
 
 
@@ -542,10 +547,13 @@ def get_position_word_recursive(position_elems, matrix_dim, palabra, list_relaci
         logger.info(f"++++++ {palabra.texto}")
         matrix_dim, palabra, relation, position_elems = \
             represent_word(matrix_dim, palabra, relation, position_elems)
-        print_graph(list_palabras_representadas, list_relaciones, position_elems, matrix_dim)
-        logger.info(f"++++++ Return")
+
         if palabra is None:
             return None, None, None
+        list_print = [a for a in palabra.list_all_pal_subgrafo if a.has_been_plotted]
+        print_graph(list_print, list_relaciones, position_elems, matrix_dim)
+        logger.info(f"++++++ Return")
+
     ################################################################################################
     if force_draw or draw_relations:
         # 2a función - 2a entrada Relaciones
@@ -1243,10 +1251,12 @@ def draw_all_nodes(ax, position_elems, list_palabras):
         if tipo_figura == FIGURA_ELIPSE:
         #if pal.lugar_sintactico.lower() in (TYPE_SINTAX_ROOT):
             pal.tipo_figura = FIGURA_ELIPSE
-            pal.tam_eje_y_figura = tam_figuras.ELIPSE[1] * (pal.dimension_y)
-            pal.tam_eje_x_figura = tam_figuras.ELIPSE[0] * (pal.dimension_x)
-            ellipse_width = 0.6 * (pal.dimension_x + pal.cte_sum_x)
-            ellipse = Ellipse((x, y), width=ellipse_width, height=1,
+            pal.tam_eje_y_figura = tam_figuras.ELIPSE[1] * (pal.dimension_y + pal.cte_sum_y)
+            pal.tam_eje_x_figura = tam_figuras.ELIPSE[0] * (pal.dimension_x + pal.cte_sum_x)
+            ellipse_width = tam_figuras.ELIPSE[2] * (pal.dimension_x + pal.cte_sum_x + 0.5)
+            #ellipse_height = pal.tam_eje_y_figura
+
+            ellipse = Ellipse((x, y), width=ellipse_width, height=1.2,
                               facecolor=dict_color_figura.get(pal.lugar_sintactico, color_figura), zorder=2 , edgecolor='black')
             ax.add_patch(ellipse)
             ax.text(x, y, node_text, fontsize=12, ha='center', va='center', zorder=3,
@@ -1257,7 +1267,7 @@ def draw_all_nodes(ax, position_elems, list_palabras):
             pal.tipo_figura = FIGURA_CIRCULO
             pal.tam_eje_y_figura = tam_figuras.CIRCULO[1] * (pal.dimension_y)
             pal.tam_eje_x_figura = tam_figuras.CIRCULO[0] * (pal.dimension_x)
-            circle_width = 0.25 * (pal.dimension_x + pal.cte_sum_x)
+            circle_width = tam_figuras.CIRCULO[2] * (pal.dimension_x + pal.cte_sum_x)
             circle = Circle((x, y), radius=circle_width, facecolor=dict_color_figura.get(pal.lugar_sintactico, color_figura),
                             zorder=2, edgecolor='black')
             ax.add_patch(circle)
@@ -1270,7 +1280,9 @@ def draw_all_nodes(ax, position_elems, list_palabras):
             pal.tipo_figura = FIGURA_RECTANGULO
             pal.tam_eje_y_figura = tam_figuras.RECTANGULO[1] * (pal.dimension_y)
             pal.tam_eje_x_figura = tam_figuras.RECTANGULO[0] * (pal.dimension_x)
-            rectangle_width = tam_figuras.RECTANGULO[0] * pal.dimension_x
+            if pal.tam_eje_x_figura < 2:
+                pal.tam_eje_x_figura = 2
+            rectangle_width = pal.tam_eje_x_figura
             rectangle = Rectangle((x - rectangle_width / 2, y - 0.4*pal.dimension_y), width=rectangle_width, height=1,
                                   facecolor=dict_color_figura.get(pal.lugar_sintactico, color_figura),
                                   edgecolor='black', zorder=2)
@@ -1304,7 +1316,9 @@ def draw_all_nodes(ax, position_elems, list_palabras):
             pal.tipo_figura = FIGURA_RECTANGULO
             pal.tam_eje_y_figura = tam_figuras.RECTANGULO[1] * (pal.dimension_y)
             pal.tam_eje_x_figura = tam_figuras.RECTANGULO[0] * (pal.dimension_x)
-            rectangle_width = tam_figuras.RECTANGULO[0] * pal.dimension_x
+            if pal.tam_eje_x_figura < 2:
+                pal.tam_eje_x_figura = 2
+            rectangle_width = pal.tam_eje_x_figura
             height = 1  # pal.dimension_y
             tamano_texto = 12
 

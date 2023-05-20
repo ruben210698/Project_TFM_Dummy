@@ -560,6 +560,11 @@ texto = "Me voy a jugar al futbol"
 texto = "El otro día me llamaron de una empresa nueva"
 texto = "Mi perro es un golden retriever de tres años que adora jugar con su pelota en el parque y siempre me da la bienvenida moviendo la cola cuando llego a casa."
 
+
+# conflictivo con muchos sujetos omitidos, a ver cómo saco las relaciones de aqui.
+texto = "Pedro se compró un coche nuevo la semana pasada porque el suyo, que tenía ya 10 años, se rompió"
+
+
 ########################################################################################################################
 ########################################################################################################################
 ########################################################################################################################
@@ -628,7 +633,7 @@ def ejecutar_texto(texto):
 ########################################################################################################################
 ########################################################################################################################
 
-ejecutar_texto(texto)
+#ejecutar_texto(texto)
 
 ########################################################################################################################
 ########################################################################################################################
@@ -704,5 +709,5 @@ def borrar_imagenes_2():
 
 
 
-#if __name__ == '__main__':
-#    app.run()
+if __name__ == '__main__':
+    app.run()
