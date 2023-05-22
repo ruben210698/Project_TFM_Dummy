@@ -612,6 +612,7 @@ def ejecutar_texto(texto):
             # Obtener el contenido del string
 
             txt_prints = string_io.getvalue()
+            print(txt_prints)
             # Restaurar la salida estándar
             sys.stdout = sys.__stdout__
 
@@ -647,16 +648,11 @@ app = Flask(__name__)
 CORS(app)
 ################################################
 
-
-@app.route('/obtener_prints_python', methods=['GET'])
 def obtener_prints_python():
     global txt_prints
     return jsonify(texto=txt_prints)
 
 
-
-
-@app.route('/', methods=['POST'])
 def recibir_texto():
     borrar_imagenes_2()
     texto = request.json['texto']
@@ -690,8 +686,6 @@ def recibir_texto():
     return 'Texto recibido: {}'.format(texto)
 
 
-
-@app.route('/borrar-imagenes', methods=['POST'])
 def borrar_imagenes():
     # Funcion desactivada ya que se le llama desde JS y no es necesario
     pass
@@ -709,5 +703,10 @@ def borrar_imagenes_2():
 
 
 
-if __name__ == '__main__':
-    app.run()
+def lambda_handler(event, context):
+    #TODO
+    print(event)
+    print(context)
+    ejecutar_texto(texto)
+
+ejecutar_texto(texto)
